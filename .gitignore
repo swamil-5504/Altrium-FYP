@@ -1,4 +1,4 @@
-# Gitignore for Credential Management System
+# Gitignore for Altrium - Degree Verification System
 
 # Backend
 backend/__pycache__/
