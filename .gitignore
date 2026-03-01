@@ -37,6 +37,9 @@ backend/htmlcov/
 backend/*.db
 backend/test.db
 backend/test_*.db
+__pycache__/
+*.py[cod]
+*$py.class
 
 # Frontend
 frontend/node_modules/
