@@ -1,11 +1,12 @@
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, JSON, Enum
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
-from datetime import datetime
-import uuid
 from enum import Enum as PyEnum
-from app.db.base_class import Base
+from typing import Optional
+from uuid import UUID, uuid4
+from datetime import datetime
 
+from beanie import Document, Indexed
+from pydantic import Field, EmailStr
+
+# we keep the same enums so they can be reused in schemas
 class UserRole(str, PyEnum):
     ADMIN = "ADMIN"
     STUDENT = "STUDENT"
@@ -16,35 +17,29 @@ class CredentialStatus(str, PyEnum):
     APPROVED = "APPROVED"
     REJECTED = "REJECTED"
 
-class User(Base):
-    __tablename__ = "users"
-    
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    email = Column(String, unique=True, index=True)
-    full_name = Column(String, nullable=True)
-    hashed_password = Column(String)
-    role = Column(Enum(UserRole), default=UserRole.STUDENT)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # Relationships
-    credentials_issued = relationship("Credential", foreign_keys="Credential.issued_by_id", back_populates="issued_by")
-    credentials_owned = relationship("Credential", foreign_keys="Credential.issued_to_id", back_populates="issued_to")
+class User(Document):
+    id: UUID = Field(default_factory=uuid4)
+    email: EmailStr = Indexed(unique=True)
+    full_name: Optional[str] = None
+    hashed_password: str
+    role: UserRole = UserRole.STUDENT
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-class Credential(Base):
-    __tablename__ = "credentials"
-    
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    title = Column(String, index=True)
-    description = Column(String, nullable=True)
-    issued_to_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))
-    issued_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))
-    status = Column(Enum(CredentialStatus), default=CredentialStatus.PENDING)
-    metadata_json = Column(JSON, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # Relationships
-    issued_to = relationship("User", foreign_keys=[issued_to_id], back_populates="credentials_owned")
-    issued_by = relationship("User", foreign_keys=[issued_by_id], back_populates="credentials_issued")
+    class Settings:
+        name = "users"
+
+class Credential(Document):
+    id: UUID = Field(default_factory=uuid4)
+    title: str
+    description: Optional[str] = None
+    issued_to_id: UUID
+    issued_by_id: UUID
+    status: CredentialStatus = CredentialStatus.PENDING
+    metadata_json: Optional[dict] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    class Settings:
+        name = "credentials"

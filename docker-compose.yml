@@ -1,6 +1,14 @@
 version: '3.8'
 
 services:
+  mongo:
+    image: mongo:6.0
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
   backend:
     build:
       context: ./backend
@@ -8,6 +16,9 @@ services:
     container_name: backend
     ports:
       - "8000:8000"
+    environment:
+      - MONGODB_URL=mongodb://mongo:27017
+      - MONGODB_DB=altrium
     volumes:
       - ./backend:/app
 
@@ -24,3 +35,7 @@ services:
       - backend
     volumes:
       - ./frontend/src:/app/src
+
+volumes:
+  mongo_data:
+
