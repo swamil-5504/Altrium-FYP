@@ -4,6 +4,10 @@ from contextlib import asynccontextmanager
 import logging
 
 from app.core.config import settings
+from app.db import session
+from app.models import models
+from motor.motor_asyncio import AsyncIOMotorClient
+from beanie import init_beanie
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -12,6 +16,12 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting Altrium - Degree Verification System...")
+    # initialize Mongo client
+    session.init_db()
+    client: AsyncIOMotorClient = session.client  # type: ignore
+    db = client[settings.MONGODB_DB]
+    # initialize beanie with our document models
+    await init_beanie(database=db, document_models=[models.User, models.Credential])
     
     yield
     

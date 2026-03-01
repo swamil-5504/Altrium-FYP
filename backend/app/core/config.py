@@ -6,8 +6,14 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
     
-    # Database (SQLite for simplicity without external services)
-    DATABASE_URL: str = "sqlite:///./credentials.db"
+    # Database configuration (MongoDB)
+    # URL to connect to MongoDB; could include credentials, e.g. mongodb://user:pass@localhost:27017
+    MONGODB_URL: str = "mongodb://localhost:27017"
+    # Name of the database to use
+    MONGODB_DB: str = "altrium"
+
+    # legacy SQLite setting (ignored/not used)
+    DATABASE_URL: Optional[str] = None
     
     # JWT
     SECRET_KEY: str = "your-secret-key-change-in-production"

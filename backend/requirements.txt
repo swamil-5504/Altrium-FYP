@@ -1,6 +1,8 @@
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
-sqlalchemy==2.0.23
+# sqlite / sqlalchemy removed in favor of MongoDB
+motor>=3.1.2,<4.0  # async MongoDB driver (4.x not yet released)
+beanie>=1.15.1,<2.0   # async ODM built on motor and pydantic
 pydantic==2.5.0
 pydantic-settings==2.1.0
 python-jose[cryptography]==3.3.0
@@ -8,3 +10,6 @@ passlib[bcrypt]==1.7.4
 python-multipart==0.0.6
 python-dotenv==1.0.0
 email-validator==2.1.0
+# testing
+pytest>=7.0
+pytest-asyncio>=0.21

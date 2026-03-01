@@ -1,18 +1,22 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from motor.motor_asyncio import AsyncIOMotorClient
 from app.core.config import settings
 
-# For SQLite, we need to add connect_args to handle thread safety
-engine_kwargs = {}
-if "sqlite" in settings.DATABASE_URL:
-    engine_kwargs = {"connect_args": {"check_same_thread": False}}
+# create a global Mongo client instance
+client: AsyncIOMotorClient | None = None
 
-engine = create_engine(settings.DATABASE_URL, **engine_kwargs)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+def init_db():
+    global client
+    if client is None:
+        client = AsyncIOMotorClient(settings.MONGODB_URL)
 
-def get_db():
-    db = SessionLocal()
+async def get_db():
+    """Dependency that yields a database object."""
+    # ensure client has been initialized (called from startup event)
+    if client is None:
+        init_db()
+    db = client[settings.MONGODB_DB]
     try:
         yield db
     finally:
-        db.close()
+        # motor client doesn't need to be closed on each request
+        pass
