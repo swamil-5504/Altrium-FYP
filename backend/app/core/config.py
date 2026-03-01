@@ -11,9 +11,6 @@ class Settings(BaseSettings):
     MONGODB_URL: str = "mongodb://localhost:27017"
     # Name of the database to use
     MONGODB_DB: str = "altrium"
-
-    # legacy SQLite setting (ignored/not used)
-    DATABASE_URL: Optional[str] = None
     
     # JWT
     SECRET_KEY: str = "your-secret-key-change-in-production"

@@ -50,6 +50,14 @@ class UserCRUD:
             return None
         return user
 
+    @staticmethod
+    async def delete(user_id: UUID) -> bool:
+        user = await UserCRUD.get_by_id(user_id)
+        if user:
+            await user.delete()
+            return True
+        return False
+
 class CredentialCRUD:
     @staticmethod
     async def create(credential_create: CredentialCreate, issued_by_id: UUID) -> Credential:
