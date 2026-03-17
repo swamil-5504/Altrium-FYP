@@ -1,0 +1,28 @@
+# Foundry build artifacts
+out/
+cache/
+
+# Forge script outputs
+broadcast/
+
+# Local environment / secrets
+.env
+.env.*
+!.env.example
+
+# OS / editor noise
+.DS_Store
+.vscode/
+
+# Logs
+*.log
+
+# Optional: documentation build outputs (keep if you generate docs here)
+docs/
+lib/
+
+
+# IMPORTANT:
+# Do NOT ignore `lib/`, `foundry.lock`, or `.gitmodules`.
+# Foundry installs dependencies into `lib/` (often as git submodules), and those
+# should be committed for reproducible builds.
