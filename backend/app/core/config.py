@@ -1,15 +1,13 @@
 from pydantic_settings import BaseSettings
-from typing import Optional
+from typing import Optional   # 👈 ADD THIS
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Altrium - Degree Verification System"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
     
-    # Database configuration (MongoDB)
-    # URL to connect to MongoDB; could include credentials, e.g. mongodb://user:pass@localhost:27017
+    # MongoDB
     MONGODB_URL: str = "mongodb://localhost:27017"
-    # Name of the database to use
     MONGODB_DB: str = "altrium"
     
     # JWT
@@ -21,7 +19,7 @@ class Settings(BaseSettings):
     # CORS
     BACKEND_CORS_ORIGINS: list = ["*"]
     
-    # Redis (optional)
+    # Redis
     REDIS_URL: Optional[str] = None
     
     # Environment
@@ -30,5 +28,6 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "ignore"
 
 settings = Settings()
