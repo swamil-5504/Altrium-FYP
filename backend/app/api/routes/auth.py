@@ -1,10 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
 from app.schemas.schemas import LoginRequest, RegisterRequest, TokenResponse, UserResponse
 from app.crud.crud import UserCRUD
 from app.core.security import create_access_token, create_refresh_token, decode_token
 from app.core.config import settings
 
 router = APIRouter(prefix=f"{settings.API_V1_STR}/auth", tags=["auth"])
+
+class RefreshRequest(BaseModel):
+    refresh_token: str
 
 @router.post("/register", response_model=UserResponse)
 async def register(request: RegisterRequest):
@@ -37,8 +41,8 @@ async def login(request: LoginRequest):
     }
 
 @router.post("/refresh", response_model=TokenResponse)
-async def refresh(refresh_token: str):
-    payload = decode_token(refresh_token)
+async def refresh(request: RefreshRequest):
+    payload = decode_token(request.refresh_token)
     if not payload:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

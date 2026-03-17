@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
@@ -10,7 +10,19 @@ const Register: React.FC = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const { register, user } = useAuth();
+
+  // Redirect to role-based dashboard once user is set after register
+  useEffect(() => {
+    if (user) {
+      const roleRoutes: Record<string, string> = {
+        ADMIN: "/admin",
+        STUDENT: "/student",
+        EMPLOYER: "/employer",
+      };
+      navigate(roleRoutes[user.role] || "/");
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,7 +31,7 @@ const Register: React.FC = () => {
 
     try {
       await register(email, password, fullName, role);
-      navigate("/dashboard");
+      // redirect handled by the useEffect above once user state updates
     } catch (err: any) {
       setError(err.response?.data?.detail || "Registration failed");
     } finally {
@@ -69,6 +81,7 @@ const Register: React.FC = () => {
             >
               <option value="STUDENT">Student</option>
               <option value="EMPLOYER">Employer</option>
+              <option value="ADMIN">Admin</option>
             </select>
           </div>
 

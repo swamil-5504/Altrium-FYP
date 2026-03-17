@@ -2,7 +2,7 @@ FROM node:18-alpine AS build
 
 WORKDIR /app
 
-COPY package.json ./
+COPY package.json package-lock.json ./
 
 RUN npm install
 
@@ -14,10 +14,10 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-RUN npm install -g http-server
+RUN npm install -g serve
 
 COPY --from=build /app/dist ./dist
 
 EXPOSE 5173
 
-CMD ["http-server", "dist", "-p", "5173", "--cors"]
+CMD ["serve", "-s", "dist", "-l", "5173"]

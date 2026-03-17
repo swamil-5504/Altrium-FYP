@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
@@ -8,7 +8,19 @@ const Login: React.FC = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, user } = useAuth();
+
+  // Redirect to role-based dashboard once user is set after login
+  useEffect(() => {
+    if (user) {
+      const roleRoutes: Record<string, string> = {
+        ADMIN: "/admin",
+        STUDENT: "/student",
+        EMPLOYER: "/employer",
+      };
+      navigate(roleRoutes[user.role] || "/");
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,7 +29,7 @@ const Login: React.FC = () => {
 
     try {
       await login(email, password);
-      navigate("/dashboard");
+      // redirect handled by the useEffect above once user state updates
     } catch (err: any) {
       setError(err.response?.data?.detail || "Login failed");
     } finally {
@@ -66,11 +78,31 @@ const Login: React.FC = () => {
           >
             {loading ? "Logging in..." : "Login"}
           </button>
-        </form>
-
-        <div className="mt-6 text-center">
-          <p className="text-gray-600 mb-2">Demo credentials:</p>
-          <p className="text-sm text-gray-500">Admin: admin@example.com / admin123</p>
+        </form>        <div className="mt-8 pt-6 border-t border-gray-200">
+          <p className="text-sm text-center text-gray-500 mb-4">Demo Quick Login</p>
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => { setEmail("admin@altrium.com"); setPassword("admin123"); }}
+              className="w-full bg-purple-100 hover:bg-purple-200 text-purple-700 font-medium py-2 rounded-lg transition text-sm"
+            >
+              Fill Admin Credentials
+            </button>
+            <button
+              type="button"
+              onClick={() => { setEmail("student@altrium.com"); setPassword("student123"); }}
+              className="w-full bg-blue-100 hover:bg-blue-200 text-blue-700 font-medium py-2 rounded-lg transition text-sm"
+            >
+              Fill Student Credentials
+            </button>
+            <button
+              type="button"
+              onClick={() => { setEmail("employer@altrium.com"); setPassword("employer123"); }}
+              className="w-full bg-orange-100 hover:bg-orange-200 text-orange-700 font-medium py-2 rounded-lg transition text-sm"
+            >
+              Fill Employer Credentials
+            </button>
+          </div>
         </div>
 
         <div className="mt-4 text-center">

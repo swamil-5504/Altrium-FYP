@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status as http_status
 from typing import List
 from uuid import UUID
+from pydantic import BaseModel
 from app.schemas.schemas import CredentialCreate, CredentialResponse, CredentialStatus
 from app.models.models import User, UserRole
 from app.crud.crud import CredentialCRUD, UserCRUD
@@ -8,6 +9,9 @@ from app.api.deps import get_current_user, require_role
 from app.core.config import settings
 
 router = APIRouter(prefix=f"{settings.API_V1_STR}/credentials", tags=["credentials"])
+
+class StatusUpdate(BaseModel):
+    status: CredentialStatus
 
 @router.post("/", response_model=CredentialResponse)
 async def create_credential(
@@ -18,7 +22,7 @@ async def create_credential(
     student = await UserCRUD.get_by_id(credential_create.issued_to_id)
     if not student or student.role != UserRole.STUDENT:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=http_status.HTTP_404_NOT_FOUND,
             detail="Student not found"
         )
 
@@ -46,14 +50,14 @@ async def get_credential(
     credential = await CredentialCRUD.get_by_id(credential_id)
     if not credential:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=http_status.HTTP_404_NOT_FOUND,
             detail="Credential not found"
         )
 
     # Authorization check
     if current_user.role == UserRole.STUDENT and credential.issued_to_id != current_user.id:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=http_status.HTTP_403_FORBIDDEN,
             detail="Not authorized"
         )
 
@@ -62,13 +66,13 @@ async def get_credential(
 @router.patch("/{credential_id}/status", response_model=CredentialResponse)
 async def update_credential_status(
     credential_id: UUID,
-    status: CredentialStatus,
+    body: StatusUpdate,
     current_user: User = Depends(require_role(UserRole.ADMIN))
 ):
-    credential = await CredentialCRUD.update_status(credential_id, status)
+    credential = await CredentialCRUD.update_status(credential_id, body.status)
     if not credential:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=http_status.HTTP_404_NOT_FOUND,
             detail="Credential not found"
         )
     return credential
@@ -81,7 +85,7 @@ async def delete_credential(
     success = await CredentialCRUD.delete(credential_id)
     if not success:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=http_status.HTTP_404_NOT_FOUND,
             detail="Credential not found"
         )
     return {"detail": "Credential deleted"}

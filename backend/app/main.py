@@ -9,6 +9,8 @@ from app.models import models
 from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
 
+from app.api.routes import auth, users, credentials
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -43,6 +45,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Register API routers
+app.include_router(auth.router)
+app.include_router(users.router)
+app.include_router(credentials.router)
 
 @app.get("/")
 def root():
