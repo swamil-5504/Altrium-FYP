@@ -8,6 +8,10 @@ from app.db import session
 from app.models import models
 from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
+from app.crud.crud import UserCRUD
+from app.schemas.schemas import UserCreate
+from app.models.models import UserRole
+from app.api.routes import auth, users, credentials
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -22,6 +26,23 @@ async def lifespan(app: FastAPI):
     db = client[settings.MONGODB_DB]
     # initialize beanie with our document models
     await init_beanie(database=db, document_models=[models.User, models.Credential])
+
+    # Seed a single University Admin (Verifier) account for demo/dev
+    try:
+        existing = await UserCRUD.get_by_email(settings.SEED_ADMIN_EMAIL)
+        if not existing:
+            await UserCRUD.create(
+                UserCreate(
+                    email=settings.SEED_ADMIN_EMAIL,
+                    password=settings.SEED_ADMIN_PASSWORD,
+                    full_name=settings.SEED_ADMIN_FULL_NAME,
+                    role=UserRole.ADMIN,
+                )
+            )
+            logger.info("Seeded university admin user: %s", settings.SEED_ADMIN_EMAIL)
+    except Exception as e:
+        # Don't crash startup if seeding fails (e.g., transient DB issues)
+        logger.error("Admin seeding failed: %s", str(e))
     
     yield
     
@@ -34,6 +55,11 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
     lifespan=lifespan
 )
+
+# API routes
+app.include_router(auth.router)
+app.include_router(users.router)
+app.include_router(credentials.router)
 
 # Add CORS middleware
 app.add_middleware(

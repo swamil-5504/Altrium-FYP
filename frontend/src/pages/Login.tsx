@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import TopNav from "../components/TopNav";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -26,7 +27,9 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <TopNav title="Login" />
+      <div className="flex items-center justify-center p-6">
       <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
         <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">Altrium - Degree Verification</h1>
         
@@ -70,7 +73,7 @@ const Login: React.FC = () => {
 
         <div className="mt-6 text-center">
           <p className="text-gray-600 mb-2">Demo credentials:</p>
-          <p className="text-sm text-gray-500">Admin: admin@example.com / admin123</p>
+          <p className="text-sm text-gray-500">University Admin: admin@example.com / admin123</p>
         </div>
 
         <div className="mt-4 text-center">
@@ -81,6 +84,7 @@ const Login: React.FC = () => {
             </Link>
           </p>
         </div>
+      </div>
       </div>
     </div>
   );

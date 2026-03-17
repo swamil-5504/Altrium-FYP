@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "../api/axios";
 import { IUser } from "../context/AuthContext";
+import TopNav from "../components/TopNav";
 
 const AdminDashboard: React.FC = () => {
   const [users, setUsers] = useState<IUser[]>([]);
@@ -80,8 +81,9 @@ const AdminDashboard: React.FC = () => {
   const students = users.filter((u) => u.role === "STUDENT");
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <h1 className="text-4xl font-bold text-gray-800 mb-8">Admin Dashboard</h1>
+    <div className="min-h-screen bg-gray-50">
+      <TopNav title="University Admin Dashboard" />
+      <div className="p-8">
 
       {error && (
         <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
@@ -222,6 +224,7 @@ const AdminDashboard: React.FC = () => {
             </table>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

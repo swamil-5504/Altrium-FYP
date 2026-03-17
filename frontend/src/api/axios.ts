@@ -1,6 +1,10 @@
 import axios, { AxiosInstance } from "axios";
 
-const API_BASE_URL = "http://localhost:8000/api/v1";
+// Prefer Vite env override (works in Docker and locally).
+// - Docker compose sets VITE_API_URL=http://backend:8000
+// - Local dev can use VITE_API_URL=http://localhost:8000
+const API_HOST = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_BASE_URL = `${API_HOST}/api/v1`;
 
 const axiosInstance: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
