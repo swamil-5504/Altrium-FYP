@@ -24,6 +24,11 @@ class Settings(BaseSettings):
     
     # Environment
     ENVIRONMENT: str = "development"
+
+    # Demo / initial university admin seed (single-university scope)
+    SEED_ADMIN_EMAIL: str = "admin@example.com"
+    SEED_ADMIN_PASSWORD: str = "admin123"
+    SEED_ADMIN_FULL_NAME: str = "University Admin"
     
     class Config:
         env_file = ".env"

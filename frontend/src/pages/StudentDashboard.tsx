@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "../api/axios";
+import TopNav from "../components/TopNav";
 
 const StudentDashboard: React.FC = () => {
   const [credentials, setCredentials] = useState<any[]>([]);
@@ -21,7 +22,9 @@ const StudentDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gray-50">
+      <TopNav title="Student Dashboard" />
+      <div className="p-8">
       <h1 className="text-4xl font-bold text-gray-800 mb-8">My Credentials</h1>
 
       {loading ? (
@@ -59,6 +62,7 @@ const StudentDashboard: React.FC = () => {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 };

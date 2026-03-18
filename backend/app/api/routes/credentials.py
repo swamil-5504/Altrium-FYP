@@ -34,8 +34,9 @@ async def get_credentials(
     elif current_user.role == UserRole.STUDENT:
         return await CredentialCRUD.get_by_user(current_user.id)
     elif current_user.role == UserRole.EMPLOYER:
-        # Employers can see all credentials (read-only)
-        return await CredentialCRUD.get_all()
+        # Employers should only see credentials that are verified/approved
+        credentials = await CredentialCRUD.get_all()
+        return [c for c in credentials if c.status == CredentialStatus.APPROVED]
     return []
 
 @router.get("/{credential_id}", response_model=CredentialResponse)
@@ -52,6 +53,11 @@ async def get_credential(
 
     # Authorization check
     if current_user.role == UserRole.STUDENT and credential.issued_to_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized"
+        )
+    if current_user.role == UserRole.EMPLOYER and credential.status != CredentialStatus.APPROVED:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized"

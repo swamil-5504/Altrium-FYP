@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "../api/axios";
+import TopNav from "../components/TopNav";
 
 const EmployerDashboard: React.FC = () => {
   const [credentials, setCredentials] = useState<any[]>([]);
@@ -34,8 +35,10 @@ const EmployerDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <h1 className="text-4xl font-bold text-gray-800 mb-8">Credentials Directory (Read-Only)</h1>
+    <div className="min-h-screen bg-gray-50">
+      <TopNav title="Employer Dashboard" />
+      <div className="p-8">
+      <h1 className="text-4xl font-bold text-gray-800 mb-8">Verified Credentials</h1>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
@@ -60,7 +63,7 @@ const EmployerDashboard: React.FC = () => {
       {/* Filter */}
       <div className="mb-6">
         <div className="flex gap-2">
-          {["ALL", "APPROVED", "PENDING", "REJECTED"].map((status) => (
+          {["ALL", "APPROVED"].map((status) => (
             <button
               key={status}
               onClick={() => setFilter(status)}
@@ -121,6 +124,7 @@ const EmployerDashboard: React.FC = () => {
           </table>
         </div>
       )}
+      </div>
     </div>
   );
 };
