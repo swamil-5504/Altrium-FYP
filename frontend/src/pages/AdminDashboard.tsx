@@ -80,6 +80,21 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (!window.confirm(`Are you sure you want to delete user "${userName}"? This action cannot be undone.`)) {
+      return;
+    }
+    setError("");
+    setSuccess("");
+    try {
+      await axios.delete(`/users/${userId}`);
+      setSuccess(`User "${userName}" deleted successfully!`);
+      fetchUsers();
+    } catch (err: any) {
+      setError(err.response?.data?.detail || "Failed to delete user");
+    }
+  };
+
   const handleLogout = () => {
     logout();
     navigate("/login");
@@ -242,17 +257,27 @@ const AdminDashboard: React.FC = () => {
                         <p className="font-medium text-gray-800">{u.full_name || u.email}</p>
                         <p className="text-sm text-gray-500">{u.email}</p>
                       </div>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          u.role === "ADMIN"
-                            ? "bg-purple-100 text-purple-800"
-                            : u.role === "STUDENT"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-orange-100 text-orange-800"
-                        }`}
-                      >
-                        {u.role}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                            u.role === "ADMIN"
+                              ? "bg-purple-100 text-purple-800"
+                              : u.role === "STUDENT"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-orange-100 text-orange-800"
+                          }`}
+                        >
+                          {u.role}
+                        </span>
+                        {(u.role === "STUDENT" || u.role === "EMPLOYER") && (
+                          <button
+                            onClick={() => handleDeleteUser(u.id, u.full_name || u.email)}
+                            className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs font-medium transition"
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>

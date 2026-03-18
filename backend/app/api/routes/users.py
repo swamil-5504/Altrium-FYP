@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends
+from uuid import UUID
+from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
 from app.schemas.schemas import UserResponse
 from app.models.models import User, UserRole
@@ -17,3 +18,22 @@ async def get_all_users(
     current_user: User = Depends(require_role(UserRole.ADMIN))
 ):
     return await UserCRUD.get_all()
+
+@router.delete("/{user_id}")
+async def delete_user(
+    user_id: UUID,
+    current_user: User = Depends(require_role(UserRole.ADMIN))
+):
+    user = await UserCRUD.get_by_id(user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    if user.role == UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot delete admin users"
+        )
+    await UserCRUD.delete(user_id)
+    return {"detail": "User deleted successfully"}
