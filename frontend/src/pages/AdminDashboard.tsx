@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from "react";
 import axios from "../api/axios";
 import { IUser } from "../context/AuthContext";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
+import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
+import { Label } from "../components/ui/Label";
+import { Select } from "../components/ui/Select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/Table";
+import { Badge } from "../components/ui/Badge";
+import { Alert } from "../components/ui/Alert";
+import { Textarea } from "../components/ui/Textarea";
+import { Skeleton } from "../components/ui/Skeleton";
 
 const AdminDashboard: React.FC = () => {
   const [users, setUsers] = useState<IUser[]>([]);
@@ -79,150 +89,165 @@ const AdminDashboard: React.FC = () => {
 
   const students = users.filter((u) => u.role === "STUDENT");
 
+  if (loadingUsers || loadingCredentials) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Skeleton className="h-96" />
+          <Skeleton className="h-96" />
+        </div>
+        <Skeleton className="h-[400px] w-full" />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <h1 className="text-4xl font-bold text-gray-800 mb-8">Admin Dashboard</h1>
-
-      {error && (
-        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-          {error}
+    <div className="space-y-6">
+{(error || success) && (
+        <div className={`p-4 rounded-lg border ${error ? 'border-destructive bg-destructive/5 text-destructive' : 'border-success bg-success/5 text-success'}`}>
+          {error || success}
         </div>
       )}
 
-      {success && (
-        <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
-          {success}
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Create Credential Form */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-2xl font-bold mb-4 text-gray-800">Create Credential</h2>
-          <form onSubmit={handleCreateCredential} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-              <input
-                type="text"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Create Credential</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleCreateCredential} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="title">Title</Label>
+                <Input
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  required
+                  placeholder="Degree in Computer Science"
+                />
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Course details, GPA, etc."
+                />
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Assign to Student</label>
-              <select
-                value={formData.issued_to_id}
-                onChange={(e) => setFormData({ ...formData, issued_to_id: e.target.value })}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select a student</option>
-                {students.map((student) => (
-                  <option key={student.id} value={student.id}>
-                    {student.full_name} ({student.email})
-                  </option>
-                ))}
-              </select>
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="student">Assign to Student</Label>
+                <Select
+                  id="student"
+                  value={formData.issued_to_id}
+                  onChange={(e) => setFormData({ ...formData, issued_to_id: e.target.value })}
+                  required
+                >
+                  <option value="">Select a student</option>
+                  {students.map((student) => (
+                    <option key={student.id} value={student.id}>
+                      {student.full_name} ({student.email})
+                    </option>
+                  ))}
+                </Select>
+              </div>
 
-            <button
-              type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition"
-            >
-              Create Credential
-            </button>
-          </form>
-        </div>
+              <Button type="submit" className="w-full">
+                Create Credential
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
 
         {/* Users List */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-2xl font-bold mb-4 text-gray-800">Users ({users.length})</h2>
-          {loadingUsers ? (
-            <p className="text-gray-500">Loading...</p>
-          ) : (
-            <div className="space-y-2">
-              {users.map((user) => (
-                <div key={user.id} className="p-3 bg-gray-50 rounded border border-gray-200">
-                  <p className="font-medium text-gray-800">{user.full_name || user.email}</p>
-                  <p className="text-sm text-gray-500">{user.role} • {user.email}</p>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Users ({users.length})</CardTitle>
+            <Button variant="outline" size="sm" onClick={fetchUsers}>
+              Refresh
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {users.map((user) => (
+              <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div>
+                  <p className="font-medium text-gray-900">{user.full_name || user.email}</p>
+                  <p className="text-sm text-muted-foreground">{user.email}</p>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+                <Badge variant={user.role === 'ADMIN' ? 'secondary' : 'default'}>
+                  {user.role}
+                </Badge>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Credentials List */}
-      <div className="mt-8 bg-white rounded-lg shadow p-6">
-        <h2 className="text-2xl font-bold mb-4 text-gray-800">All Credentials</h2>
-        {loadingCredentials ? (
-          <p className="text-gray-500">Loading...</p>
-        ) : credentials.length === 0 ? (
-          <p className="text-gray-500">No credentials created yet</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 font-medium text-gray-700">Title</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {credentials.map((cred) => (
-                  <tr key={cred.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-3 px-4 text-gray-800">{cred.title}</td>
-                    <td className="py-3 px-4">
-                      <span
-                        className={`px-2 py-1 rounded text-sm font-medium ${
-                          cred.status === "APPROVED"
-                            ? "bg-green-100 text-green-800"
-                            : cred.status === "REJECTED"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}
-                      >
-                        {cred.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      {cred.status === "PENDING" && (
-                        <>
-                          <button
-                            onClick={() => handleApproveCredential(cred.id)}
-                            className="mr-2 px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => handleRejectCredential(cred.id)}
-                            className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
-                          >
-                            Reject
-                          </button>
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      {/* Credentials Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>All Credentials ({credentials.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {credentials.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground text-lg">No credentials created yet</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {credentials.map((cred) => (
+                    <TableRow key={cred.id}>
+                      <TableCell className="font-medium">{cred.title}</TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant={
+                            cred.status === "APPROVED" ? "default" :
+                            cred.status === "REJECTED" ? "destructive" : "secondary"
+                          }
+                        >
+                          {cred.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {cred.status === "PENDING" && (
+                          <div className="flex gap-2 justify-end">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleApproveCredential(cred.id)}
+                            >
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleRejectCredential(cred.id)}
+                            >
+                              Reject
+                            </Button>
+                          </div>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

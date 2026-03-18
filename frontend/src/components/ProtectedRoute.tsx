@@ -9,6 +9,6 @@ export const ProtectedRoute: React.FC<Props> = ({ children, requiredRole }) => {
 
   if (isLoading) return <div>Loading...</div>;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (requiredRole && user?.role !== requiredRole) return <Navigate to="/dashboard" replace />;
+  if (requiredRole && user?.role !== requiredRole) return <Navigate to="/" replace />;
   return children;
 };

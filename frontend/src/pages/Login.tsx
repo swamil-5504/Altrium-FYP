@@ -1,6 +1,11 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { Card, CardContent } from "../components/ui/Card";
+import { Input } from "../components/ui/Input";
+import { Label } from "../components/ui/Label";
+import { Button } from "../components/ui/Button";
+import { Alert } from "../components/ui/Alert";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -17,7 +22,7 @@ const Login: React.FC = () => {
 
     try {
       await login(email, password);
-      navigate("/dashboard");
+      // Navigate handled by AuthLayout
     } catch (err: any) {
       setError(err.response?.data?.detail || "Login failed");
     } finally {
@@ -26,63 +31,71 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">Altrium - Degree Verification</h1>
-        
+    <Card className="w-full max-w-md mx-auto">
+      <CardContent className="p-8 space-y-6">
+        <div className="space-y-2 text-center">
+          <h2 className="text-3xl font-bold tracking-tight">Sign in to Altrium</h2>
+          <p className="text-sm text-muted-foreground">
+            Enter your credentials to access the platform
+          </p>
+        </div>
+
         {error && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+          <Alert variant="destructive" className="mb-6">
             {error}
-          </div>
+          </Alert>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="admin@example.com"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-            <input
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="your password"
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition disabled:bg-gray-400"
-          >
-            {loading ? "Logging in..." : "Login"}
-          </button>
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "Signing in..." : "Sign in"}
+          </Button>
         </form>
 
-        <div className="mt-6 text-center">
-          <p className="text-gray-600 mb-2">Demo credentials:</p>
-          <p className="text-sm text-gray-500">Admin: admin@example.com / admin123</p>
+        <div className="text-center text-sm text-muted-foreground py-4">
+          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+            <p className="font-medium text-amber-800 mb-1">Demo Credentials:</p>
+            <p className="text-sm">Admin: admin@example.com / admin123</p>
+          </div>
         </div>
 
-        <div className="mt-4 text-center">
-          <p className="text-gray-600">
-            Don't have an account?{" "}
-            <Link to="/register" className="text-blue-600 hover:underline">
-              Register here
-            </Link>
-          </p>
+        <div className="text-center text-sm">
+          <span className="text-muted-foreground">
+            Don't have an account?{' '}
+          </span>
+          <Link 
+            to="/register" 
+            className="font-medium text-primary hover:underline underline-offset-4"
+          >
+            Create account
+          </Link>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
