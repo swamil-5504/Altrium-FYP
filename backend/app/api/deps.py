@@ -45,5 +45,17 @@ def require_role(*roles: UserRole):
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not enough permissions"
             )
+
+        # Scaffolding: only legally verified admins can approve + mint.
+        # This blocks random accounts that manage to get an ADMIN role.
+        if (
+            current_user.role == UserRole.ADMIN
+            and UserRole.ADMIN in roles
+            and not getattr(current_user, "is_legal_admin_verified", False)
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Admin is not legally verified",
+            )
         return current_user
     return check_role

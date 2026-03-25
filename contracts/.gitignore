@@ -1,7 +1,7 @@
 # Foundry build artifacts
 out/
 cache/
-
+lib/
 # Forge script outputs
 broadcast/
 
@@ -19,8 +19,6 @@ broadcast/
 
 # Optional: documentation build outputs (keep if you generate docs here)
 docs/
-lib/
-
 
 # IMPORTANT:
 # Do NOT ignore `lib/`, `foundry.lock`, or `.gitmodules`.

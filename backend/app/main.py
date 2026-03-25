@@ -31,7 +31,7 @@ async def lifespan(app: FastAPI):
     try:
         existing = await UserCRUD.get_by_email(settings.SEED_ADMIN_EMAIL)
         if not existing:
-            await UserCRUD.create(
+            seeded_user = await UserCRUD.create(
                 UserCreate(
                     email=settings.SEED_ADMIN_EMAIL,
                     password=settings.SEED_ADMIN_PASSWORD,
@@ -39,6 +39,9 @@ async def lifespan(app: FastAPI):
                     role=UserRole.ADMIN,
                 )
             )
+            # Demo scope: seeded admin is treated as already legally verified.
+            seeded_user.is_legal_admin_verified = True
+            await seeded_user.save()
             logger.info("Seeded university admin user: %s", settings.SEED_ADMIN_EMAIL)
     except Exception as e:
         # Don't crash startup if seeding fails (e.g., transient DB issues)

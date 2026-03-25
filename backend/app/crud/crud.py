@@ -60,13 +60,20 @@ class UserCRUD:
 
 class CredentialCRUD:
     @staticmethod
-    async def create(credential_create: CredentialCreate, issued_by_id: UUID) -> Credential:
+    async def create(
+        credential_create: CredentialCreate,
+        issued_to_id: UUID,
+        issued_by_id: UUID,
+    ) -> Credential:
         credential = Credential(
             title=credential_create.title,
             description=credential_create.description,
-            issued_to_id=credential_create.issued_to_id,
+            issued_to_id=issued_to_id,
             issued_by_id=issued_by_id,
             metadata_json=credential_create.metadata_json,
+            token_id=credential_create.token_id,
+            tx_hash=credential_create.tx_hash,
+            prn_number=credential_create.prn_number
         )
         await credential.insert()
         return credential
@@ -92,6 +99,27 @@ class CredentialCRUD:
         credential.updated_at = datetime.utcnow()
         await credential.save()
         return credential
+
+    @staticmethod
+    async def update(credential_id: UUID, credential_update: CredentialUpdate) -> Optional[Credential]:
+        credential = await CredentialCRUD.get_by_id(credential_id)
+        if not credential:
+            return None
+
+        update_data = credential_update.dict(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(credential, field, value)
+
+        credential.updated_at = datetime.utcnow()
+        await credential.save()
+        return credential
+
+    @staticmethod
+    async def get_approved_by_prn(prn_number: str) -> List[Credential]:
+        return await Credential.find(
+            (Credential.prn_number == prn_number)
+            & (Credential.status == CredentialStatus.APPROVED)
+        ).to_list()
 
     @staticmethod
     async def delete(credential_id: UUID) -> bool:
