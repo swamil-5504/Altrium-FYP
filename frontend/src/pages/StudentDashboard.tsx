@@ -44,7 +44,7 @@ const StudentDashboard: React.FC = () => {
   const fetchSubmissions = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("/credentials");
+      const response = await axios.get("/degrees");
       setSubmissions(response.data);
     } catch (err) {
       console.error(err);
@@ -77,7 +77,7 @@ const StudentDashboard: React.FC = () => {
         credits: formData.credits,
       };
 
-      await axios.post("/credentials", {
+      await axios.post("/degrees", {
         title: formData.title,
         description: formData.description || null,
         prn_number: formData.prn_number,

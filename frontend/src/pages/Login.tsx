@@ -1,11 +1,13 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { ArrowLeft, KeyRound, Mail, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import axios from "@/api/axios";
 
 export default function Login() {
+  const [searchParams] = useSearchParams();
+  const isAdminLogin = searchParams.get("role") === "ADMIN";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,11 +23,10 @@ export default function Login() {
       toast.success("Successfully logged in!");
 
       const me = await axios.get("/users/me");
-      const role = me.data.role as "ADMIN" | "STUDENT" | "EMPLOYER";
+      const role = me.data.role as "ADMIN" | "STUDENT";
 
       if (role === "ADMIN") navigate("/university");
-      else if (role === "STUDENT") navigate("/student");
-      else navigate("/verify");
+      else navigate("/student");
     } catch (err: unknown) {
       const detail =
         typeof err === "object" && err && "response" in err
@@ -58,7 +59,7 @@ export default function Login() {
           <KeyRound className="w-6 h-6 text-accent" />
         </div>
 
-        <h2 className="text-2xl font-bold mb-2">Welcome Back</h2>
+        <h2 className="text-2xl font-bold mb-2">{isAdminLogin ? "Admin Login" : "Student Login"}</h2>
         <p className="text-muted-foreground text-sm mb-6">Sign in to access your portal.</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -109,7 +110,7 @@ export default function Login() {
 
         <div className="mt-6 text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{" "}
-          <Link to="/register" className="text-accent font-medium hover:underline">
+          <Link to={isAdminLogin ? "/register?role=ADMIN" : "/register"} className="text-accent font-medium hover:underline">
             Register here
           </Link>
         </div>

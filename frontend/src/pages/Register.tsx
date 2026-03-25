@@ -1,14 +1,16 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { ArrowLeft, UserPlus, Mail, KeyRound, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 
 export default function Register() {
+  const [searchParams] = useSearchParams();
+  const roleFromQuery = searchParams.get("role") === "ADMIN" ? "ADMIN" : "STUDENT";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [role, setRole] = useState<"STUDENT" | "EMPLOYER" | "ADMIN">("STUDENT");
+  const [role, setRole] = useState<"STUDENT" | "ADMIN">(roleFromQuery);
   const [loading, setLoading] = useState(false);
 
   const { register } = useAuth();
@@ -22,8 +24,7 @@ export default function Register() {
       toast.success("Account created!");
 
       if (role === "ADMIN") navigate("/university");
-      else if (role === "STUDENT") navigate("/student");
-      else navigate("/verify");
+      else navigate("/student");
     } catch (err: unknown) {
       const detail =
         typeof err === "object" && err && "response" in err
@@ -56,7 +57,7 @@ export default function Register() {
           <UserPlus className="w-6 h-6 text-accent" />
         </div>
 
-        <h2 className="text-2xl font-bold mb-2">Create Account</h2>
+        <h2 className="text-2xl font-bold mb-2">{role === "ADMIN" ? "Create Admin Account" : "Create Student Account"}</h2>
         <p className="text-muted-foreground text-sm mb-6">Register your role within the network.</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -70,7 +71,6 @@ export default function Register() {
                 onChange={(e) => setRole(e.target.value as typeof role)}
               >
                 <option value="STUDENT">STUDENT</option>
-                <option value="EMPLOYER">EMPLOYER</option>
                 <option value="ADMIN">ADMIN</option>
               </select>
             </div>

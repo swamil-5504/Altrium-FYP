@@ -108,7 +108,7 @@ const UniversityAdmin: React.FC = () => {
   const fetchCredentials = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("/credentials");
+      const response = await axios.get("/degrees");
       setCredentials(response.data);
     } catch (err) {
       console.error(err);
@@ -141,7 +141,7 @@ const UniversityAdmin: React.FC = () => {
 
   const handleReject = async (credentialId: string) => {
     try {
-      await axios.patch(`/credentials/${credentialId}`, { status: "REJECTED" });
+      await axios.patch(`/degrees/${credentialId}`, { status: "REJECTED" });
       toast.success("Submission rejected.");
       await fetchCredentials();
     } catch (err) {
@@ -236,7 +236,7 @@ const UniversityAdmin: React.FC = () => {
       }
 
       // Persist to backend: status=APPROVED, tx_hash=receipt.transactionHash, token_id=tokenId
-      await axios.patch(`/credentials/${credential.id}`, {
+      await axios.patch(`/degrees/${credential.id}`, {
         status: "APPROVED",
         tx_hash: receipt.transactionHash,
         token_id: Number(tokenId),

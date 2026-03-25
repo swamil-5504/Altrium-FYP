@@ -5,7 +5,7 @@ export interface IUser {
   id: string;
   email: string;
   full_name: string | null;
-  role: "ADMIN" | "STUDENT" | "EMPLOYER";
+  role: "ADMIN" | "STUDENT";
   is_active: boolean;
   created_at: string;
 }
@@ -15,8 +15,8 @@ interface IAuthContext {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, fullName: string, role: string) => Promise<void>;
-  logout: () => void;
+  register: (email: string, password: string, fullName: string, role: "ADMIN" | "STUDENT") => Promise<void>;
+  logout: () => Promise<void>;
   refresh: () => Promise<void>;
 }
 
@@ -54,27 +54,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser(userResponse.data);
   };
 
-  const register = async (email: string, password: string, fullName: string, role: string) => {
+  const register = async (email: string, password: string, fullName: string, role: "ADMIN" | "STUDENT") => {
     await axios.post("/auth/register", { email, password, full_name: fullName, role });
     await login(email, password);
   };
 
-  const logout = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    setUser(null);
+  const logout = async () => {
+    try {
+      await axios.post("/auth/logout");
+    } catch {
+      // Best-effort: backend logout is optional for stateless JWT.
+    } finally {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      setUser(null);
+    }
   };
 
   const refresh = async () => {
     const refreshToken = localStorage.getItem("refresh_token");
     if (!refreshToken) return;
 
-    // backend expects refresh_token as a query param
-    const response = await axios.post(
-      "/auth/refresh",
-      null,
-      { params: { refresh_token: refreshToken } },
-    );
+    const response = await axios.post("/auth/refresh", { refresh_token: refreshToken });
     localStorage.setItem("access_token", response.data.access_token);
     localStorage.setItem("refresh_token", response.data.refresh_token);
   };

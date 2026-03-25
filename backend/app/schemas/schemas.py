@@ -7,7 +7,6 @@ from enum import Enum
 class UserRole(str, Enum):
     ADMIN = "ADMIN"
     STUDENT = "STUDENT"
-    EMPLOYER = "EMPLOYER"
 
 class CredentialStatus(str, Enum):
     PENDING = "PENDING"
@@ -75,10 +74,15 @@ class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
+    expires_in: int
+    refresh_expires_in: int
 
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
 
 class RegisterRequest(UserCreate):
     pass

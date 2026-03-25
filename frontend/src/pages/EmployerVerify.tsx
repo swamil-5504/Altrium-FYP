@@ -44,7 +44,7 @@ const EmployerVerify: React.FC = () => {
     setSearched(true);
     setLoading(true);
     try {
-      const response = await axios.get("/credentials/public", {
+      const response = await axios.get("/degrees/public", {
         params: { prn_number: trimmed },
       });
 

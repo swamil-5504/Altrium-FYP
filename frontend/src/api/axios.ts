@@ -39,9 +39,8 @@ axiosInstance.interceptors.response.use(
       const refreshToken = localStorage.getItem("refresh_token");
       if (refreshToken) {
         try {
-          // backend expects refresh_token as a query param (scalar param without Body annotation)
-          const refreshResponse = await axios.post(`${API_BASE_URL}/auth/refresh`, null, {
-            params: { refresh_token: refreshToken },
+          const refreshResponse = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+            refresh_token: refreshToken,
           });
 
           localStorage.setItem("access_token", refreshResponse.data.access_token);

@@ -10,7 +10,6 @@ from pydantic import Field, EmailStr
 class UserRole(str, PyEnum):
     ADMIN = "ADMIN"
     STUDENT = "STUDENT"
-    EMPLOYER = "EMPLOYER"
 
 class CredentialStatus(str, PyEnum):
     PENDING = "PENDING"
