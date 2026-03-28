@@ -4,6 +4,8 @@ from contextlib import asynccontextmanager
 import logging
 
 from app.core.config import settings
+from app.core.errors import register_exception_handlers
+from app.core.logging import configure_logging
 from app.db import session
 from app.models import models
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -11,9 +13,9 @@ from beanie import init_beanie
 from app.crud.crud import UserCRUD
 from app.schemas.schemas import UserCreate
 from app.models.models import UserRole
-from app.api.routes import auth, users, credentials
+from app.api.routes import auth, users, credentials, degrees
 
-logging.basicConfig(level=logging.INFO)
+configure_logging()
 logger = logging.getLogger(__name__)
 
 @asynccontextmanager
@@ -31,7 +33,7 @@ async def lifespan(app: FastAPI):
     try:
         existing = await UserCRUD.get_by_email(settings.SEED_ADMIN_EMAIL)
         if not existing:
-            await UserCRUD.create(
+            seeded_user = await UserCRUD.create(
                 UserCreate(
                     email=settings.SEED_ADMIN_EMAIL,
                     password=settings.SEED_ADMIN_PASSWORD,
@@ -39,6 +41,9 @@ async def lifespan(app: FastAPI):
                     role=UserRole.ADMIN,
                 )
             )
+            # Demo scope: seeded admin is treated as already legally verified.
+            seeded_user.is_legal_admin_verified = True
+            await seeded_user.save()
             logger.info("Seeded university admin user: %s", settings.SEED_ADMIN_EMAIL)
     except Exception as e:
         # Don't crash startup if seeding fails (e.g., transient DB issues)
@@ -60,6 +65,8 @@ app = FastAPI(
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(credentials.router)
+app.include_router(degrees.router)
+register_exception_handlers(app)
 
 # Add CORS middleware
 app.add_middleware(
@@ -143,7 +150,7 @@ async def test_crud_operations(test_email: str = "test@example.com"):
         
         # UPDATE
         from app.schemas.schemas import UserUpdate
-        user_update = UserUpdate(role="EMPLOYER")
+        user_update = UserUpdate(role="STUDENT")
         updated = await UserCRUD.update(test_user.id, user_update)
         test_result["update"] = {
             "success": updated is not None,

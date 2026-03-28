@@ -25,6 +25,11 @@ class Settings(BaseSettings):
     # Environment
     ENVIRONMENT: str = "development"
 
+    # Web3 Integration
+    WEB3_PROVIDER_URI: str = "https://rpc.sepolia.org"
+    CONTRACT_SBT_ADDRESS: str = ""
+    CONTRACT_REGISTRY_ADDRESS: str = ""
+
     # Demo / initial university admin seed (single-university scope)
     SEED_ADMIN_EMAIL: str = "admin@example.com"
     SEED_ADMIN_PASSWORD: str = "admin123"

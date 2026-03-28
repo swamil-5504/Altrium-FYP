@@ -3,7 +3,7 @@ from typing import List
 from app.schemas.schemas import UserResponse
 from app.models.models import User, UserRole
 from app.crud.crud import UserCRUD
-from app.api.deps import get_current_user, require_role
+from app.api.deps.auth import get_current_user, require_role
 from app.core.config import settings
 
 router = APIRouter(prefix=f"{settings.API_V1_STR}/users", tags=["users"])

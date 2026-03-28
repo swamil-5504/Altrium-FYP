@@ -7,7 +7,6 @@ from enum import Enum
 class UserRole(str, Enum):
     ADMIN = "ADMIN"
     STUDENT = "STUDENT"
-    EMPLOYER = "EMPLOYER"
 
 class CredentialStatus(str, Enum):
     PENDING = "PENDING"
@@ -42,19 +41,28 @@ class CredentialBase(BaseModel):
     metadata_json: Optional[dict] = None
 
 class CredentialCreate(CredentialBase):
-    issued_to_id: UUID
+    # Optional so STUDENT submissions can omit it; backend will attach it to the logged-in student.
+    issued_to_id: Optional[UUID] = None
+    token_id: Optional[int] = None
+    tx_hash: Optional[str] = None
+    prn_number: str
 
 class CredentialUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     status: Optional[CredentialStatus] = None
     metadata_json: Optional[dict] = None
+    token_id: Optional[int] = None
+    tx_hash: Optional[str] = None
 
 class CredentialResponse(CredentialBase):
     id: UUID
     issued_to_id: UUID
     issued_by_id: UUID
     status: CredentialStatus
+    token_id: Optional[int] = None
+    tx_hash: Optional[str] = None
+    prn_number: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 
@@ -66,10 +74,15 @@ class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
+    expires_in: int
+    refresh_expires_in: int
 
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
 
 class RegisterRequest(UserCreate):
     pass

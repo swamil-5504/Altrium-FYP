@@ -10,7 +10,6 @@ from pydantic import Field, EmailStr
 class UserRole(str, PyEnum):
     ADMIN = "ADMIN"
     STUDENT = "STUDENT"
-    EMPLOYER = "EMPLOYER"
 
 class CredentialStatus(str, PyEnum):
     PENDING = "PENDING"
@@ -23,7 +22,11 @@ class User(Document):
     full_name: Optional[str] = None
     hashed_password: str
     role: UserRole = UserRole.STUDENT
+    prn_number: Optional[str] = None
     is_active: bool = True
+    # Demo/demo-scope: only admins that are "legally verified" are allowed
+    # to approve + mint credentials.
+    is_legal_admin_verified: bool = False
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -38,6 +41,9 @@ class Credential(Document):
     issued_by_id: UUID
     status: CredentialStatus = CredentialStatus.PENDING
     metadata_json: Optional[dict] = None
+    token_id: Optional[int] = None
+    tx_hash: Optional[str] = None
+    prn_number: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 

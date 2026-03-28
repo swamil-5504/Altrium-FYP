@@ -11,7 +11,8 @@ passlib[bcrypt]==1.7.4
 bcrypt==3.2.2
 python-multipart==0.0.6
 python-dotenv==1.0.0
-email-validator==2.1.0
+email-validator==2.3.0
 # testing
 pytest>=7.0
 pytest-asyncio>=0.21
+web3>=6.11.1

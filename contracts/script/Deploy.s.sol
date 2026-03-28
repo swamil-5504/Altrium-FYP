@@ -3,7 +3,6 @@ pragma solidity ^0.8.20;
 
 import "../lib/forge-std/src/Script.sol";
 import "../src/AltriumRegistry.sol";
-import "../src/EmployerAccessManager.sol";
 import "../src/AltriumDegreeSBT.sol";
 
 contract Deploy is Script {
@@ -17,13 +16,8 @@ contract Deploy is Script {
         // 1. Deploy Degree SBT (custodied + soulbound)
         AltriumDegreeSBT degree = new AltriumDegreeSBT(deployer, deployer);
         console.log("AltriumDegreeSBT deployed at:", address(degree));
-
-        // 2. Deploy Employer access manager (request/approve)
-        EmployerAccessManager accessManager = new EmployerAccessManager(deployer);
-        console.log("EmployerAccessManager deployed at:", address(accessManager));
-
         // 3. Deploy Registry (RBAC + orchestration)
-        AltriumRegistry registry = new AltriumRegistry(deployer, address(degree), address(accessManager));
+        AltriumRegistry registry = new AltriumRegistry(deployer, address(degree));
         console.log("AltriumRegistry deployed at:", address(registry));
 
         // 4. Allow registry to mint degrees

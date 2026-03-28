@@ -61,6 +61,10 @@ frontend/yarn-debug.log*
 frontend/yarn-error.log*
 frontend/.DS_Store
 frontend/coverage/
+frontend/bun.lock
+frontend/bun.lockb
+frontend/playwright-report/
+frontend/.playwright/
 
 # IDE
 .vscode/
@@ -197,5 +201,62 @@ dmypy.json
 # Pyre type checker
 .pyre/
 /lib/
-/contracts/lib/
+/contracts/lib/  # managed by contracts/.gitignore; do not globally ignore Foundry libs
+!/contracts/lib/
+
 /contracts/out/ 
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Env files / secrets
+.env
+.env.*
+!.env.example
+
+# Bun lockfiles (if you run with bun)
+bun.lock
+bun.lockb
+
+# Test output
+coverage/
+.playwright/
+playwright-report/
+
+# Tool caches
+.eslintcache
+.vite
+.turbo
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# Foundry build artifacts
+out/
+cache/
+
+# Forge script outputs
+broadcast/
+
+# Generated caches / build artifacts (do not commit)
+/contracts/cache/solidity-files-cache.json
+/backend/package-lock.json
+/backend/app/core/AltriumDegreeSBTABI.json
