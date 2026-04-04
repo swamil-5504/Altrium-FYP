@@ -21,6 +21,7 @@ services:
       - MONGODB_DB=altrium
     volumes:
       - ./backend:/app
+      - uploads:/app/uploads
 
   frontend:
     build:
@@ -38,4 +39,5 @@ services:
 
 volumes:
   mongo_data:
+  uploads:
 

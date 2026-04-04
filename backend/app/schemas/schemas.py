@@ -63,6 +63,7 @@ class CredentialResponse(CredentialBase):
     token_id: Optional[int] = None
     tx_hash: Optional[str] = None
     prn_number: Optional[str] = None
+    has_document: bool = False
     created_at: datetime
     updated_at: datetime
 
