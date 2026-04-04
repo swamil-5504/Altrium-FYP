@@ -50,11 +50,10 @@ export const Navbar = () => {
       <Link
         key={link.key}
         to={link.to}
-        className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${
-          isActive
+        className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${isActive
             ? "bg-primary text-primary-foreground"
             : "text-muted-foreground hover:text-foreground hover:bg-muted"
-        }`}
+          }`}
       >
         {link.label}
       </Link>
@@ -74,7 +73,7 @@ export const Navbar = () => {
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
             <Shield className="w-4 h-4 text-primary-foreground" />
           </div>
-          <span className="font-semibold text-lg tracking-tight">DegreeVault</span>
+          <span className="font-semibold text-lg tracking-tight">Altrium</span>
         </Link>
 
         {/* Desktop */}
@@ -96,31 +95,28 @@ export const Navbar = () => {
               <>
                 <Link
                   to="/login?role=STUDENT"
-                  className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    location.pathname === "/login" && !location.search.includes("role=ADMIN")
+                  className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${location.pathname === "/login" && !location.search.includes("role=ADMIN")
                       ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`}
+                    }`}
                 >
                   Student Login
                 </Link>
                 <Link
                   to="/login?role=ADMIN"
-                  className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    location.pathname === "/login" && location.search.includes("role=ADMIN")
+                  className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${location.pathname === "/login" && location.search.includes("role=ADMIN")
                       ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`}
+                    }`}
                 >
                   Admin Login
                 </Link>
                 <Link
                   to="/register?role=ADMIN"
-                  className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    location.pathname === "/register" && location.search.includes("role=ADMIN")
+                  className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${location.pathname === "/register" && location.search.includes("role=ADMIN")
                       ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`}
+                    }`}
                 >
                   Admin Register
                 </Link>
@@ -147,11 +143,10 @@ export const Navbar = () => {
                 key={link.key}
                 to={link.to}
                 onClick={() => setMobileOpen(false)}
-                className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  location.pathname === link.to
+                className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === link.to
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                }`}
+                  }`}
               >
                 {link.label}
               </Link>
@@ -179,33 +174,30 @@ export const Navbar = () => {
                 <Link
                   to="/login?role=STUDENT"
                   onClick={() => setMobileOpen(false)}
-                  className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                    location.pathname === "/login" && !location.search.includes("role=ADMIN")
+                  className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === "/login" && !location.search.includes("role=ADMIN")
                       ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`}
+                    }`}
                 >
                   Student Login
                 </Link>
                 <Link
                   to="/login?role=ADMIN"
                   onClick={() => setMobileOpen(false)}
-                  className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                    location.pathname === "/login" && location.search.includes("role=ADMIN")
+                  className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === "/login" && location.search.includes("role=ADMIN")
                       ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`}
+                    }`}
                 >
                   Admin Login
                 </Link>
                 <Link
                   to="/register?role=ADMIN"
                   onClick={() => setMobileOpen(false)}
-                  className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                    location.pathname === "/register" && location.search.includes("role=ADMIN")
+                  className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === "/register" && location.search.includes("role=ADMIN")
                       ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`}
+                    }`}
                 >
                   Admin Register
                 </Link>

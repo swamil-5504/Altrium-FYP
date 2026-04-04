@@ -12,18 +12,32 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { login } = useAuth();
+  const { login, logout } = useAuth();
   const navigate = useNavigate();
+
+  const expectedRole: "ADMIN" | "STUDENT" = isAdminLogin ? "ADMIN" : "STUDENT";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
       await login(email, password);
-      toast.success("Successfully logged in!");
 
       const me = await axios.get("/users/me");
       const role = me.data.role as "ADMIN" | "STUDENT";
+
+      // Reject if the user's role doesn't match this login page's role
+      if (role !== expectedRole) {
+        await logout();
+        toast.error(
+          role === "ADMIN"
+            ? "This is the Student login page. Please use the Admin login instead."
+            : "This is the Admin login page. Please use the Student login instead."
+        );
+        return;
+      }
+
+      toast.success("Successfully logged in!");
 
       if (role === "ADMIN") navigate("/university");
       else navigate("/student");

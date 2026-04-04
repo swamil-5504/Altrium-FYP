@@ -20,11 +20,6 @@ class DegreeService:
     @staticmethod
     async def list_for_user(current_user: User) -> List[Credential]:
         if current_user.role == UserRole.ADMIN:
-            if not getattr(current_user, "is_legal_admin_verified", False):
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Admin is not legally verified",
-                )
             return await CredentialCRUD.get_all()
         return await CredentialCRUD.get_by_user(current_user.id)
 
@@ -38,11 +33,7 @@ class DegreeService:
             )
 
         if current_user.role == UserRole.ADMIN:
-            if not getattr(current_user, "is_legal_admin_verified", False):
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Admin is not legally verified",
-                )
+            pass  # Admins can view any submission
         elif credential.issued_to_id != current_user.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
