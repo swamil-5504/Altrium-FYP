@@ -18,6 +18,7 @@ interface Credential {
   status: CredentialStatus;
   token_id?: number | null;
   tx_hash?: string | null;
+  has_document?: boolean;
   created_at: string;
 }
 
@@ -146,6 +147,20 @@ const UniversityAdmin: React.FC = () => {
     } catch (err) {
       console.error(err);
       toast.error("Failed to reject submission.");
+    }
+  };
+
+  const handleViewDocument = async (credentialId: string) => {
+    try {
+      const response = await axios.get(`/degrees/${credentialId}/document`, {
+        responseType: "blob",
+      });
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load document. It may not have been uploaded yet.");
     }
   };
 
@@ -346,11 +361,19 @@ const UniversityAdmin: React.FC = () => {
                             <td className="py-3.5 px-4">
                               <div className="flex items-center justify-end gap-2">
                                 <button
-                                  className="p-1.5 rounded-md hover:bg-muted transition-colors"
-                                  title="View Document (demo)"
-                                  onClick={() => toast.info("Document viewing is demo-only for now.")}
+                                  className={`p-1.5 rounded-md transition-colors ${
+                                    cred.has_document
+                                      ? "hover:bg-muted text-accent"
+                                      : "opacity-40 cursor-not-allowed"
+                                  }`}
+                                  title={cred.has_document ? "View Document" : "No document uploaded"}
+                                  onClick={() =>
+                                    cred.has_document
+                                      ? void handleViewDocument(cred.id)
+                                      : toast.info("No document uploaded for this submission.")
+                                  }
                                 >
-                                  <Eye className="w-4 h-4 text-muted-foreground" />
+                                  <Eye className="w-4 h-4" />
                                 </button>
 
                                 <button

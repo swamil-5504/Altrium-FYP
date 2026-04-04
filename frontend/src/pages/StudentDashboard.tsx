@@ -3,7 +3,7 @@ import axios from "@/api/axios";
 import { toast } from "sonner";
 import { Navbar } from "@/components/Navbar";
 import { ScrollReveal } from "@/components/ScrollReveal";
-import { Upload, FileText, CreditCard, Clock, Shield, XCircle, ArrowRight } from "lucide-react";
+import { Upload, FileText, CreditCard, Clock, Shield, XCircle, ArrowRight, Eye } from "lucide-react";
 
 type CredentialStatus = "PENDING" | "APPROVED" | "REJECTED";
 
@@ -16,6 +16,7 @@ interface Credential {
   status: CredentialStatus;
   tx_hash?: string | null;
   token_id?: number | null;
+  has_document?: boolean;
   created_at: string;
 }
 
@@ -53,6 +54,20 @@ const StudentDashboard: React.FC = () => {
     }
   };
 
+  const handleViewDocument = async (credentialId: string) => {
+    try {
+      const response = await axios.get(`/degrees/${credentialId}/document`, {
+        responseType: "blob",
+      });
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load document. It may not have been uploaded yet.");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -61,9 +76,8 @@ const StudentDashboard: React.FC = () => {
       return;
     }
 
-    // This UI currently treats file upload as informational (backend doesn't store files yet).
     if (!file) {
-      toast.error("Please select your degree PDF (storage integration coming next).");
+      toast.error("Please select your degree PDF.");
       return;
     }
 
@@ -76,14 +90,25 @@ const StudentDashboard: React.FC = () => {
         credits: formData.credits,
       };
 
-      await axios.post("/degrees", {
+      // Step 1: Create the degree submission
+      const response = await axios.post("/degrees", {
         title: formData.title,
         description: formData.description || null,
         prn_number: formData.prn_number,
         metadata_json: studentBasicsPayload,
       });
 
-      toast.success("Submission received. College Admin will verify and mint on Sepolia.");
+      const credentialId = response.data.id;
+
+      // Step 2: Upload the PDF document
+      const formDataUpload = new FormData();
+      formDataUpload.append("file", file);
+
+      await axios.post(`/degrees/${credentialId}/document`, formDataUpload, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      toast.success("Submission & document uploaded. College Admin will verify and mint on Sepolia.");
       setShowForm(false);
       setFile(null);
       setFormData({
@@ -332,6 +357,16 @@ const StudentDashboard: React.FC = () => {
                         )}
                         {sub.status === "APPROVED" && sub.token_id !== null && sub.token_id !== undefined && (
                           <span className="text-xs font-mono text-muted-foreground">Token: {sub.token_id}</span>
+                        )}
+
+                        {sub.has_document && (
+                          <button
+                            onClick={() => void handleViewDocument(sub.id)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-medium hover:bg-accent/20 transition-colors active:scale-[0.97]"
+                          >
+                            <Eye className="w-3 h-3" />
+                            View PDF
+                          </button>
                         )}
                       </div>
                     </div>

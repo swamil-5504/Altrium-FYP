@@ -41,6 +41,7 @@ class Credential(Document):
     issued_by_id: UUID
     status: CredentialStatus = CredentialStatus.PENDING
     metadata_json: Optional[dict] = None
+    document_path: Optional[str] = None
     token_id: Optional[int] = None
     tx_hash: Optional[str] = None
     prn_number: Optional[str] = None
