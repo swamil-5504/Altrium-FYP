@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import axios from "@/api/axios";
 import { useAuth } from "@/context/AuthContext";
 import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { Blocks, Clock, Eye, Shield, XCircle, Wallet } from "lucide-react";
 
@@ -385,7 +384,6 @@ const UniversityAdmin: React.FC = () => {
         </div>
       </div>
 
-      <Footer />
     </div>
   );
 };

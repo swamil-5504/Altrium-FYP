@@ -16,10 +16,10 @@ RUN npm run build
 FROM node:18-alpine
 WORKDIR /app
 
-RUN npm install -g http-server
+RUN npm install -g serve
 
 COPY --from=build /app/dist ./dist
 EXPOSE 5173
 
-CMD ["http-server", "dist", "-p", "5173", "--cors", "-c-1"]
+CMD ["serve", "dist", "-l", "5173", "-s"]
 

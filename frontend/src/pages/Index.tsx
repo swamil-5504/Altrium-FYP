@@ -55,7 +55,7 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <ScrollReveal className="text-center mb-16">
             <p className="text-sm font-medium text-accent mb-2 uppercase tracking-wider">Process</p>
-            <h2 className="text-3xl md:text-4xl font-bold">How DegreeVault Works</h2>
+            <h2 className="text-3xl md:text-4xl font-bold">How Altrium Works</h2>
           </ScrollReveal>
 
           <div className="grid md:grid-cols-4 gap-6 max-w-5xl mx-auto">

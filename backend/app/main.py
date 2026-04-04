@@ -61,14 +61,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# API routes
-app.include_router(auth.router)
-app.include_router(users.router)
-app.include_router(credentials.router)
-app.include_router(degrees.router)
-register_exception_handlers(app)
-
-# Add CORS middleware
+# Add CORS middleware (must come before routes so preflight OPTIONS works)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.BACKEND_CORS_ORIGINS,
@@ -76,6 +69,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# API routes
+app.include_router(auth.router)
+app.include_router(users.router)
+app.include_router(credentials.router)
+app.include_router(degrees.router)
+register_exception_handlers(app)
 
 @app.get("/")
 def root():

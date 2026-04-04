@@ -9,7 +9,7 @@ export const Footer = () => (
           <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
             <Shield className="w-3.5 h-3.5 text-primary-foreground" />
           </div>
-          <span className="font-semibold">DegreeVault</span>
+          <span className="font-semibold">Altrium</span>
         </div>
         <div className="flex items-center gap-6 text-sm text-muted-foreground">
           <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
@@ -18,7 +18,7 @@ export const Footer = () => (
           <Link to="/verify" className="hover:text-foreground transition-colors">Verify</Link>
         </div>
         <p className="text-xs text-muted-foreground">
-          © 2026 DegreeVault. Powered by Blockchain.
+          © 2026 Altrium. Powered by Blockchain.
         </p>
       </div>
     </div>

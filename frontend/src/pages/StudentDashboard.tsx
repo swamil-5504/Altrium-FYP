@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import axios from "@/api/axios";
 import { toast } from "sonner";
 import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { Upload, FileText, CreditCard, Clock, Shield, XCircle, ArrowRight } from "lucide-react";
 
@@ -344,7 +343,6 @@ const StudentDashboard: React.FC = () => {
         </div>
       </div>
 
-      <Footer />
     </div>
   );
 };
