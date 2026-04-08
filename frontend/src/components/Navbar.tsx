@@ -19,18 +19,20 @@ export const Navbar = () => {
   const role = user?.role;
   const navLinks: NavItem[] = [
     { key: "home", to: "/", label: "Home", enabled: true },
-    {
-      key: "primary",
-      to: role === "ADMIN" ? "/university" : "/student",
-      label: role === "ADMIN" ? "Dashboard" : "My Degree",
-      enabled: isAuthenticated,
-    },
-    {
-      key: "secondary",
-      to: role === "ADMIN" ? "/university" : "/student",
-      label: role === "ADMIN" ? "Upload Degree" : "Submissions",
-      enabled: isAuthenticated,
-    },
+    ...(isAuthenticated ? [
+      {
+        key: "primary",
+        to: role === "ADMIN" ? "/university" : "/student",
+        label: role === "ADMIN" ? "Dashboard" : "My Degree",
+        enabled: true,
+      },
+      {
+        key: "secondary",
+        to: role === "ADMIN" ? "/university" : "/student",
+        label: role === "ADMIN" ? "Upload Degree" : "Submissions",
+        enabled: true,
+      }
+    ] : []),
   ];
 
   const renderNavItem = (link: NavItem) => {
@@ -51,8 +53,8 @@ export const Navbar = () => {
         key={link.key}
         to={link.to}
         className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${isActive
-            ? "bg-primary text-primary-foreground"
-            : "text-muted-foreground hover:text-foreground hover:bg-muted"
+          ? "bg-primary text-primary-foreground shadow-sm"
+          : "text-muted-foreground hover:text-accent hover:bg-accent/10"
           }`}
       >
         {link.label}
@@ -70,8 +72,8 @@ export const Navbar = () => {
     <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b">
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
         <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-            <Shield className="w-4 h-4 text-primary-foreground" />
+          <div className="w-8 h-8 rounded-lg shadow-inner flex items-center justify-center overflow-hidden">
+            <img src="/altrium.jpg" alt="Altrium" className="w-full h-full object-cover" />
           </div>
           <span className="font-semibold text-lg tracking-tight">Altrium</span>
         </Link>
@@ -94,31 +96,22 @@ export const Navbar = () => {
             ) : (
               <>
                 <Link
-                  to="/login?role=STUDENT"
-                  className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${location.pathname === "/login" && !location.search.includes("role=ADMIN")
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  to="/login"
+                  className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${location.pathname === "/login"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-accent hover:bg-accent/10"
                     }`}
                 >
-                  Student Login
+                  Login
                 </Link>
                 <Link
-                  to="/login?role=ADMIN"
-                  className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${location.pathname === "/login" && location.search.includes("role=ADMIN")
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  to="/register"
+                  className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${location.pathname === "/register"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-accent hover:bg-accent/10"
                     }`}
                 >
-                  Admin Login
-                </Link>
-                <Link
-                  to="/register?role=ADMIN"
-                  className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${location.pathname === "/register" && location.search.includes("role=ADMIN")
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                    }`}
-                >
-                  Admin Register
+                  Register
                 </Link>
               </>
             )}
@@ -144,8 +137,8 @@ export const Navbar = () => {
                 to={link.to}
                 onClick={() => setMobileOpen(false)}
                 className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === link.to
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   }`}
               >
                 {link.label}
@@ -172,34 +165,24 @@ export const Navbar = () => {
             ) : (
               <>
                 <Link
-                  to="/login?role=STUDENT"
+                  to="/login"
                   onClick={() => setMobileOpen(false)}
-                  className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === "/login" && !location.search.includes("role=ADMIN")
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === "/login"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-accent hover:bg-accent/10"
                     }`}
                 >
-                  Student Login
+                  Login
                 </Link>
                 <Link
-                  to="/login?role=ADMIN"
+                  to="/register"
                   onClick={() => setMobileOpen(false)}
-                  className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === "/login" && location.search.includes("role=ADMIN")
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === "/register"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-accent hover:bg-accent/10"
                     }`}
                 >
-                  Admin Login
-                </Link>
-                <Link
-                  to="/register?role=ADMIN"
-                  onClick={() => setMobileOpen(false)}
-                  className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === "/register" && location.search.includes("role=ADMIN")
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                    }`}
-                >
-                  Admin Register
+                  Register
                 </Link>
               </>
             )}

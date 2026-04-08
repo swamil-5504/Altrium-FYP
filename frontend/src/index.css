@@ -15,16 +15,16 @@
     --popover: 0 0% 100%;
     --popover-foreground: 215 25% 14%;
 
-    --primary: 215 25% 14%;
+    --primary: 209 64% 16%;
     --primary-foreground: 210 20% 98%;
 
-    --secondary: 174 42% 48%;
+    --secondary: 40 73% 63%;
     --secondary-foreground: 0 0% 100%;
 
     --muted: 210 16% 93%;
     --muted-foreground: 215 12% 48%;
 
-    --accent: 174 42% 48%;
+    --accent: 220 83% 56%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
@@ -32,7 +32,7 @@
 
     --border: 214 20% 89%;
     --input: 214 20% 89%;
-    --ring: 174 42% 48%;
+    --ring: 220 83% 56%;
 
     --radius: 0.625rem;
 
@@ -65,7 +65,12 @@
     @apply bg-background text-foreground font-sans antialiased;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-semibold tracking-tight;
     text-wrap: balance;
   }
@@ -119,6 +124,7 @@
     transform: translateY(20px);
     filter: blur(4px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -127,8 +133,13 @@
 }
 
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slide-in-left {
@@ -137,6 +148,7 @@
     transform: translateX(-20px);
     filter: blur(4px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -150,6 +162,7 @@
     transform: translateX(20px);
     filter: blur(4px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -158,6 +171,13 @@
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
 }

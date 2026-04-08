@@ -14,6 +14,7 @@ import {
   Hash,
   ExternalLink,
   Building2,
+  CheckCircle2,
 } from "lucide-react";
 
 type CredentialStatus = "PENDING" | "APPROVED" | "REJECTED";
@@ -109,13 +110,16 @@ const EmployerVerify: React.FC = () => {
           {result && (
             <ScrollReveal>
               <div className="rounded-xl border bg-card overflow-hidden blockchain-glow">
-                <div className="bg-success/5 border-b px-6 py-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center">
-                    <Shield className="w-5 h-5 text-success" />
+                <div className="bg-primary/5 border-b px-6 py-4 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-sm">
+                    <Shield className="w-5 h-5 text-primary-foreground" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-success">Verified on Blockchain</h3>
-                    <p className="text-xs text-muted-foreground">Degree anchored for integrity (SBT minted by Admin).</p>
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <CheckCircle2 className="w-4 h-4 text-accent" />
+                      <h3 className="font-semibold text-primary">Altrium Verified</h3>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Degree anchored on the blockchain (SBT minted).</p>
                   </div>
                 </div>
 

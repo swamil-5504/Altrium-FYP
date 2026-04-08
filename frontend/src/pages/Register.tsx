@@ -60,21 +60,26 @@ export default function Register() {
         <h2 className="text-2xl font-bold mb-2">{role === "ADMIN" ? "Create Admin Account" : "Create Student Account"}</h2>
         <p className="text-muted-foreground text-sm mb-6">Register your role within the network.</p>
 
+        <div className="flex bg-muted p-1 rounded-lg mb-6">
+          <button
+            type="button"
+            onClick={() => setRole("STUDENT")}
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${role === "STUDENT" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+          >
+            Student
+          </button>
+          <button
+            type="button"
+            onClick={() => setRole("ADMIN")}
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${role === "ADMIN" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+          >
+            University Admin
+          </button>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Select Your Role</label>
-            <div className="relative">
-              <Building2 className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <select
-                className="w-full pl-9 pr-4 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent transition-all appearance-none"
-                value={role}
-                onChange={(e) => setRole(e.target.value as typeof role)}
-              >
-                <option value="STUDENT">STUDENT</option>
-                <option value="ADMIN">ADMIN</option>
-              </select>
-            </div>
-          </div>
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Full Name</label>
@@ -128,7 +133,7 @@ export default function Register() {
 
         <div className="mt-6 text-center text-sm text-muted-foreground">
           Already have an account?{" "}
-          <Link to="/login" className="text-accent font-medium hover:underline">
+          <Link to={`/login?role=${role}`} className="text-accent font-medium hover:underline">
             Sign in
           </Link>
         </div>

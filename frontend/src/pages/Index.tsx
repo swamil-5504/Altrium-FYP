@@ -12,7 +12,7 @@ const Index = () => {
       {/* Hero */}
       <section className="pt-32 pb-20 md:pt-40 md:pb-28 relative overflow-hidden">
         {/* Subtle grid background */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{
+        <div className="absolute inset-0 opacity-[0.05]" style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h60v60H0z' fill='none' stroke='%23000' stroke-width='.5'/%3E%3C/svg%3E")`,
         }} />
 

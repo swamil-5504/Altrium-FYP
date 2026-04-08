@@ -7,15 +7,13 @@ import axios from "@/api/axios";
 
 export default function Login() {
   const [searchParams] = useSearchParams();
-  const isAdminLogin = searchParams.get("role") === "ADMIN";
+  const [role, setRole] = useState<"STUDENT" | "ADMIN">(searchParams.get("role") === "ADMIN" ? "ADMIN" : "STUDENT");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const { login, logout } = useAuth();
   const navigate = useNavigate();
-
-  const expectedRole: "ADMIN" | "STUDENT" = isAdminLogin ? "ADMIN" : "STUDENT";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,22 +22,17 @@ export default function Login() {
       await login(email, password);
 
       const me = await axios.get("/users/me");
-      const role = me.data.role as "ADMIN" | "STUDENT";
+      const userRole = me.data.role as "ADMIN" | "STUDENT";
 
-      // Reject if the user's role doesn't match this login page's role
-      if (role !== expectedRole) {
+      if (userRole !== role) {
         await logout();
-        toast.error(
-          role === "ADMIN"
-            ? "This is the Student login page. Please use the Admin login instead."
-            : "This is the Admin login page. Please use the Student login instead."
-        );
+        toast.error(`You are a ${userRole}, but you tried to login as a ${role}.`);
         return;
       }
 
       toast.success("Successfully logged in!");
 
-      if (role === "ADMIN") navigate("/university");
+      if (userRole === "ADMIN") navigate("/university");
       else navigate("/student");
     } catch (err: unknown) {
       const detail =
@@ -73,8 +66,27 @@ export default function Login() {
           <KeyRound className="w-6 h-6 text-accent" />
         </div>
 
-        <h2 className="text-2xl font-bold mb-2">{isAdminLogin ? "Admin Login" : "Student Login"}</h2>
+        <h2 className="text-2xl font-bold mb-2">{role === "ADMIN" ? "Admin Login" : "Student Login"}</h2>
         <p className="text-muted-foreground text-sm mb-6">Sign in to access your portal.</p>
+
+        <div className="flex bg-muted p-1 rounded-lg mb-6">
+          <button
+            type="button"
+            onClick={() => setRole("STUDENT")}
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${role === "STUDENT" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+          >
+            Student
+          </button>
+          <button
+            type="button"
+            onClick={() => setRole("ADMIN")}
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${role === "ADMIN" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+          >
+            University Admin
+          </button>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
@@ -124,7 +136,7 @@ export default function Login() {
 
         <div className="mt-6 text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{" "}
-          <Link to={isAdminLogin ? "/register?role=ADMIN" : "/register"} className="text-accent font-medium hover:underline">
+          <Link to={`/register?role=${role}`} className="text-accent font-medium hover:underline">
             Register here
           </Link>
         </div>

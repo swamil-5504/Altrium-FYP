@@ -6,8 +6,8 @@ export const Footer = () => (
     <div className="container mx-auto px-4">
       <div className="flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
-            <Shield className="w-3.5 h-3.5 text-primary-foreground" />
+          <div className="w-7 h-7 rounded-md flex items-center justify-center overflow-hidden">
+            <img src="/altrium.jpg" alt="Altrium" className="w-full h-full object-cover" />
           </div>
           <span className="font-semibold">Altrium</span>
         </div>
