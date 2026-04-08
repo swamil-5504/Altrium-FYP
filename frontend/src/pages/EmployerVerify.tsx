@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { generateSVG, getTierInfo } from "@/utils/svgGenerator";
 import axios from "@/api/axios";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -79,6 +80,7 @@ const EmployerVerify: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [allDegrees, setAllDegrees] = useState<Credential[]>([]);
   const [loadingAll, setLoadingAll] = useState(true);
+  const [isImageExpanded, setIsImageExpanded] = useState(false);
 
   React.useEffect(() => {
     const fetchAll = async () => {
@@ -206,6 +208,12 @@ const EmployerVerify: React.FC = () => {
   const cgpa = typeof meta.cgpa === "string" ? meta.cgpa : "-";
   const credits = typeof meta.credits === "string" ? meta.credits : "-";
 
+  let generatedSvg = "";
+  if (result) {
+    const { name: tierName, color: tierColor } = getTierInfo(cgpa);
+    generatedSvg = generateSVG("Altrium University", result.title, passingYear, tierName, tierColor);
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
@@ -278,58 +286,58 @@ const EmployerVerify: React.FC = () => {
                 </div>
 
                 <div className="p-6">
-                  <div className="max-w-3xl mx-auto space-y-6">
-                    <div className="grid sm:grid-cols-2 gap-6 items-start">
-                      <div className="space-y-5">
+                  <div className="grid md:grid-cols-3 gap-8">
+                    <div className="md:col-span-2 space-y-6">
+                      {/* Student basics */}
+                      <div className="grid sm:grid-cols-2 gap-4">
                         <InfoRow icon={GraduationCap} label="Student Name" value={studentName} />
                         <InfoRow icon={Hash} label="PRN" value={result.prn_number ?? "-"} mono />
+                        <InfoRow icon={FileText} label="Degree Title" value={result.title} />
                         <InfoRow icon={Calendar} label="Entry Year" value={String(entryYear)} />
+                        <InfoRow icon={Calendar} label="Passing Year" value={String(passingYear)} />
                         <InfoRow icon={Blocks} label="CGPA" value={String(cgpa)} />
+                        <InfoRow icon={Blocks} label="Credits" value={String(credits)} />
                         <InfoRow icon={Building2} label="Off-chain Notes" value={result.description ?? "-"} />
                       </div>
-                      <div className="space-y-5">
-                        <InfoRow icon={Building2} label="University" value={result.college_name || "Altrium University"} />
-                        <InfoRow icon={FileText} label="Degree Title" value={result.title} />
-                        <InfoRow icon={Calendar} label="Passing Year" value={String(passingYear)} />
-                        <InfoRow icon={Blocks} label="Credits" value={String(credits)} />
+
+                      <div className="p-5 rounded-xl bg-muted/20 border border-muted-foreground/10 space-y-3">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">On-Chain Proof</p>
+
+                        <div className="flex items-center justify-between text-sm py-1 border-b border-muted-foreground/10">
+                          <span className="text-muted-foreground">Token ID</span>
+                          <span className="font-mono font-bold text-foreground">{result.token_id ?? "-"}</span>
+                        </div>
+
+                        {result.tx_hash && (
+                          <div className="flex items-center justify-between text-sm py-1">
+                            <span className="text-muted-foreground">Tx Hash</span>
+                            <a
+                              href={`https://sepolia.etherscan.io/tx/${result.tx_hash}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 font-mono text-accent hover:text-accent/80 transition-colors max-w-[200px] sm:max-w-[260px] truncate"
+                            >
+                              {result.tx_hash}
+                              <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                            </a>
+                          </div>
+                        )}
                       </div>
                     </div>
 
-                    <div className="p-5 rounded-xl bg-muted/20 border border-muted-foreground/10 space-y-3">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">On-Chain Proof</p>
-
-                      <div className="flex items-center justify-between text-sm py-1 border-b border-muted-foreground/10">
-                        <span className="text-muted-foreground">Token ID</span>
-                        <span className="font-mono font-bold text-foreground">{result.token_id ?? "-"}</span>
+                    <div
+                      className="md:col-span-1 flex items-center justify-center border rounded-xl bg-background/50 p-4 shadow-inner relative overflow-hidden group cursor-pointer"
+                      onClick={() => setIsImageExpanded(true)}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-tr from-accent/5 to-transparent opacity-50" />
+                      <div className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm p-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-foreground"><path d="m21 21-6-6m6 6v-4.8m0 4.8h-4.8M3 16.2V21m0 0h4.8M3 21l6-6M21 7.8V3m0 0h-4.8M21 3l-6 6M3 7.8V3m0 0h4.8M3 3l6 6" /></svg>
                       </div>
-
-                      {result.tx_hash && (
-                        <div className="flex items-center justify-between text-sm py-1 border-b border-muted-foreground/10">
-                          <span className="text-muted-foreground">Tx Hash</span>
-
-                          <a
-                            href={`https://sepolia.etherscan.io/tx/${result.tx_hash}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 font-mono text-accent hover:text-accent/80 transition-colors max-w-[200px] sm:max-w-[260px] truncate"
-                          >
-                            {result.tx_hash}
-                            <ExternalLink className="w-3.5 h-3.5 shrink-0" />
-                          </a>
-                        </div>
-                      )}
-
-                      <div className="flex items-center justify-between text-sm py-1">
-                        <span className="text-muted-foreground">Integrity Check</span>
-                        <button
-                          onClick={handleVerifyHash}
-                          disabled={verifyingHash}
-                          className="flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium bg-accent/10 text-accent hover:bg-accent/20 transition-colors disabled:opacity-50"
-                        >
-                          <ShieldCheck className="w-3.5 h-3.5" />
-                          {verifyingHash ? "Verifying..." : hashVerified === true ? "✅ Verified" : hashVerified === false ? "❌ Failed" : "Verify Hash"}
-                        </button>
-                      </div>
+                      <img
+                        src={generatedSvg}
+                        alt="SBT Credential"
+                        className="w-full max-w-[240px] h-auto object-contain drop-shadow-2xl relative z-10 transition-transform duration-500 group-hover:scale-[1.05]"
+                      />
                     </div>
                   </div>
                 </div>
@@ -418,6 +426,28 @@ const EmployerVerify: React.FC = () => {
 
       <Footer />
 
+      {/* Image expanded modal */}
+      {isImageExpanded && result && generatedSvg && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+          onClick={() => setIsImageExpanded(false)}
+        >
+          <div className="relative max-w-[90vw] max-h-[90vh] flex flex-col items-center">
+            <button
+              className="absolute -top-12 right-0 p-2 text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => setIsImageExpanded(false)}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+            </button>
+            <img
+              src={generatedSvg}
+              alt="SBT Credential Expanded"
+              className="w-full h-full object-contain max-h-[85vh] drop-shadow-2xl rounded-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
