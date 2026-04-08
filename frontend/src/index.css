@@ -54,6 +54,39 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 174 42% 48%;
   }
+
+  .dark {
+    --background: 215 25% 8%;
+    --foreground: 210 20% 98%;
+
+    --card: 215 25% 12%;
+    --card-foreground: 210 20% 98%;
+
+    --popover: 215 25% 12%;
+    --popover-foreground: 210 20% 98%;
+
+    /* Lightened Navy for visibility on dark background */
+    --primary: 209 64% 35%;
+    --primary-foreground: 210 20% 98%;
+
+    /* Keep Gold */
+    --secondary: 40 73% 63%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 215 20% 18%;
+    --muted-foreground: 210 16% 70%;
+
+    /* Keep Verification Blue */
+    --accent: 220 83% 56%;
+    --accent-foreground: 0 0% 100%;
+
+    --border: 215 20% 18%;
+    --input: 215 20% 18%;
+    --ring: 220 83% 56%;
+
+    --surface-elevated: 215 25% 12%;
+    --surface-sunken: 215 25% 6%;
+  }
 }
 
 @layer base {

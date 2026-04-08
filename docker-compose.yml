@@ -1,9 +1,8 @@
-version: '3.8'
-
 services:
   mongo:
     image: mongo:6.0
     container_name: mongo
+    restart: unless-stopped
     # Mongo is only used by the backend inside the Docker network.
     # Leaving it unexposed avoids "port 27017 already in use" on dev machines.
     volumes:
@@ -14,13 +13,13 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: backend
+    restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
       - MONGODB_URL=mongodb://mongo:27017
       - MONGODB_DB=altrium
     volumes:
-      - ./backend:/app
       - uploads:/app/uploads
 
   frontend:
@@ -30,6 +29,7 @@ services:
       args:
         VITE_API_URL: http://localhost:8000
     container_name: frontend
+    restart: unless-stopped
     ports:
       - "5173:5173"
     environment:

@@ -1,7 +1,8 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Shield, Menu, X } from "lucide-react";
+import { Shield, Menu, X, Sun, Moon } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/components/ThemeProvider";
 
 interface NavItem {
   key: string;
@@ -15,21 +16,21 @@ export const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
   const { isAuthenticated, logout, user } = useAuth();
+  const { theme, setTheme } = useTheme();
+
+  const toggleTheme = () => {
+    const isDark = document.documentElement.classList.contains("dark");
+    setTheme(isDark ? "light" : "dark");
+  };
 
   const role = user?.role;
   const navLinks: NavItem[] = [
-    { key: "home", to: "/", label: "Home", enabled: true },
+    ...(!isAuthenticated ? [{ key: "home", to: "/", label: "Home", enabled: true }] : []),
     ...(isAuthenticated ? [
       {
         key: "primary",
         to: role === "ADMIN" ? "/university" : "/student",
-        label: role === "ADMIN" ? "Dashboard" : "My Degree",
-        enabled: true,
-      },
-      {
-        key: "secondary",
-        to: role === "ADMIN" ? "/university" : "/student",
-        label: role === "ADMIN" ? "Upload Degree" : "Submissions",
+        label: role === "ADMIN" ? "Submissions" : "My Degree",
         enabled: true,
       }
     ] : []),
@@ -65,13 +66,13 @@ export const Navbar = () => {
   const handleLogout = async () => {
     await logout();
     setMobileOpen(false);
-    navigate("/login");
+    navigate("/");
   };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b">
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
-        <Link to="/" className="flex items-center gap-2.5 group">
+        <Link to={isAuthenticated ? (role === "ADMIN" ? "/university" : "/student") : "/"} className="flex items-center gap-2.5 group">
           <div className="w-8 h-8 rounded-lg shadow-inner flex items-center justify-center overflow-hidden">
             <img src="/altrium.jpg" alt="Altrium" className="w-full h-full object-cover" />
           </div>
@@ -85,6 +86,15 @@ export const Navbar = () => {
           </div>
 
           <div className="ml-2 pl-2 border-l flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors mr-1"
+              aria-label="Toggle theme"
+            >
+              <Sun className="h-5 w-5 hidden dark:block" />
+              <Moon className="h-5 w-5 block dark:hidden" />
+            </button>
+
             {isAuthenticated ? (
               <button
                 type="button"
@@ -119,12 +129,22 @@ export const Navbar = () => {
         </div>
 
         {/* Mobile toggle */}
-        <button
-          className="md:hidden p-2 rounded-lg hover:bg-muted"
-          onClick={() => setMobileOpen(!mobileOpen)}
-        >
-          {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
+        <div className="flex items-center gap-2 md:hidden">
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-lg text-muted-foreground hover:bg-muted transition-colors"
+            aria-label="Toggle theme"
+          >
+            <Sun className="h-5 w-5 hidden dark:block" />
+            <Moon className="h-5 w-5 block dark:hidden" />
+          </button>
+          <button
+            className="p-2 rounded-lg hover:bg-muted transition-colors"
+            onClick={() => setMobileOpen(!mobileOpen)}
+          >
+            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile menu */}

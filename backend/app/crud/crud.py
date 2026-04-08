@@ -117,8 +117,14 @@ class CredentialCRUD:
     @staticmethod
     async def get_approved_by_prn(prn_number: str) -> List[Credential]:
         return await Credential.find(
-            (Credential.prn_number == prn_number)
-            & (Credential.status == CredentialStatus.APPROVED)
+            Credential.prn_number == prn_number,
+            Credential.status == CredentialStatus.APPROVED
+        ).to_list()
+
+    @staticmethod
+    async def get_all_approved() -> List[Credential]:
+        return await Credential.find(
+            (Credential.status == CredentialStatus.APPROVED)
         ).to_list()
 
     @staticmethod

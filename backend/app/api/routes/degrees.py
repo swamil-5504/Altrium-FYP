@@ -37,8 +37,11 @@ async def get_degrees(current_user: User = Depends(get_current_user)):
 
 
 @router.get("/public", response_model=List[CredentialResponse])
-async def get_public_degrees(prn_number: str):
-    creds = await DegreeService.get_public_by_prn(prn_number)
+async def get_public_degrees(prn_number: str = None):
+    if prn_number:
+        creds = await DegreeService.get_public_by_prn(prn_number)
+    else:
+        creds = await DegreeService.get_all_public()
     return [_to_response(c) for c in creds]
 
 

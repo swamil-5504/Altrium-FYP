@@ -54,6 +54,10 @@ class DegreeService:
     @staticmethod
     async def get_public_by_prn(prn_number: str) -> List[Credential]:
         return await CredentialCRUD.get_approved_by_prn(prn_number)
+        
+    @staticmethod
+    async def get_all_public() -> List[Credential]:
+        return await CredentialCRUD.get_all_approved()
 
     @staticmethod
     async def update_status(credential_id: UUID, status_value: CredentialStatus) -> Credential:
