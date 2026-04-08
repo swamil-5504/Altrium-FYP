@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { generateSVG, getTierInfo } from "@/utils/svgGenerator";
 import axios from "@/api/axios";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -14,6 +15,8 @@ import {
   Hash,
   ExternalLink,
   Building2,
+  CheckCircle2,
+  ArrowRight,
 } from "lucide-react";
 
 type CredentialStatus = "PENDING" | "APPROVED" | "REJECTED";
@@ -35,11 +38,40 @@ const EmployerVerify: React.FC = () => {
   const [result, setResult] = useState<Credential | null>(null);
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [allDegrees, setAllDegrees] = useState<Credential[]>([]);
+  const [loadingAll, setLoadingAll] = useState(true);
+  const [isImageExpanded, setIsImageExpanded] = useState(false);
 
-  const handleSearch = async (e: React.FormEvent) => {
+  React.useEffect(() => {
+    const fetchAll = async () => {
+      try {
+        const res = await axios.get("/degrees/public");
+        setAllDegrees(res.data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoadingAll(false);
+      }
+    };
+    void fetchAll();
+  }, []);
+
+  const handleQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setQuery(e.target.value);
+    if (!e.target.value.trim()) {
+      setSearched(false);
+      setResult(null);
+    }
+  };
+
+  const handleSearch = async (e: React.FormEvent | { preventDefault: () => void }) => {
     e.preventDefault();
-    const trimmed = query.trim().toUpperCase();
-    if (!trimmed) return;
+    const trimmed = query.trim();
+    if (!trimmed) {
+      setSearched(false);
+      setResult(null);
+      return;
+    }
 
     setSearched(true);
     setLoading(true);
@@ -72,6 +104,12 @@ const EmployerVerify: React.FC = () => {
   const cgpa = typeof meta.cgpa === "string" ? meta.cgpa : "-";
   const credits = typeof meta.credits === "string" ? meta.credits : "-";
 
+  let generatedSvg = "";
+  if (result) {
+    const { name: tierName, color: tierColor } = getTierInfo(cgpa);
+    generatedSvg = generateSVG("Altrium University", result.title, passingYear, tierName, tierColor);
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -87,15 +125,24 @@ const EmployerVerify: React.FC = () => {
           </ScrollReveal>
 
           <ScrollReveal delay={80}>
-            <form onSubmit={handleSearch} className="flex gap-2 mb-8">
+            <form onSubmit={handleSearch} className="flex gap-2 mb-8 relative">
               <input
                 type="text"
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={handleQueryChange}
                 placeholder="Enter PRN Number (e.g. PRN2024001)"
                 required
-                className="flex-1 px-4 py-3 rounded-lg border bg-card text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring"
+                className="flex-1 px-4 py-3 rounded-lg border bg-card text-sm font-mono focus:outline-none focus:ring-2 focus:ring-accent transition-all"
               />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => handleQueryChange({ target: { value: "" } } as any)}
+                  className="absolute right-[110px] top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-foreground"
+                >
+                  ✕
+                </button>
+              )}
               <button
                 type="submit"
                 disabled={loading}
@@ -109,51 +156,73 @@ const EmployerVerify: React.FC = () => {
           {result && (
             <ScrollReveal>
               <div className="rounded-xl border bg-card overflow-hidden blockchain-glow">
-                <div className="bg-success/5 border-b px-6 py-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center">
-                    <Shield className="w-5 h-5 text-success" />
+                <div className="bg-primary/5 border-b px-6 py-4 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-sm">
+                    <Shield className="w-5 h-5 text-primary-foreground" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-success">Verified on Blockchain</h3>
-                    <p className="text-xs text-muted-foreground">Degree anchored for integrity (SBT minted by Admin).</p>
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <CheckCircle2 className="w-4 h-4 text-accent" />
+                      <h3 className="font-semibold text-primary">Altrium Verified</h3>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Degree anchored on the blockchain (SBT minted).</p>
                   </div>
                 </div>
 
-                <div className="p-6 space-y-5">
-                  {/* Student basics (degreeHash anchors this payload) */}
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <InfoRow icon={GraduationCap} label="Student Name" value={studentName} />
-                    <InfoRow icon={Hash} label="PRN" value={result.prn_number ?? "-"} mono />
-                    <InfoRow icon={FileText} label="Degree Title" value={result.title} />
-                    <InfoRow icon={Calendar} label="Entry Year" value={String(entryYear)} />
-                    <InfoRow icon={Calendar} label="Passing Year" value={String(passingYear)} />
-                    <InfoRow icon={Blocks} label="CGPA" value={String(cgpa)} />
-                    <InfoRow icon={Blocks} label="Credits" value={String(credits)} />
-                    <InfoRow icon={Building2} label="Off-chain Notes" value={result.description ?? "-"} />
-                  </div>
+                <div className="p-6">
+                  <div className="grid md:grid-cols-3 gap-8">
+                    <div className="md:col-span-2 space-y-6">
+                      {/* Student basics */}
+                      <div className="grid sm:grid-cols-2 gap-4">
+                        <InfoRow icon={GraduationCap} label="Student Name" value={studentName} />
+                        <InfoRow icon={Hash} label="PRN" value={result.prn_number ?? "-"} mono />
+                        <InfoRow icon={FileText} label="Degree Title" value={result.title} />
+                        <InfoRow icon={Calendar} label="Entry Year" value={String(entryYear)} />
+                        <InfoRow icon={Calendar} label="Passing Year" value={String(passingYear)} />
+                        <InfoRow icon={Blocks} label="CGPA" value={String(cgpa)} />
+                        <InfoRow icon={Blocks} label="Credits" value={String(credits)} />
+                        <InfoRow icon={Building2} label="Off-chain Notes" value={result.description ?? "-"} />
+                      </div>
 
-                  <div className="p-4 rounded-lg bg-muted/30 border space-y-2.5">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">On-Chain Proof</p>
+                      <div className="p-5 rounded-xl bg-muted/20 border border-muted-foreground/10 space-y-3">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">On-Chain Proof</p>
 
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Token ID</span>
-                      <span className="font-mono font-medium">{result.token_id ?? "-"}</span>
+                        <div className="flex items-center justify-between text-sm py-1 border-b border-muted-foreground/10">
+                          <span className="text-muted-foreground">Token ID</span>
+                          <span className="font-mono font-bold text-foreground">{result.token_id ?? "-"}</span>
+                        </div>
+
+                        {result.tx_hash && (
+                          <div className="flex items-center justify-between text-sm py-1">
+                            <span className="text-muted-foreground">Tx Hash</span>
+                            <a
+                              href={`https://sepolia.etherscan.io/tx/${result.tx_hash}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 font-mono text-accent hover:text-accent/80 transition-colors max-w-[200px] sm:max-w-[260px] truncate"
+                            >
+                              {result.tx_hash}
+                              <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                            </a>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
-                    {result.tx_hash && (
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Tx Hash</span>
-                        <a
-                          href={`https://sepolia.etherscan.io/tx/${result.tx_hash}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 font-mono text-accent hover:underline max-w-[180px] truncate"
-                        >
-                          {result.tx_hash}
-                          <ExternalLink className="w-3 h-3 shrink-0" />
-                        </a>
+                    <div
+                      className="md:col-span-1 flex items-center justify-center border rounded-xl bg-background/50 p-4 shadow-inner relative overflow-hidden group cursor-pointer"
+                      onClick={() => setIsImageExpanded(true)}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-tr from-accent/5 to-transparent opacity-50" />
+                      <div className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm p-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-foreground"><path d="m21 21-6-6m6 6v-4.8m0 4.8h-4.8M3 16.2V21m0 0h4.8M3 21l6-6M21 7.8V3m0 0h-4.8M21 3l-6 6M3 7.8V3m0 0h4.8M3 3l6 6" /></svg>
                       </div>
-                    )}
+                      <img
+                        src={generatedSvg}
+                        alt="SBT Credential"
+                        className="w-full max-w-[240px] h-auto object-contain drop-shadow-2xl relative z-10 transition-transform duration-500 group-hover:scale-[1.05]"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -167,33 +236,96 @@ const EmployerVerify: React.FC = () => {
                   <Search className="w-5 h-5 text-muted-foreground" />
                 </div>
                 <h3 className="font-semibold mb-1">No Record Found</h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground mb-6">
                   No APPROVED degree was found for PRN{" "}
-                  <span className="font-mono font-medium">{query.toUpperCase()}</span>. The admin may not have minted it yet.
+                  <span className="font-mono font-medium">{query}</span>. The admin may not have minted it yet.
                 </p>
+                <button
+                  onClick={() => handleQueryChange({ target: { value: "" } } as any)}
+                  className="px-4 py-2 bg-muted text-foreground rounded-lg text-sm font-medium hover:bg-accent/10 hover:text-accent transition-colors"
+                >
+                  Back to Directory
+                </button>
               </div>
             </ScrollReveal>
           )}
 
           {!searched && (
             <ScrollReveal delay={150}>
-              <p className="text-center text-xs text-muted-foreground mt-4">
-                Try{" "}
-                <button
-                  type="button"
-                  onClick={() => setQuery("PRN2024001")}
-                  className="font-mono text-accent hover:underline"
-                >
-                  PRN2024001
-                </button>{" "}
-                for a demo (if approved on backend).
-              </p>
+              <div className="mt-12 text-left">
+                <h3 className="text-xl font-bold mb-4 text-center md:text-left">Verified Degrees Directory</h3>
+                {loadingAll ? (
+                  <p className="text-sm text-center text-muted-foreground p-8">Loading directory...</p>
+                ) : allDegrees.length === 0 ? (
+                  <p className="text-sm text-center text-muted-foreground p-8">No degrees have been fully verified on the blockchain yet.</p>
+                ) : (
+                  <div className="grid gap-3">
+                    {allDegrees.map((deg) => {
+                      const dMeta = (deg.metadata_json ?? {}) as Record<string, unknown>;
+                      const studentName = typeof dMeta.studentName === "string" ? dMeta.studentName : typeof dMeta.name === "string" ? dMeta.name : "Unknown Student";
+                      return (
+                        <div
+                          key={deg.id}
+                          className="p-4 rounded-xl border bg-card hover:bg-muted/30 transition-colors flex items-center justify-between group cursor-pointer"
+                          onClick={() => {
+                            setQuery(deg.prn_number || "");
+                            setSearched(true);
+                            setResult(deg);
+                          }}
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
+                              <Shield className="w-5 h-5 text-accent" />
+                            </div>
+                            <div>
+                              <div className="font-semibold text-foreground">{studentName}</div>
+                              <div className="text-sm text-muted-foreground flex flex-wrap items-center gap-2 mt-0.5">
+                                <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">{deg.prn_number}</span>
+                                <span className="hidden sm:inline">•</span>
+                                <span className="truncate max-w-[200px] sm:max-w-none">{deg.title}</span>
+                                <span className="hidden sm:inline">•</span>
+                                <span>SBT: <span className="font-mono font-medium text-foreground">{deg.token_id ?? "Pending"}</span></span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-accent opacity-0 group-hover:opacity-100 transition-opacity pl-2">
+                            <ArrowRight className="w-5 h-5" />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </ScrollReveal>
           )}
         </div>
       </div>
 
       <Footer />
+
+      {/* Image expanded modal */}
+      {isImageExpanded && result && generatedSvg && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+          onClick={() => setIsImageExpanded(false)}
+        >
+          <div className="relative max-w-[90vw] max-h-[90vh] flex flex-col items-center">
+            <button
+              className="absolute -top-12 right-0 p-2 text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => setIsImageExpanded(false)}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+            </button>
+            <img
+              src={generatedSvg}
+              alt="SBT Credential Expanded"
+              className="w-full h-full object-contain max-h-[85vh] drop-shadow-2xl rounded-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

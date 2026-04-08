@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { generateSVG, getTierInfo } from "@/utils/svgGenerator";
 import { ethers, type Eip1193Provider } from "ethers";
 import { toast } from "sonner";
 import axios from "@/api/axios";
@@ -200,8 +201,9 @@ const UniversityAdmin: React.FC = () => {
 
       // degreeHash = keccak256(utf8(JSON.stringify(studentBasicsPayload)))
       const m = (credential.metadata_json ?? {}) as Record<string, unknown>;
+      const extractedStudentName = typeof m.studentName === "string" ? m.studentName : (typeof m.name === "string" ? m.name : "Student");
       const studentBasicsPayload = {
-        studentName: typeof m.studentName === "string" ? m.studentName : "",
+        studentName: extractedStudentName,
         passingYear: typeof m.passingYear === "string" ? m.passingYear : "",
         entryYear: typeof m.entryYear === "string" ? m.entryYear : "",
         cgpa: typeof m.cgpa === "string" ? m.cgpa : "",
@@ -212,8 +214,36 @@ const UniversityAdmin: React.FC = () => {
 
       const degreeHash = ethers.keccak256(ethers.toUtf8Bytes(JSON.stringify(studentBasicsPayload)));
 
-      // tokenURI is an off-chain pointer; for demo we keep it deterministic.
-      const degreeURI = `ipfs://degree/${credential.prn_number}`;
+      const universityName = "Altrium University"; // Can be dynamic from auth/context if implemented
+      const cgpaVal = String(m.cgpa || "");
+      const { name: tierName, color: tierColor } = getTierInfo(cgpaVal);
+      const dynamicImageURI = generateSVG(universityName, credential.title, String(m.passingYear || "N/A"), tierName, tierColor);
+
+      // Create a native ERC721 metadata JSON object to inject directly to the blockchain
+      const descriptionText = `${credential.description || "Soulbound academic credential issued via Altrium"}
+
+🎓 Degree: ${credential.title}
+🏫 University: ${universityName}
+📛 PRN: ${credential.prn_number}
+⭐ Tier: ${tierName}
+📅 Class of: ${String(m.passingYear || "N/A")}`;
+      const metadata = {
+        name: `${credential.title} - ${extractedStudentName}`,
+        description: descriptionText,
+        image: dynamicImageURI,
+        attributes: [
+          { trait_type: "University", value: universityName },
+          { trait_type: "Degree", value: credential.title },
+          { trait_type: "CGPA Tier", value: tierName },
+          { trait_type: "Graduation Year", value: String(m.passingYear || "N/A") },
+          { trait_type: "Soulbound", value: "True" }
+        ]
+      };
+
+      // Use URL compatible unicode Base64 encoding
+      const jsonStr = JSON.stringify(metadata);
+      const base64Json = btoa(unescape(encodeURIComponent(jsonStr)));
+      const degreeURI = `data:application/json;base64,${base64Json}`;
 
       const tx = await registryContract.uploadDegree(collegeIdHash, degreeHash, degreeURI);
       const receipt = await tx.wait();
@@ -249,10 +279,10 @@ const UniversityAdmin: React.FC = () => {
         tokenId = await degreeSbtContract.tokenIdByCollegeIdHash(collegeIdHash);
       }
 
-      // Persist to backend: status=APPROVED, tx_hash=receipt.transactionHash, token_id=tokenId
+      // Persist to backend: status=APPROVED, tx_hash=tx.hash, token_id=tokenId
       await axios.patch(`/degrees/${credential.id}`, {
         status: "APPROVED",
-        tx_hash: receipt.transactionHash,
+        tx_hash: tx.hash,
         token_id: Number(tokenId),
       });
 
@@ -263,8 +293,8 @@ const UniversityAdmin: React.FC = () => {
       const message =
         typeof error === "object" && error
           ? ("reason" in error ? (error as { reason?: string }).reason : undefined) ||
-            ("message" in error ? (error as { message?: string }).message : undefined) ||
-            "Minting failed"
+          ("message" in error ? (error as { message?: string }).message : undefined) ||
+          "Minting failed"
           : error instanceof Error
             ? error.message
             : "Minting failed";
@@ -361,11 +391,10 @@ const UniversityAdmin: React.FC = () => {
                             <td className="py-3.5 px-4">
                               <div className="flex items-center justify-end gap-2">
                                 <button
-                                  className={`p-1.5 rounded-md transition-colors ${
-                                    cred.has_document
-                                      ? "hover:bg-muted text-accent"
-                                      : "opacity-40 cursor-not-allowed"
-                                  }`}
+                                  className={`p-1.5 rounded-md transition-colors ${cred.has_document
+                                    ? "hover:bg-muted text-accent"
+                                    : "opacity-40 cursor-not-allowed"
+                                    }`}
                                   title={cred.has_document ? "View Document" : "No document uploaded"}
                                   onClick={() =>
                                     cred.has_document
