@@ -118,8 +118,26 @@ export default function Register() {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="flex bg-muted p-1 rounded-lg mb-6">
+          <button
+            type="button"
+            onClick={() => setRole("STUDENT")}
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${role === "STUDENT" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+          >
+            Student
+          </button>
+          <button
+            type="button"
+            onClick={() => setRole("ADMIN")}
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${role === "ADMIN" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+          >
+            University Admin
+          </button>
+        </div>
 
+        <form onSubmit={handleSubmit} className="space-y-4">
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Full Name</label>
@@ -237,8 +255,9 @@ export default function Register() {
         <div className="mt-6 text-center text-sm text-muted-foreground">
           Already have an account?{" "}
           <Link to={`/login?role=${role}`} className="text-accent font-medium hover:underline">
-            Sign in
-          </Link>
+            <Link to={`/login?role=${role}`} className="text-accent font-medium hover:underline">
+              Sign in
+            </Link>
         </div>
       </div>
     </div>

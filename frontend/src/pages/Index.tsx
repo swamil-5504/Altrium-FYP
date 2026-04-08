@@ -22,36 +22,11 @@ const Index = () => {
       <Navbar />
 
       {/* Hero */}
-      <section className="min-h-screen flex flex-col justify-center relative overflow-hidden">
-        {mounted && (
-          <>
-            {/* Animated grid background - Light Mode */}
-            <div className="absolute inset-0 z-0 transition-opacity duration-500 opacity-[0.1] dark:opacity-0 pointer-events-auto dark:pointer-events-none">
-              <ShapeGrid
-                speed={0.5}
-                squareSize={40}
-                direction='diagonal'
-                borderColor='#271E37'
-                hoverFillColor='#222'
-                shape='square'
-                hoverTrailAmount={0}
-              />
-            </div>
-
-            {/* Animated grid background - Dark Mode */}
-            <div className="absolute inset-0 z-0 transition-opacity duration-500 opacity-0 dark:opacity-[0.3] pointer-events-none dark:pointer-events-auto">
-              <ShapeGrid
-                speed={0.5}
-                squareSize={40}
-                direction='diagonal'
-                borderColor='#ffffff'
-                hoverFillColor='rgba(255, 255, 255, 0.1)'
-                shape='square'
-                hoverTrailAmount={0}
-              />
-            </div>
-          </>
-        )}
+      <section className="pt-32 pb-20 md:pt-40 md:pb-28 relative overflow-hidden">
+        {/* Subtle grid background */}
+        <div className="absolute inset-0 opacity-[0.05]" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h60v60H0z' fill='none' stroke='%23000' stroke-width='.5'/%3E%3C/svg%3E")`,
+        }} />
 
         <div className="container mx-auto px-4 relative">
           <ScrollReveal className="max-w-3xl mx-auto text-center">

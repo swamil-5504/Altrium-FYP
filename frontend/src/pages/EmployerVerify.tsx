@@ -16,9 +16,6 @@ import {
   ExternalLink,
   Building2,
   CheckCircle2,
-  AlertTriangle,
-  XCircle,
-  ShieldCheck,
 } from "lucide-react";
 
 type CredentialStatus = "PENDING" | "APPROVED" | "REJECTED";
@@ -242,31 +239,16 @@ const EmployerVerify: React.FC = () => {
           {result && (
             <ScrollReveal>
               <div className="rounded-xl border bg-card overflow-hidden blockchain-glow">
-                {result.revoked && (
-                  <div className="bg-destructive/10 border-b border-destructive/20 px-6 py-3 flex items-center gap-2">
-                    <XCircle className="w-4 h-4 text-destructive shrink-0" />
-                    <p className="text-sm text-destructive font-medium">This credential has been <strong>revoked</strong> by the issuing institution and is no longer valid.</p>
+                <div className="bg-primary/5 border-b px-6 py-4 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-sm">
+                    <Shield className="w-5 h-5 text-primary-foreground" />
                   </div>
-                )}
-
-                <div className="bg-primary/5 border-b px-6 py-4 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm ${result.revoked ? "bg-destructive/20" : "bg-primary"}`}>
-                      {result.revoked
-                        ? <XCircle className="w-5 h-5 text-destructive" />
-                        : <Shield className="w-5 h-5 text-primary-foreground" />}
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <CheckCircle2 className="w-4 h-4 text-accent" />
+                      <h3 className="font-semibold text-primary">Altrium Verified</h3>
                     </div>
-                    <div>
-                      <div className="flex items-center gap-1.5 mb-0.5">
-                        {result.revoked
-                          ? <><AlertTriangle className="w-4 h-4 text-destructive" /><h3 className="font-semibold text-destructive">Credential Revoked</h3></>
-                          : <><CheckCircle2 className="w-4 h-4 text-accent" /><h3 className="font-semibold text-primary">Altrium Verified</h3></>
-                        }
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {result.revoked ? "This credential is no longer valid." : "Degree anchored on the blockchain (SBT minted)."}
-                      </p>
-                    </div>
+                    <p className="text-xs text-muted-foreground">Degree anchored on the blockchain (SBT minted).</p>
                   </div>
                 </div>
 
@@ -299,8 +281,8 @@ const EmployerVerify: React.FC = () => {
                       {result.tx_hash && (
                         <div className="flex items-center justify-between text-sm py-1 border-b border-muted-foreground/10">
                           <span className="text-muted-foreground">Tx Hash</span>
-                          
-  <a
+
+                          <a
                             href={`https://sepolia.etherscan.io/tx/${result.tx_hash}`}
                             target="_blank"
                             rel="noopener noreferrer"

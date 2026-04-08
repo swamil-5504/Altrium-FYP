@@ -25,12 +25,18 @@ export const Navbar = () => {
 
   const role = user?.role;
   const navLinks: NavItem[] = [
-    ...(!isAuthenticated ? [{ key: "home", to: "/", label: "Home", enabled: true }] : []),
+    { key: "home", to: "/", label: "Home", enabled: true },
     ...(isAuthenticated ? [
       {
         key: "primary",
-        to: role === "SUPERADMIN" ? "/superadmin" : (role === "ADMIN" ? "/university" : "/student"),
-        label: role === "SUPERADMIN" ? "Superadmin Dashboard" : (role === "ADMIN" ? "Submissions" : "My Degree"),
+        to: role === "ADMIN" ? "/university" : "/student",
+        label: role === "ADMIN" ? "Dashboard" : "My Degree",
+        enabled: true,
+      },
+      {
+        key: "secondary",
+        to: role === "ADMIN" ? "/university" : "/student",
+        label: role === "ADMIN" ? "Upload Degree" : "Submissions",
         enabled: true,
       }
     ] : []),
@@ -53,9 +59,9 @@ export const Navbar = () => {
       <Link
         key={link.key}
         to={link.to}
-        className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${isActive
-          ? "text-foreground font-semibold"
-          : "text-muted-foreground hover:text-foreground"
+        className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${isActive
+          ? "bg-primary text-primary-foreground shadow-sm"
+          : "text-muted-foreground hover:text-accent hover:bg-accent/10"
           }`}
       >
         {link.label}
@@ -70,55 +76,53 @@ export const Navbar = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50">
-      <div className="container mx-auto flex items-center justify-between h-14 px-4">
-
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 group">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center overflow-hidden bg-primary">
-            <img src="/altrium_light.png" alt="Altrium" className="w-full h-full object-cover block dark:hidden" />
-            <img src="/altrium_dark.png" alt="Altrium" className="w-full h-full object-cover hidden dark:block" />
+    <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b">
+      <div className="container mx-auto flex items-center justify-between h-16 px-4">
+        <Link to="/" className="flex items-center gap-2.5 group">
+          <div className="w-8 h-8 rounded-lg shadow-inner flex items-center justify-center overflow-hidden">
+            <img src="/altrium.jpg" alt="Altrium" className="w-full h-full object-cover" />
           </div>
           <span className="font-semibold text-sm tracking-tight text-foreground">Altrium</span>
         </Link>
 
         {/* Desktop */}
-        <div className="hidden md:flex items-center gap-5">
-          {navLinks.map(renderNavItem)}
+        <div className="hidden md:flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            {navLinks.map(renderNavItem)}
+          </div>
 
-          <button
-            onClick={toggleTheme}
-            className="text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Toggle theme"
-          >
-            <Sun className="h-4 w-4 hidden dark:block" />
-            <Moon className="h-4 w-4 block dark:hidden" />
-          </button>
-
-          {isAuthenticated ? (
-            <button
-              type="button"
-              onClick={() => void handleLogout()}
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Logout
-            </button>
-          ) : (
-            <div className="flex items-center gap-4">
-              <Link
-                to="/login"
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          <div className="ml-2 pl-2 border-l flex items-center gap-2">
+            {isAuthenticated ? (
+              <button
+                type="button"
+                onClick={() => void handleLogout()}
+                className="px-3.5 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
               >
-                Login
-              </Link>
-              <Link
-                to="/register"
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Register
-              </Link>
-            </div>
-          )}
+                Logout
+              </button>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${location.pathname === "/login"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-accent hover:bg-accent/10"
+                    }`}
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${location.pathname === "/register"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-accent hover:bg-accent/10"
+                    }`}
+                >
+                  Register
+                </Link>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Mobile toggle */}
@@ -149,9 +153,9 @@ export const Navbar = () => {
                 key={link.key}
                 to={link.to}
                 onClick={() => setMobileOpen(false)}
-                className={`block px-3 py-2 rounded-md text-sm font-medium transition-colors ${location.pathname === link.to
-                  ? "text-foreground font-semibold"
-                  : "text-muted-foreground hover:text-foreground"
+                className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === link.to
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   }`}
               >
                 {link.label}
@@ -179,16 +183,26 @@ export const Navbar = () => {
               <>
                 <Link
                   to="/login"
+                  to="/login"
                   onClick={() => setMobileOpen(false)}
-                  className="block px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === "/login"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-accent hover:bg-accent/10"
+                    }`}
                 >
+                  Login
                   Login
                 </Link>
                 <Link
                   to="/register"
+                  to="/register"
                   onClick={() => setMobileOpen(false)}
-                  className="block px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === "/register"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-accent hover:bg-accent/10"
+                    }`}
                 >
+                  Register
                   Register
                 </Link>
               </>

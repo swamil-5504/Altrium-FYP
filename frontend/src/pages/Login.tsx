@@ -10,10 +10,7 @@ import axios from "@/api/axios";
 
 export default function Login() {
   const [searchParams] = useSearchParams();
-  const [role, setRole] = useState<"STUDENT" | "ADMIN">(
-    searchParams.get("role") === "ADMIN" ? "ADMIN" : "STUDENT"
-  );
-
+  const [role, setRole] = useState<"STUDENT" | "ADMIN">(searchParams.get("role") === "ADMIN" ? "ADMIN" : "STUDENT");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -34,31 +31,19 @@ export default function Login() {
       await login(email, password, false);
 
       const me = await axios.get("/users/me");
-      const userRole = me.data.role as "ADMIN" | "STUDENT" | "SUPERADMIN";
-
-      if (userRole === "SUPERADMIN") {
-        toast.success("Successfully logged in as Superadmin!");
-        navigate("/superadmin");
-        return;
-      }
+      const userRole = me.data.role as "ADMIN" | "STUDENT";
 
       if (userRole !== role) {
         await logout();
         toast.error(`You are a ${userRole}, but you tried to login as a ${role}.`);
+        toast.error(`You are a ${userRole}, but you tried to login as a ${role}.`);
         return;
       }
 
-      if (userRole === "ADMIN") {
-        if (!me.data.is_legal_admin_verified) {
-          navigate("/pending-verification");
-        } else {
-          toast.success("Successfully logged in!");
-          navigate("/university");
-        }
-      } else if (userRole === "STUDENT") {
-        toast.success("Successfully logged in!");
-        navigate("/student");
-      }
+      toast.success("Successfully logged in!");
+
+      if (userRole === "ADMIN") navigate("/university");
+      else navigate("/student");
     } catch (err: unknown) {
       const detail =
         typeof err === "object" && err && "response" in err
@@ -98,17 +83,14 @@ export default function Login() {
           <KeyRound className="w-6 h-6 text-accent" />
         </div>
 
-        <h2 className="text-2xl font-bold mb-2">
-          {role === "ADMIN" ? "Admin Login" : "Student Login"}
-        </h2>
-
+        <h2 className="text-2xl font-bold mb-2">{role === "ADMIN" ? "Admin Login" : "Student Login"}</h2>
         <p className="text-muted-foreground text-sm mb-6">Sign in to access your portal.</p>
 
-        <div className="grid grid-cols-2 bg-muted p-1 rounded-lg mb-6">
+        <div className="flex bg-muted p-1 rounded-lg mb-6">
           <button
             type="button"
             onClick={() => setRole("STUDENT")}
-            className={`py-2 text-sm font-medium rounded-md transition-all ${role === "STUDENT" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${role === "STUDENT" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
           >
             Student
@@ -116,13 +98,12 @@ export default function Login() {
           <button
             type="button"
             onClick={() => setRole("ADMIN")}
-            className={`py-2 text-sm font-medium rounded-md transition-all ${role === "ADMIN" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${role === "ADMIN" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
           >
-            Admin
+            University Admin
           </button>
         </div>
-
 
         <form onSubmit={handleSubmit} className="space-y-4">
 
@@ -179,8 +160,9 @@ export default function Login() {
         <div className="mt-6 text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{" "}
           <Link to={`/register?role=${role}`} className="text-accent font-medium hover:underline">
-            Register here
-          </Link>
+            <Link to={`/register?role=${role}`} className="text-accent font-medium hover:underline">
+              Register here
+            </Link>
         </div>
       </div>
     </div>
