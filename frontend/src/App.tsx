@@ -16,33 +16,6 @@ import PendingVerification from "./pages/PendingVerification.tsx";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
-import { createAppKit } from '@reown/appkit/react';
-import { EthersAdapter } from '@reown/appkit-adapter-ethers';
-import { sepolia } from '@reown/appkit/networks';
-
-const projectId = import.meta.env.VITE_REOWN_PROJECT_ID || 'b56e18d47c72ab683b10814fe9495694';
-
-// Initialize Reown AppKit
-createAppKit({
-  adapters: [new EthersAdapter()],
-  networks: [sepolia],
-  metadata: {
-    name: 'Altrium Admin',
-    description: 'Altrium Institutional Degree Minting',
-    url: typeof window !== 'undefined' ? window.location.origin : 'https://altrium.example.com',
-    icons: [`${typeof window !== 'undefined' ? window.location.origin : 'https://altrium.example.com'}/favicon.ico`]
-  },
-  projectId,
-  features: {
-    email: false,
-    socials: false,
-  },
-  featuredWalletIds: [
-    'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96' // MetaMask
-  ],
-  allWallets: 'HIDE'
-});
-
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -72,16 +45,6 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/superadmin"
-              element={
-                <ProtectedRoute requiredRole="SUPERADMIN">
-                  <SuperadminDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/guide" element={<Web3Guide />} />
-            <Route path="/pending-verification" element={<PendingVerification />} />
             <Route path="/verify" element={<EmployerVerify />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

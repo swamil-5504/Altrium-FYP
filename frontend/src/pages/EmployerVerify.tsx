@@ -16,6 +16,7 @@ import {
   ExternalLink,
   Building2,
   CheckCircle2,
+  ArrowRight,
 } from "lucide-react";
 
 type CredentialStatus = "PENDING" | "APPROVED" | "REJECTED";
@@ -76,15 +77,28 @@ const EmployerVerify: React.FC = () => {
   const [result, setResult] = useState<Credential | null>(null);
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [hashVerified, setHashVerified] = useState<boolean | null>(null);
-  const [verifyingHash, setVerifyingHash] = useState(false);
+  const [allDegrees, setAllDegrees] = useState<Credential[]>([]);
+  const [loadingAll, setLoadingAll] = useState(true);
+
+  React.useEffect(() => {
+    const fetchAll = async () => {
+      try {
+        const res = await axios.get("/degrees/public");
+        setAllDegrees(res.data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoadingAll(false);
+      }
+    };
+    void fetchAll();
+  }, []);
 
   const handleQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
     if (!e.target.value.trim()) {
       setSearched(false);
       setResult(null);
-      setHashVerified(null);
     }
   };
 
@@ -94,7 +108,6 @@ const EmployerVerify: React.FC = () => {
     if (!trimmed) {
       setSearched(false);
       setResult(null);
-      setHashVerified(null);
       return;
     }
 
@@ -209,31 +222,43 @@ const EmployerVerify: React.FC = () => {
 
           <ScrollReveal delay={80}>
             <form onSubmit={handleSearch} className="flex gap-2 mb-8 relative">
-              <input
-                type="text"
-                value={query}
-                onChange={handleQueryChange}
-                placeholder="Enter PRN (e.g. PRN2024001) or Email"
-                required
+              <form onSubmit={handleSearch} className="flex gap-2 mb-8 relative">
+                <input
+                  type="text"
+                  value={query}
+                  onChange={handleQueryChange}
+                  placeholder="Enter PRN Number (e.g. PRN2024001)"
+                  required
+                  className="flex-1 px-4 py-3 rounded-lg border bg-card text-sm font-mono focus:outline-none focus:ring-2 focus:ring-accent transition-all"
+                />
+                {query && (
+                  <button
+                    type="button"
+                    onClick={() => handleQueryChange({ target: { value: "" } } as any)}
+                    className="absolute right-[110px] top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-foreground"
+                  >
+                    ✕
+                  </button>
+                )}
                 className="flex-1 px-4 py-3 rounded-lg border bg-card text-sm font-mono focus:outline-none focus:ring-2 focus:ring-accent transition-all"
               />
-              {query && (
+                {query && (
+                  <button
+                    type="button"
+                    onClick={() => handleQueryChange({ target: { value: "" } } as any)}
+                    className="absolute right-[110px] top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-foreground"
+                  >
+                    ✕
+                  </button>
+                )}
                 <button
-                  type="button"
-                  onClick={() => handleQueryChange({ target: { value: "" } } as any)}
-                  className="absolute right-[110px] top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-foreground"
+                  type="submit"
+                  disabled={loading}
+                  className="px-5 py-3 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity active:scale-[0.98] disabled:opacity-50"
                 >
-                  ✕
+                  {loading ? "Verifying..." : "Verify"}
                 </button>
-              )}
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-5 py-3 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity active:scale-[0.98] disabled:opacity-50"
-              >
-                {loading ? "Verifying..." : "Verify"}
-              </button>
-            </form>
+              </form>
           </ScrollReveal>
 
           {result && (
@@ -320,9 +345,15 @@ const EmployerVerify: React.FC = () => {
                 </div>
                 <h3 className="font-semibold mb-1">No Record Found</h3>
                 <p className="text-sm text-muted-foreground mb-6">
-                  No APPROVED degree was found for{" "}
+                  No APPROVED degree was found for PRN{" "}
                   <span className="font-mono font-medium">{query}</span>. The admin may not have minted it yet.
                 </p>
+                <button
+                  onClick={() => handleQueryChange({ target: { value: "" } } as any)}
+                  className="px-4 py-2 bg-muted text-foreground rounded-lg text-sm font-medium hover:bg-accent/10 hover:text-accent transition-colors"
+                >
+                  Back to Directory
+                </button>
                 <button
                   onClick={() => handleQueryChange({ target: { value: "" } } as any)}
                   className="px-4 py-2 bg-muted text-foreground rounded-lg text-sm font-medium hover:bg-accent/10 hover:text-accent transition-colors"
@@ -333,6 +364,55 @@ const EmployerVerify: React.FC = () => {
             </ScrollReveal>
           )}
 
+          {!searched && (
+            <ScrollReveal delay={150}>
+              <div className="mt-12 text-left">
+                <h3 className="text-xl font-bold mb-4 text-center md:text-left">Verified Degrees Directory</h3>
+                {loadingAll ? (
+                  <p className="text-sm text-center text-muted-foreground p-8">Loading directory...</p>
+                ) : allDegrees.length === 0 ? (
+                  <p className="text-sm text-center text-muted-foreground p-8">No degrees have been fully verified on the blockchain yet.</p>
+                ) : (
+                  <div className="grid gap-3">
+                    {allDegrees.map((deg) => {
+                      const dMeta = (deg.metadata_json ?? {}) as Record<string, unknown>;
+                      const studentName = typeof dMeta.studentName === "string" ? dMeta.studentName : typeof dMeta.name === "string" ? dMeta.name : "Unknown Student";
+                      return (
+                        <div
+                          key={deg.id}
+                          className="p-4 rounded-xl border bg-card hover:bg-muted/30 transition-colors flex items-center justify-between group cursor-pointer"
+                          onClick={() => {
+                            setQuery(deg.prn_number || "");
+                            setSearched(true);
+                            setResult(deg);
+                          }}
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
+                              <Shield className="w-5 h-5 text-accent" />
+                            </div>
+                            <div>
+                              <div className="font-semibold text-foreground">{studentName}</div>
+                              <div className="text-sm text-muted-foreground flex flex-wrap items-center gap-2 mt-0.5">
+                                <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">{deg.prn_number}</span>
+                                <span className="hidden sm:inline">•</span>
+                                <span className="truncate max-w-[200px] sm:max-w-none">{deg.title}</span>
+                                <span className="hidden sm:inline">•</span>
+                                <span>SBT: <span className="font-mono font-medium text-foreground">{deg.token_id ?? "Pending"}</span></span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-accent opacity-0 group-hover:opacity-100 transition-opacity pl-2">
+                            <ArrowRight className="w-5 h-5" />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </ScrollReveal>
+          )}
         </div>
       </div>
 
