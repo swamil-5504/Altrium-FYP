@@ -201,6 +201,7 @@ dmypy.json
 # Pyre type checker
 .pyre/
 /lib/
+!frontend/src/lib/
 /contracts/lib/  # managed by contracts/.gitignore; do not globally ignore Foundry libs
 !/contracts/lib/
 
