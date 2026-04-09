@@ -17,3 +17,15 @@ async def get_all_users(
     current_user: User = Depends(require_role(UserRole.ADMIN))
 ):
     return await UserCRUD.get_all()
+
+@router.get("/my-students", response_model=List[UserResponse])
+async def get_my_students(
+    current_user: User = Depends(require_role(UserRole.ADMIN))
+):
+    """Return all students enrolled in the same college as this admin."""
+    if not current_user.college_name:
+        return []
+    return await User.find(
+        User.role == UserRole.STUDENT,
+        User.college_name == current_user.college_name
+    ).to_list()

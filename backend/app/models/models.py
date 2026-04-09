@@ -27,6 +27,9 @@ class User(Document):
     # Demo/demo-scope: only admins that are "legally verified" are allowed
     # to approve + mint credentials.
     is_legal_admin_verified: bool = False
+    college_name: Optional[str] = None
+    wallet_address: Optional[str] = None
+    verification_document_path: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -45,6 +48,9 @@ class Credential(Document):
     token_id: Optional[int] = None
     tx_hash: Optional[str] = None
     prn_number: Optional[str] = None
+    college_name: Optional[str] = None
+    revoked: bool = False
+    revoked_at: Optional[datetime] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 

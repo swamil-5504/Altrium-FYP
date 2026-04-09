@@ -6,6 +6,9 @@ export interface IUser {
   email: string;
   full_name: string | null;
   role: "ADMIN" | "STUDENT";
+  college_name: string | null;
+  wallet_address: string | null;
+  prn_number: string | null;
   is_active: boolean;
   created_at: string;
 }
@@ -15,7 +18,7 @@ interface IAuthContext {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, fullName: string, role: "ADMIN" | "STUDENT") => Promise<void>;
+  register: (email: string, password: string, fullName: string, role: "ADMIN" | "STUDENT", collegeName?: string, walletAddress?: string, prnNumber?: string) => Promise<any>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
 }
@@ -54,9 +57,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser(userResponse.data);
   };
 
-  const register = async (email: string, password: string, fullName: string, role: "ADMIN" | "STUDENT") => {
-    await axios.post("/auth/register", { email, password, full_name: fullName, role });
-    await login(email, password);
+  const register = async (email: string, password: string, fullName: string, role: "ADMIN" | "STUDENT", collegeName?: string, walletAddress?: string, prnNumber?: string) => {
+    const response = await axios.post("/auth/register", {
+      email,
+      password,
+      full_name: fullName,
+      role,
+      college_name: collegeName,
+      wallet_address: walletAddress,
+      prn_number: prnNumber
+    });
+    if (role === "STUDENT") {
+      await login(email, password);
+    }
+    return response.data;
   };
 
   const logout = async () => {
@@ -80,22 +94,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.setItem("refresh_token", response.data.refresh_token);
   };
 
-    return (
-      <AuthContext.Provider
-        value={{
-          user,
-          isLoading,
-          isAuthenticated: !!user,
-          login,
-          register,
-          logout,
-          refresh,
-        }}
-      >
-        {children}
-      </AuthContext.Provider>
-    );
-  };
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoading,
+        isAuthenticated: !!user,
+        login,
+        register,
+        logout,
+        refresh,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
 
 export const useAuth = () => {
   const context = useContext(AuthContext);

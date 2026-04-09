@@ -39,6 +39,12 @@ export default function Login() {
         typeof err === "object" && err && "response" in err
           ? (err as { response?: { data?: { detail?: string } } }).response?.data?.detail
           : undefined;
+
+      if (detail && detail.includes("pending verification")) {
+        navigate("/pending-verification");
+        return;
+      }
+
       toast.error(detail || "Login failed");
     } finally {
       setLoading(false);

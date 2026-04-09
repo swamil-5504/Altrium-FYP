@@ -214,3 +214,10 @@
     transform: translateY(-6px);
   }
 }
+@media print {
+  .no-print { display: none !important; }
+  nav, footer { display: none !important; }
+  body { background: white !important; color: black !important; }
+  .blockchain-glow { box-shadow: none !important; }
+  .bg-card { background: white !important; border: 1px solid #ddd !important; }
+}
