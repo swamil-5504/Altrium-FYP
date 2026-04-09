@@ -6,7 +6,7 @@ export interface IUser {
   id: string;
   email: string;
   full_name: string | null;
-  role: "ADMIN" | "STUDENT" | "SUPERADMIN";
+  role: "ADMIN" | "STUDENT";
   college_name: string | null;
   wallet_address: string | null;
   prn_number: string | null;
@@ -19,9 +19,8 @@ interface IAuthContext {
   user: IUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  isPendingVerification: boolean;
-  login: (email: string, password: string, ignoreVerification?: boolean) => Promise<void>;
-  register: (email: string, password: string, fullName: string, role: "ADMIN" | "STUDENT" | "SUPERADMIN", collegeName?: string, walletAddress?: string, prnNumber?: string) => Promise<any>;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, fullName: string, role: "ADMIN" | "STUDENT", collegeName?: string, walletAddress?: string, prnNumber?: string) => Promise<any>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -62,7 +61,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser(userResponse.data);
   };
 
-  const register = async (email: string, password: string, fullName: string, role: "ADMIN" | "STUDENT" | "SUPERADMIN", collegeName?: string, walletAddress?: string, prnNumber?: string) => {
+  const register = async (email: string, password: string, fullName: string, role: "ADMIN" | "STUDENT", collegeName?: string, walletAddress?: string, prnNumber?: string) => {
     const response = await axios.post("/auth/register", {
       email,
       password,
@@ -72,7 +71,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       wallet_address: walletAddress,
       prn_number: prnNumber
     });
-    if (role === "STUDENT" || role === "ADMIN") {
+    if (role === "STUDENT") {
       await login(email, password);
     }
     return response.data;
@@ -124,13 +123,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       value={{
         user,
         isLoading,
-        isAuthenticated,
-        isPendingVerification,
+        isAuthenticated: !!user,
         login,
         register,
         logout,
         refresh,
-        refreshUser,
       }}
     >
       {children}

@@ -18,6 +18,9 @@ class UserCRUD:
             college_name=user_create.college_name,
             wallet_address=user_create.wallet_address,
             prn_number=user_create.prn_number
+            college_name=user_create.college_name,
+            wallet_address=user_create.wallet_address,
+            prn_number=user_create.prn_number
         )
         await user.insert()
         return user
@@ -77,8 +80,7 @@ class CredentialCRUD:
             token_id=credential_create.token_id,
             tx_hash=credential_create.tx_hash,
             prn_number=credential_create.prn_number,
-            college_name=credential_create.college_name,
-            document_uid=f"DOC-{uuid4().hex[:12].upper()}"
+            college_name=credential_create.college_name
         )
         await credential.insert()
         return credential
@@ -94,6 +96,10 @@ class CredentialCRUD:
     @staticmethod
     async def get_by_user(user_id: UUID) -> List[Credential]:
         return await Credential.find(Credential.issued_to_id == user_id).to_list()
+
+    @staticmethod
+    async def get_by_college(college_name: str, skip: int = 0, limit: int = 100) -> List[Credential]:
+        return await Credential.find(Credential.college_name == college_name).skip(skip).limit(limit).to_list()
 
     @staticmethod
     async def get_by_college(college_name: str, skip: int = 0, limit: int = 100) -> List[Credential]:

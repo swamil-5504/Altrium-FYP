@@ -45,6 +45,8 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route path="/guide" element={<Web3Guide />} />
+            <Route path="/pending-verification" element={<PendingVerification />} />
             <Route path="/verify" element={<EmployerVerify />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

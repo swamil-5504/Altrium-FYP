@@ -23,6 +23,9 @@ class UserBase(BaseModel):
     college_name: Optional[str] = None
     wallet_address: Optional[str] = None
     prn_number: Optional[str] = None
+    college_name: Optional[str] = None
+    wallet_address: Optional[str] = None
+    prn_number: Optional[str] = None
 
 class UserCreate(UserBase):
     password: str
@@ -35,7 +38,10 @@ class UserResponse(UserBase):
     id: UUID
     college_name: Optional[str] = None
     prn_number: Optional[str] = None
+    college_name: Optional[str] = None
+    prn_number: Optional[str] = None
     is_active: bool
+    is_legal_admin_verified: bool = False
     is_legal_admin_verified: bool = False
     created_at: datetime
 
@@ -55,6 +61,8 @@ class CredentialCreate(CredentialBase):
     tx_hash: Optional[str] = None
     prn_number: Optional[str] = None
     college_name: Optional[str] = None
+    prn_number: Optional[str] = None
+    college_name: Optional[str] = None
 
 class CredentialUpdate(BaseModel):
     title: Optional[str] = None
@@ -63,6 +71,7 @@ class CredentialUpdate(BaseModel):
     metadata_json: Optional[dict] = None
     token_id: Optional[int] = None
     tx_hash: Optional[str] = None
+    revoked: Optional[bool] = None
     revoked: Optional[bool] = None
 
 class CredentialResponse(CredentialBase):
@@ -74,8 +83,8 @@ class CredentialResponse(CredentialBase):
     tx_hash: Optional[str] = None
     prn_number: Optional[str] = None
     college_name: Optional[str] = None
-    document_uid: Optional[str] = None
     has_document: bool = False
+    revoked: bool = False
     revoked: bool = False
     created_at: datetime
     updated_at: datetime

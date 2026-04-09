@@ -83,14 +83,11 @@ class DegreeService:
     @staticmethod
     async def create_submission(credential_create: CredentialCreate, current_user: User) -> Credential:
         # Automatically pull PRN and College from user profile if not provided
-        overrides: dict = {}
         if not credential_create.prn_number:
-            overrides["prn_number"] = current_user.prn_number
+            credential_create.prn_number = current_user.prn_number
         if not credential_create.college_name:
-            overrides["college_name"] = current_user.college_name
-        if overrides:
-            credential_create = credential_create.model_copy(update=overrides)
-
+            credential_create.college_name = current_user.college_name
+            
         return await CredentialCRUD.create(
             credential_create=credential_create,
             issued_to_id=current_user.id,
@@ -103,10 +100,29 @@ class DegreeService:
             return await CredentialCRUD.get_all() # We need a get_all method, or just get everything
         if current_user.role == UserRole.ADMIN:
             if current_user.college_name:
-                creds = await CredentialCRUD.get_by_college(current_user.college_name)
-                return [c for c in creds if c.status == CredentialStatus.PENDING or c.issued_by_id == current_user.id]
+                return await CredentialCRUD.get_by_college(current_user.college_name)
             return []  # Return empty if admin has no college assigned
         return await CredentialCRUD.get_by_user(current_user.id)
+
+    @staticmethod
+    async def reset_submission(credential_id: UUID) -> Credential:
+        """Reset a degree submission after an on-chain burn, allowing re-minting."""
+        credential = await CredentialCRUD.get_by_id(credential_id)
+        if not credential:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Credential not found",
+            )
+        
+        credential.status = CredentialStatus.PENDING
+        credential.token_id = None
+        credential.tx_hash = None
+        credential.revoked = False
+        credential.revoked_at = None
+        from datetime import datetime
+        credential.updated_at = datetime.utcnow()
+        await credential.save()
+        return credential
 
     @staticmethod
     async def reset_submission(credential_id: UUID) -> Credential:

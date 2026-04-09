@@ -8,7 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useAppKit, useAppKitAccount, useAppKitProvider } from '@reown/appkit/react';
 import { Navbar } from "@/components/Navbar";
 import { ScrollReveal } from "@/components/ScrollReveal";
-import { Blocks, Clock, Eye, Shield, XCircle, Wallet, HelpCircle, Users, GraduationCap, AlertTriangle, Mail, User as UserIcon, Building2 } from "lucide-react";
+import { Blocks, Clock, Eye, Shield, XCircle, Wallet, Upload, HelpCircle, Users, GraduationCap, AlertTriangle } from "lucide-react";
 
 import { Link } from "react-router-dom";
 
@@ -25,6 +25,18 @@ interface Credential {
   tx_hash?: string | null;
   has_document?: boolean;
   college_name?: string | null;
+  created_at: string;
+}
+
+interface Student {
+  id: string;
+  email: string;
+  full_name: string | null;
+  role: "ADMIN" | "STUDENT";
+  college_name: string | null;
+  wallet_address: string | null;
+  prn_number: string | null;
+  is_active: boolean;
   created_at: string;
 }
 
@@ -93,6 +105,27 @@ const registryAbi = [
   },
   {
     type: "function",
+    name: "revokeDegree",
+    inputs: [{ name: "collegeIdHash", type: "bytes32" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "burnDegree",
+    inputs: [{ name: "collegeIdHash", type: "bytes32" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "isDegreeRevoked",
+    inputs: [{ name: "collegeIdHash", type: "bytes32" }],
+    outputs: [{ name: "", type: "bool" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
     name: "degreeSBT",
     inputs: [],
     outputs: [{ name: "", type: "address" }],
@@ -122,15 +155,17 @@ const degreeSbtAbi = [
 ] as const;
 
 const UniversityAdmin: React.FC = () => {
-  const { isAuthenticated, user, refreshUser } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [credentials, setCredentials] = useState<Credential[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [activeTab, setActiveTab] = useState<"degrees" | "students">("degrees");
   const [students, setStudents] = useState<Student[]>([]);
   const [activeTab, setActiveTab] = useState<"degrees" | "students">("degrees");
   const [loading, setLoading] = useState(true);
 
-  const { open } = useAppKit();
-  const { address: walletAddress, isConnected } = useAppKitAccount();
-  const { walletProvider } = useAppKitProvider('eip155');
+  const [walletAddress, setWalletAddress] = useState<string>("");
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
 
   const [mintingById, setMintingById] = useState<Record<string, boolean>>({});
 
@@ -164,13 +199,57 @@ const UniversityAdmin: React.FC = () => {
     [credentials],
   );
 
+  const approvedCredentials = useMemo(
+    () => credentials.filter((c) => c.status === "APPROVED"),
+    [credentials],
+  );
+
   useEffect(() => {
     void fetchCredentials();
+
+    // Check if guide has been shown for THIS specific user
+    if (user?.id) {
+      const guideSeenKey = `web3_guide_seen_${user.id}`;
+      const guideSeen = localStorage.getItem(guideSeenKey);
+      if (!guideSeen) {
+        setShowGuide(true);
+      }
+    }
   }, [user?.id]);
+
+  useEffect(() => {
+    if (window.ethereum) {
+      // Sync initial wallet address
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      provider.listAccounts().then(accounts => {
+        if (accounts.length > 0) {
+          setWalletAddress(accounts[0].address);
+        }
+      });
+
+      const handleAccountsChanged = (accounts: string[]) => {
+        if (accounts.length > 0) {
+          setWalletAddress(accounts[0]);
+        } else {
+          setWalletAddress("");
+        }
+      };
+      (window.ethereum as any).on("accountsChanged", handleAccountsChanged);
+      return () => {
+        (window.ethereum as any).removeListener("accountsChanged", handleAccountsChanged);
+      };
+    }
+  }, []);
 
   const fetchCredentials = async () => {
     setLoading(true);
     try {
+      const [credRes, studRes] = await Promise.all([
+        axios.get("/degrees"),
+        axios.get("/users/my-students"),
+      ]);
+      setCredentials(credRes.data);
+      setStudents(studRes.data);
       const [credRes, studRes] = await Promise.all([
         axios.get("/degrees"),
         axios.get("/users/my-students"),
@@ -215,8 +294,8 @@ const UniversityAdmin: React.FC = () => {
     const revokeToast = toast.loading("Revoking on-chain...");
     try {
       // --- On-chain revocation first ---
-      if (walletProvider && CONTRACT_REGISTRY_ADDRESS) {
-        const provider = new ethers.BrowserProvider(walletProvider as any);
+      if (window.ethereum && CONTRACT_REGISTRY_ADDRESS) {
+        const provider = new ethers.BrowserProvider(window.ethereum);
         const signer = await provider.getSigner();
         const registryContract = new ethers.Contract(CONTRACT_REGISTRY_ADDRESS, registryAbi, signer);
         const combinedString = `${credential.prn_number}-${credential.college_name}`;
@@ -225,7 +304,7 @@ const UniversityAdmin: React.FC = () => {
         await tx.wait();
         toast.loading("On-chain revocation confirmed. Updating backend...", { id: revokeToast });
       } else {
-        toast.warning("Wallet not connected — revoking on platform only (not on-chain).");
+        toast.warning("MetaMask not connected — revoking on platform only (not on-chain).");
       }
 
       await axios.patch(`/degrees/${credentialId}/revoke`);
@@ -247,8 +326,8 @@ const UniversityAdmin: React.FC = () => {
     const burnToast = toast.loading("Burning NFT on-chain...");
     try {
       // 1. On-chain burn
-      if (walletProvider && CONTRACT_REGISTRY_ADDRESS) {
-        const provider = new ethers.BrowserProvider(walletProvider as any);
+      if (window.ethereum && CONTRACT_REGISTRY_ADDRESS) {
+        const provider = new ethers.BrowserProvider(window.ethereum);
         const signer = await provider.getSigner();
         const registryContract = new ethers.Contract(CONTRACT_REGISTRY_ADDRESS, registryAbi, signer);
         const combinedString = `${credential.prn_number}-${credential.college_name}`;
@@ -257,7 +336,7 @@ const UniversityAdmin: React.FC = () => {
         await tx.wait();
         toast.loading("On-chain burn confirmed. Resetting submission in database...", { id: burnToast });
       } else {
-        toast.warning("Wallet not connected — resetting on platform only (not on-chain).");
+        toast.warning("MetaMask not connected — resetting on platform only (not on-chain).");
       }
 
       // 2. Backend reset
@@ -270,6 +349,57 @@ const UniversityAdmin: React.FC = () => {
     }
   };
 
+  // ── CSV Bulk Upload ──────────────────────────────────────────────────
+  const [csvUploading, setCSVUploading] = useState(false);
+
+  const handleCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCSVUploading(true);
+    try {
+      const text = await file.text();
+      const lines = text.trim().split("\n");
+      const headers = lines[0].split(",").map(h => h.trim().toLowerCase());
+      const rows = lines.slice(1);
+
+      let minted = 0;
+      for (const row of rows) {
+        const values = row.split(",").map(v => v.trim());
+        const obj: Record<string, string> = {};
+        headers.forEach((h, i) => { obj[h] = values[i] || ""; });
+
+        // Expected CSV columns: prn_number, student_name, degree_title, passing_year, entry_year, cgpa, credits, description
+        if (!obj["prn_number"] || !obj["degree_title"]) continue;
+
+        try {
+          await axios.post("/degrees/", {
+            title: obj["degree_title"],
+            description: obj["description"] || "",
+            prn_number: obj["prn_number"],
+            metadata_json: {
+              studentName: obj["student_name"] || "",
+              passingYear: obj["passing_year"] || "",
+              entryYear: obj["entry_year"] || "",
+              cgpa: obj["cgpa"] || "",
+              credits: obj["credits"] || "",
+            },
+          });
+          minted++;
+        } catch (rowErr) {
+          console.error("Row failed:", obj, rowErr);
+        }
+      }
+
+      toast.success(`CSV imported: ${minted} submission(s) queued for minting.`);
+      await fetchCredentials();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to parse CSV.");
+    } finally {
+      setCSVUploading(false);
+      e.target.value = "";
+    }
+  };
 
   const handleViewDocument = async (credentialId: string) => {
     const loadingToast = toast.loading("Loading proof document, please wait...");
@@ -344,6 +474,11 @@ const UniversityAdmin: React.FC = () => {
       // collegeIdHash = keccak256(utf8(prn_number + universityName))
       const combinedString = `${credential.prn_number}-${universityName}`;
       const collegeIdHash = ethers.keccak256(ethers.toUtf8Bytes(combinedString));
+      const universityName = user?.college_name || "Altrium University";
+
+      // collegeIdHash = keccak256(utf8(prn_number + universityName))
+      const combinedString = `${credential.prn_number}-${universityName}`;
+      const collegeIdHash = ethers.keccak256(ethers.toUtf8Bytes(combinedString));
 
       // degreeHash = keccak256(utf8(JSON.stringify(studentBasicsPayload)))
       const m = (credential.metadata_json ?? {}) as Record<string, unknown>;
@@ -362,7 +497,6 @@ const UniversityAdmin: React.FC = () => {
 
       const degreeHash = ethers.keccak256(ethers.toUtf8Bytes(JSON.stringify(studentBasicsPayload)));
 
-      const universityName = "Altrium University"; // Can be dynamic from auth/context if implemented
       const cgpaVal = String(m.cgpa || "");
       const { name: tierName, color: tierColor } = getTierInfo(cgpaVal);
       const dynamicImageURI = generateSVG(universityName, credential.title, String(m.passingYear || "N/A"), tierName, tierColor);
@@ -486,6 +620,12 @@ const UniversityAdmin: React.FC = () => {
               </div>
 
               <div className="flex gap-3">
+                {/* CSV Upload */}
+                <label className={`inline-flex items-center gap-2 px-4 py-2 border rounded-lg bg-card text-foreground font-medium text-sm hover:bg-muted transition active:scale-[0.98] cursor-pointer ${csvUploading ? "opacity-50 pointer-events-none" : ""}`}>
+                  <Upload className="w-4 h-4" />
+                  {csvUploading ? "Importing..." : "Import CSV"}
+                  <input type="file" className="hidden" accept=".csv" onChange={handleCSVUpload} disabled={csvUploading} />
+                </label>
                 {/* Wallet Status Label */}
                 <div className="flex items-center gap-2 px-4 py-2 border rounded-lg bg-card text-foreground text-sm font-medium">
                   <Wallet className="w-4 h-4 text-accent" />
@@ -506,6 +646,20 @@ const UniversityAdmin: React.FC = () => {
                 </Link>
               </div>
             </div>
+
+            {/* Wallet Warning */}
+            {walletAddress && user?.wallet_address && walletAddress.toLowerCase() !== user.wallet_address.toLowerCase() && (
+              <div className="mb-6 p-4 rounded-xl border border-amber-500/30 bg-amber-500/10 flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
+                <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
+                <div>
+                  <h4 className="text-sm font-bold text-amber-500">Wallet Account Mismatch</h4>
+                  <p className="text-xs text-amber-500/80 mt-1">
+                    MetaMask is connected to <strong>{walletAddress.slice(0, 10)}...</strong>, but this Admin profile is registered to <strong>{user.wallet_address.slice(0, 10)}...</strong>.
+                    Transactions will fail unless you switch accounts in MetaMask.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Wallet Warning */}
             {walletAddress && user?.wallet_address && walletAddress.toLowerCase() !== user.wallet_address.toLowerCase() && (
@@ -562,7 +716,58 @@ const UniversityAdmin: React.FC = () => {
                       </div>
                     </div>
                   </div>
+          {/* Tab Switcher */}
+          <div className="flex gap-2 mb-6 p-1 bg-muted rounded-xl">
+            <button
+              onClick={() => setActiveTab("degrees")}
+              className={`flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === "degrees"
+                ? "bg-background shadow text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+                }`}
+            >
+              <GraduationCap className="w-4 h-4" />
+              Degree Submissions
+            </button>
+            <button
+              onClick={() => setActiveTab("students")}
+              className={`flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === "students"
+                ? "bg-background shadow text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+                }`}
+            >
+              <Users className="w-4 h-4" />
+              Students Enrolled
+              <span className="ml-1 px-1.5 py-0.5 rounded-full text-xs bg-accent/10 text-accent">{students.length}</span>
+            </button>
+          </div>
 
+          {activeTab === "degrees" && (
+            <>
+              <ScrollReveal delay={100}>
+                <div className="rounded-xl border bg-card overflow-hidden">
+                  <div className="p-4 border-b bg-muted/30">
+                    <div className="flex flex-wrap items-center gap-4 justify-between">
+                      <div>
+                        <div className="text-sm text-muted-foreground">Pending submissions</div>
+                        <div className="text-2xl font-bold tabular-nums">{pendingCredentials.length}</div>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {loading ? "Loading..." : "Minted submissions are persisted to backend and show up instantly."}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b bg-muted/30">
+                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">Student</th>
+                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">Degree</th>
+                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">PRN</th>
+                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status</th>
+                          <th className="text-right py-3 px-4 font-medium text-muted-foreground">Actions</th>
+                        </tr>
+                      </thead>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
@@ -622,6 +827,53 @@ const UniversityAdmin: React.FC = () => {
                                     >
                                       <Eye className="w-4 h-4" />
                                     </button>
+                      <tbody>
+                        {loading ? (
+                          <tr>
+                            <td colSpan={5} className="py-10 text-center text-muted-foreground">
+                              Loading submissions...
+                            </td>
+                          </tr>
+                        ) : pendingCredentials.length === 0 ? (
+                          <tr>
+                            <td colSpan={5} className="py-12 text-center text-muted-foreground">
+                              No pending submissions.
+                            </td>
+                          </tr>
+                        ) : (
+                          pendingCredentials.map((cred) => {
+                            const meta = (cred.metadata_json ?? {}) as Record<string, unknown>;
+                            const studentName = typeof meta.studentName === "string" ? meta.studentName : "Student";
+                            return (
+                              <tr key={cred.id} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
+                                <td className="py-3.5 px-4">
+                                  <div className="font-medium">{studentName}</div>
+                                  <div className="text-xs text-muted-foreground">{new Date(cred.created_at).toLocaleDateString()}</div>
+                                </td>
+                                <td className="py-3.5 px-4 text-muted-foreground">{cred.title}</td>
+                                <td className="py-3.5 px-4 font-mono text-xs">{cred.prn_number}</td>
+                                <td className="py-3.5 px-4">
+                                  <span className="inline-flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                                    <Clock className="w-3 h-3" />
+                                    Pending
+                                  </span>
+                                </td>
+                                <td className="py-3.5 px-4">
+                                  <div className="flex items-center justify-end gap-2">
+                                    <button
+                                      className={`p-1.5 rounded-md transition-colors ${cred.has_document
+                                        ? "hover:bg-muted text-accent"
+                                        : "opacity-40 cursor-not-allowed"
+                                        }`}
+                                      title={cred.has_document ? "View Document" : "No document uploaded"}
+                                      onClick={() =>
+                                        cred.has_document
+                                          ? void handleViewDocument(cred.id)
+                                          : toast.info("No document uploaded for this submission.")
+                                      }
+                                    >
+                                      <Eye className="w-4 h-4" />
+                                    </button>
 
                                     <button
                                       className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-accent text-accent-foreground text-xs font-medium hover:opacity-90 transition-opacity active:scale-[0.97] disabled:opacity-50"
@@ -629,9 +881,7 @@ const UniversityAdmin: React.FC = () => {
                                       disabled={!!mintingById[cred.id]}
                                     >
                                       <Blocks className="w-3 h-3" />
-                                      {mintingById[cred.id]
-                                        ? (BYPASS_BLOCKCHAIN_APPROVAL ? "Approving..." : "Minting...")
-                                        : (BYPASS_BLOCKCHAIN_APPROVAL ? "Approve" : "Mint & Approve")}
+                                      {mintingById[cred.id] ? "Minting..." : "Mint & Approve"}
                                     </button>
 
                                     <button
@@ -777,6 +1027,52 @@ const UniversityAdmin: React.FC = () => {
 
         </div>
       </div >
+
+      {/* Web3 Onboarding Modal */}
+      {
+        showGuide && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
+            <ScrollReveal>
+              <div className="bg-card border rounded-2xl p-8 max-w-lg shadow-2xl relative overflow-hidden blockchain-glow">
+                <div className="absolute top-0 right-0 p-8 opacity-5">
+                  <Shield className="w-24 h-24" />
+                </div>
+                <div className="relative z-10">
+                  <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-6">
+                    <Wallet className="w-6 h-6 text-accent" />
+                  </div>
+                  <h2 className="text-2xl font-bold mb-3">Welcome, University Admin</h2>
+                  <p className="text-muted-foreground mb-6">
+                    To issue decentralized credentials, you'll need to set up your institutional wallet. We've prepared a comprehensive guide to help you get started with MetaMask and Sepolia testnet.
+                  </p>
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Link
+                      to="/guide"
+                      onClick={() => {
+                        if (user?.id) localStorage.setItem(`web3_guide_seen_${user.id}`, "true");
+                        setShowGuide(false);
+                      }}
+                      className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-accent text-accent-foreground font-medium hover:opacity-90 transition active:scale-[0.98]"
+                    >
+                      View Setup Guide
+                    </Link>
+                    <button
+                      onClick={() => {
+                        if (user?.id) localStorage.setItem(`web3_guide_seen_${user.id}`, "true");
+                        setShowGuide(false);
+                      }}
+                      className="flex-1 px-4 py-2.5 rounded-lg border bg-card text-foreground font-medium hover:bg-muted transition active:scale-[0.98]"
+                    >
+                      Skip for now
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </ScrollReveal>
+          </div>
+        )
+      }
 
     </div >
   );

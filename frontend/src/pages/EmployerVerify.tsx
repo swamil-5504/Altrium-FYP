@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { generateSVG, getTierInfo } from "@/utils/svgGenerator";
 import axios from "@/api/axios";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { toast } from "sonner";
+import { generateSVG, getTierInfo } from "@/utils/svgGenerator";
 import { ethers } from "ethers";
 import {
   Search,
@@ -18,6 +18,10 @@ import {
   Building2,
   CheckCircle2,
   ArrowRight,
+  AlertTriangle,
+  XCircle,
+  Printer,
+  ShieldCheck,
 } from "lucide-react";
 
 type CredentialStatus = "PENDING" | "APPROVED" | "REJECTED";
@@ -31,6 +35,8 @@ interface Credential {
   status: CredentialStatus;
   tx_hash?: string | null;
   token_id?: number | null;
+  revoked?: boolean;
+  college_name?: string | null;
   revoked?: boolean;
   college_name?: string | null;
   created_at: string;
@@ -66,13 +72,6 @@ const registryAbi = [
   },
 ] as const;
 
-const isEmail = (value: string): boolean => {
-  const parts = value.split("@");
-  const hasAt = parts.length === 2;
-  const hasDot = hasAt && parts[1].includes(".");
-  return hasAt && parts[0].length > 0 && hasDot;
-};
-
 const EmployerVerify: React.FC = () => {
   const [query, setQuery] = useState("");
   const [result, setResult] = useState<Credential | null>(null);
@@ -81,6 +80,8 @@ const EmployerVerify: React.FC = () => {
   const [allDegrees, setAllDegrees] = useState<Credential[]>([]);
   const [loadingAll, setLoadingAll] = useState(true);
   const [isImageExpanded, setIsImageExpanded] = useState(false);
+  const [hashVerified, setHashVerified] = useState<boolean | null>(null);
+  const [verifyingHash, setVerifyingHash] = useState(false);
 
   React.useEffect(() => {
     const fetchAll = async () => {
@@ -101,6 +102,7 @@ const EmployerVerify: React.FC = () => {
     if (!e.target.value.trim()) {
       setSearched(false);
       setResult(null);
+      setHashVerified(null);
     }
   };
 
@@ -110,19 +112,17 @@ const EmployerVerify: React.FC = () => {
     if (!trimmed) {
       setSearched(false);
       setResult(null);
+      setHashVerified(null);
       return;
     }
 
     setSearched(true);
     setLoading(true);
     setHashVerified(null);
-
     try {
-      const params = isEmail(trimmed)
-        ? { email: trimmed }
-        : { prn_number: trimmed };
-
-      const response = await axios.get("/degrees/public", { params });
+      const response = await axios.get("/degrees/public", {
+        params: { prn_number: trimmed },
+      });
 
       const list: Credential[] = response.data;
       if (list.length > 0) setResult(list[0]);
@@ -148,6 +148,7 @@ const EmployerVerify: React.FC = () => {
       const combinedString = `${result.prn_number}-${universityName}`;
       const collegeIdHash = ethers.keccak256(ethers.toUtf8Bytes(combinedString));
 
+      // 1. Client-side Metadata Integrity Check
       const m = (result.metadata_json ?? {}) as Record<string, unknown>;
       const extractedStudentName =
         typeof m.studentName === "string" ? m.studentName : typeof m.name === "string" ? m.name : "Student";
@@ -162,6 +163,7 @@ const EmployerVerify: React.FC = () => {
       };
       const computedDegreeHash = ethers.keccak256(ethers.toUtf8Bytes(JSON.stringify(payload)));
 
+      // 2. On-Chain Existence & Revocation Check
       if (typeof window !== "undefined" && window.ethereum && CONTRACT_REGISTRY_ADDRESS) {
         const provider = new ethers.BrowserProvider(window.ethereum);
         const contract = new ethers.Contract(CONTRACT_REGISTRY_ADDRESS, registryAbi, provider);
@@ -200,6 +202,10 @@ const EmployerVerify: React.FC = () => {
     }
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   const meta = (result?.metadata_json ?? {}) as Record<string, unknown>;
   const studentName =
     typeof meta.studentName === "string" ? meta.studentName : typeof meta.name === "string" ? meta.name : "-";
@@ -211,7 +217,7 @@ const EmployerVerify: React.FC = () => {
   let generatedSvg = "";
   if (result) {
     const { name: tierName, color: tierColor } = getTierInfo(cgpa);
-    generatedSvg = generateSVG("Altrium University", result.title, passingYear, tierName, tierColor);
+    generatedSvg = generateSVG(result.college_name || "Altrium University", result.title, passingYear, tierName, tierColor);
   }
 
   return (
@@ -272,17 +278,41 @@ const EmployerVerify: React.FC = () => {
           {result && (
             <ScrollReveal>
               <div className="rounded-xl border bg-card overflow-hidden blockchain-glow">
-                <div className="bg-primary/5 border-b px-6 py-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-sm">
-                    <Shield className="w-5 h-5 text-primary-foreground" />
+                {/* Revoked Banner */}
+                {result.revoked && (
+                  <div className="bg-destructive/10 border-b border-destructive/20 px-6 py-3 flex items-center gap-2">
+                    <XCircle className="w-4 h-4 text-destructive shrink-0" />
+                    <p className="text-sm text-destructive font-medium">This credential has been <strong>revoked</strong> by the issuing institution and is no longer valid.</p>
                   </div>
-                  <div>
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                      <CheckCircle2 className="w-4 h-4 text-accent" />
-                      <h3 className="font-semibold text-primary">Altrium Verified</h3>
+                )}
+
+                <div className="bg-primary/5 border-b px-6 py-4 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm ${result.revoked ? "bg-destructive/20" : "bg-primary"}`}>
+                      {result.revoked
+                        ? <XCircle className="w-5 h-5 text-destructive" />
+                        : <Shield className="w-5 h-5 text-primary-foreground" />}
                     </div>
-                    <p className="text-xs text-muted-foreground">Degree anchored on the blockchain (SBT minted).</p>
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        {result.revoked
+                          ? <><AlertTriangle className="w-4 h-4 text-destructive" /><h3 className="font-semibold text-destructive">Credential Revoked</h3></>
+                          : <><CheckCircle2 className="w-4 h-4 text-accent" /><h3 className="font-semibold text-primary">Altrium Verified</h3></>
+                        }
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {result.revoked ? "This credential is no longer valid." : "Degree anchored on the blockchain (SBT minted)."}
+                      </p>
+                    </div>
                   </div>
+                  {/* Print button */}
+                  <button
+                    onClick={handlePrint}
+                    className="no-print p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                    title="Print certificate"
+                  >
+                    <Printer className="w-4 h-4" />
+                  </button>
                 </div>
 
                 <div className="p-6">
@@ -291,6 +321,7 @@ const EmployerVerify: React.FC = () => {
                       {/* Student basics */}
                       <div className="grid sm:grid-cols-2 gap-4">
                         <InfoRow icon={GraduationCap} label="Student Name" value={studentName} />
+                        <InfoRow icon={Building2} label="University" value={result.college_name || "Altrium University"} />
                         <InfoRow icon={Hash} label="PRN" value={result.prn_number ?? "-"} mono />
                         <InfoRow icon={FileText} label="Degree Title" value={result.title} />
                         <InfoRow icon={Calendar} label="Entry Year" value={String(entryYear)} />
@@ -309,7 +340,7 @@ const EmployerVerify: React.FC = () => {
                         </div>
 
                         {result.tx_hash && (
-                          <div className="flex items-center justify-between text-sm py-1">
+                          <div className="flex items-center justify-between text-sm py-1 border-b border-muted-foreground/10">
                             <span className="text-muted-foreground">Tx Hash</span>
                             <a
                               href={`https://sepolia.etherscan.io/tx/${result.tx_hash}`}
@@ -322,6 +353,19 @@ const EmployerVerify: React.FC = () => {
                             </a>
                           </div>
                         )}
+
+                        {/* Hash re-verification */}
+                        <div className="flex items-center justify-between text-sm py-1">
+                          <span className="text-muted-foreground">Integrity Check</span>
+                          <button
+                            onClick={handleVerifyHash}
+                            disabled={verifyingHash}
+                            className="flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium bg-accent/10 text-accent hover:bg-accent/20 transition-colors disabled:opacity-50"
+                          >
+                            <ShieldCheck className="w-3.5 h-3.5" />
+                            {verifyingHash ? "Verifying..." : hashVerified === true ? "✅ Verified" : hashVerified === false ? "❌ Failed" : "Verify Hash"}
+                          </button>
+                        </div>
                       </div>
                     </div>
 
@@ -384,23 +428,29 @@ const EmployerVerify: React.FC = () => {
                   <div className="grid gap-3">
                     {allDegrees.map((deg) => {
                       const dMeta = (deg.metadata_json ?? {}) as Record<string, unknown>;
-                      const studentName = typeof dMeta.studentName === "string" ? dMeta.studentName : typeof dMeta.name === "string" ? dMeta.name : "Unknown Student";
+                      const sName = typeof dMeta.studentName === "string" ? dMeta.studentName : typeof dMeta.name === "string" ? dMeta.name : "Unknown Student";
                       return (
                         <div
                           key={deg.id}
-                          className="p-4 rounded-xl border bg-card hover:bg-muted/30 transition-colors flex items-center justify-between group cursor-pointer"
+                          className={`p-4 rounded-xl border bg-card hover:bg-muted/30 transition-colors flex items-center justify-between group cursor-pointer ${deg.revoked ? "opacity-50 border-destructive/30" : ""}`}
                           onClick={() => {
                             setQuery(deg.prn_number || "");
                             setSearched(true);
                             setResult(deg);
+                            setHashVerified(null);
                           }}
                         >
                           <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
-                              <Shield className="w-5 h-5 text-accent" />
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${deg.revoked ? "bg-destructive/10" : "bg-accent/10"}`}>
+                              {deg.revoked
+                                ? <XCircle className="w-5 h-5 text-destructive" />
+                                : <Shield className="w-5 h-5 text-accent" />}
                             </div>
                             <div>
-                              <div className="font-semibold text-foreground">{studentName}</div>
+                              <div className="font-semibold text-foreground flex items-center gap-2">
+                                {sName}
+                                {deg.revoked && <span className="text-xs font-normal text-destructive bg-destructive/10 px-1.5 py-0.5 rounded">Revoked</span>}
+                              </div>
                               <div className="text-sm text-muted-foreground flex flex-wrap items-center gap-2 mt-0.5">
                                 <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">{deg.prn_number}</span>
                                 <span className="hidden sm:inline">•</span>
