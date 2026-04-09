@@ -28,14 +28,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem("access_token");
+      const token = sessionStorage.getItem("access_token");
       if (token) {
         try {
           const response = await axios.get("/users/me");
           setUser(response.data);
         } catch {
-          localStorage.removeItem("access_token");
-          localStorage.removeItem("refresh_token");
+          sessionStorage.removeItem("access_token");
+          sessionStorage.removeItem("refresh_token");
         }
       }
       setIsLoading(false);
@@ -47,8 +47,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (email: string, password: string) => {
     const response = await axios.post("/auth/login", { email, password });
 
-    localStorage.setItem("access_token", response.data.access_token);
-    localStorage.setItem("refresh_token", response.data.refresh_token);
+    sessionStorage.setItem("access_token", response.data.access_token);
+    sessionStorage.setItem("refresh_token", response.data.refresh_token);
 
     const userResponse = await axios.get("/users/me");
     setUser(userResponse.data);
@@ -65,19 +65,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch {
       // Best-effort: backend logout is optional for stateless JWT.
     } finally {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
+      sessionStorage.removeItem("access_token");
+      sessionStorage.removeItem("refresh_token");
       setUser(null);
     }
   };
 
   const refresh = async () => {
-    const refreshToken = localStorage.getItem("refresh_token");
+    const refreshToken = sessionStorage.getItem("refresh_token");
     if (!refreshToken) return;
 
     const response = await axios.post("/auth/refresh", { refresh_token: refreshToken });
-    localStorage.setItem("access_token", response.data.access_token);
-    localStorage.setItem("refresh_token", response.data.refresh_token);
+    sessionStorage.setItem("access_token", response.data.access_token);
+    sessionStorage.setItem("refresh_token", response.data.refresh_token);
   };
 
     return (
