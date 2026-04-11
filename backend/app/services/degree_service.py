@@ -20,6 +20,12 @@ def _ensure_upload_dir() -> None:
 class DegreeService:
     @staticmethod
     async def create_submission(credential_create: CredentialCreate, current_user: User) -> Credential:
+        # Automatically pull PRN and College from user profile if not provided
+        if not credential_create.prn_number:
+            credential_create.prn_number = current_user.prn_number
+        if not credential_create.college_name:
+            credential_create.college_name = current_user.college_name
+            
         return await CredentialCRUD.create(
             credential_create=credential_create,
             issued_to_id=current_user.id,
@@ -29,8 +35,30 @@ class DegreeService:
     @staticmethod
     async def list_for_user(current_user: User) -> List[Credential]:
         if current_user.role == UserRole.ADMIN:
-            return await CredentialCRUD.get_all()
+            if current_user.college_name:
+                return await CredentialCRUD.get_by_college(current_user.college_name)
+            return []  # Return empty if admin has no college assigned
         return await CredentialCRUD.get_by_user(current_user.id)
+
+    @staticmethod
+    async def reset_submission(credential_id: UUID) -> Credential:
+        """Reset a degree submission after an on-chain burn, allowing re-minting."""
+        credential = await CredentialCRUD.get_by_id(credential_id)
+        if not credential:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Credential not found",
+            )
+        
+        credential.status = CredentialStatus.PENDING
+        credential.token_id = None
+        credential.tx_hash = None
+        credential.revoked = False
+        credential.revoked_at = None
+        from datetime import datetime
+        credential.updated_at = datetime.utcnow()
+        await credential.save()
+        return credential
 
     @staticmethod
     async def get_by_id_for_user(credential_id: UUID, current_user: User) -> Credential:

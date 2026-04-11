@@ -20,7 +20,6 @@ contract AltriumDegreeSBT is ERC721URIStorage, AccessControl {
     bytes32 public constant VERIFIER_ROLE = keccak256("VERIFIER_ROLE"); // e.g. university admins
 
     uint256 private _tokenIdCounter;
-    address public custodian;
 
     struct DegreeRecord {
         bytes32 collegeIdHash; // student identifier (hashed off-chain)
@@ -28,6 +27,9 @@ contract AltriumDegreeSBT is ERC721URIStorage, AccessControl {
         uint64 issuedAt;
         bool verified;
         bytes32 degreeHash; // hash of degree payload / VC / metadata (off-chain)
+        bool revoked; // true = credential revoked on-chain
+        uint64 revokedAt; // timestamp of revocation (0 if not revoked)
+        address revokedBy; // address that revoked the credential
     }
 
     mapping(uint256 => DegreeRecord) public degreeByTokenId;
@@ -42,22 +44,15 @@ contract AltriumDegreeSBT is ERC721URIStorage, AccessControl {
     );
 
     event DegreeVerified(uint256 indexed tokenId, bool verified, address indexed verifier);
+    event DegreeRevoked(uint256 indexed tokenId, bytes32 indexed collegeIdHash, address indexed revokedBy, uint64 revokedAt);
     event CustodianUpdated(address indexed oldCustodian, address indexed newCustodian);
 
-    constructor(address _admin, address _custodian) ERC721("Altrium Degree", "ALTRIUM-DEG") {
+    constructor(address _admin) ERC721("Altrium Degree", "ALTRIUM-DEG") {
         require(_admin != address(0), "admin=0");
-        require(_custodian != address(0), "custodian=0");
 
         _grantRole(DEFAULT_ADMIN_ROLE, _admin);
-        custodian = _custodian;
     }
 
-    function setCustodian(address _custodian) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_custodian != address(0), "custodian=0");
-        address old = custodian;
-        custodian = _custodian;
-        emit CustodianUpdated(old, _custodian);
-    }
 
     function tokenIdByCollegeIdHash(bytes32 collegeIdHash) external view returns (uint256) {
         return _tokenIdByCollegeIdHash[collegeIdHash];
@@ -66,6 +61,7 @@ contract AltriumDegreeSBT is ERC721URIStorage, AccessControl {
     function mintDegree(
         bytes32 collegeIdHash,
         address issuedBy,
+        address recipient,
         bytes32 degreeHash,
         string memory degreeURI
     ) external onlyRole(MINTER_ROLE) returns (uint256 tokenId) {
@@ -76,7 +72,7 @@ contract AltriumDegreeSBT is ERC721URIStorage, AccessControl {
         _tokenIdCounter++;
         tokenId = _tokenIdCounter;
 
-        _safeMint(custodian, tokenId);
+        _safeMint(recipient, tokenId);
         _setTokenURI(tokenId, degreeURI);
 
         degreeByTokenId[tokenId] = DegreeRecord({
@@ -84,7 +80,10 @@ contract AltriumDegreeSBT is ERC721URIStorage, AccessControl {
             issuedBy: issuedBy,
             issuedAt: uint64(block.timestamp),
             verified: false,
-            degreeHash: degreeHash
+            degreeHash: degreeHash,
+            revoked: false,
+            revokedAt: 0,
+            revokedBy: address(0)
         });
 
         _tokenIdByCollegeIdHash[collegeIdHash] = tokenId;
@@ -94,8 +93,39 @@ contract AltriumDegreeSBT is ERC721URIStorage, AccessControl {
 
     function setVerified(uint256 tokenId, bool verified) external onlyRole(VERIFIER_ROLE) {
         require(_ownerOf(tokenId) != address(0), "degree missing");
+        require(!degreeByTokenId[tokenId].revoked, "SBT: already revoked");
         degreeByTokenId[tokenId].verified = verified;
         emit DegreeVerified(tokenId, verified, msg.sender);
+    }
+
+    /**
+     * @notice Permanently revoke a degree credential on-chain.
+     * @dev Only callable by VERIFIER_ROLE (university admin). Revocation is irreversible.
+     *      Emits DegreeRevoked event that is permanently readable on Etherscan.
+     *      The token remains minted (not burned) so the revocation history is preserved.
+     */
+    function revokeDegree(uint256 tokenId) external onlyRole(VERIFIER_ROLE) {
+        require(_ownerOf(tokenId) != address(0), "degree missing");
+        require(!degreeByTokenId[tokenId].revoked, "SBT: already revoked");
+
+        degreeByTokenId[tokenId].revoked = true;
+        degreeByTokenId[tokenId].revokedAt = uint64(block.timestamp);
+        degreeByTokenId[tokenId].revokedBy = msg.sender;
+        // Also remove the verified flag since the credential is no longer valid
+        degreeByTokenId[tokenId].verified = false;
+
+        bytes32 collegeIdHash = degreeByTokenId[tokenId].collegeIdHash;
+        emit DegreeRevoked(tokenId, collegeIdHash, msg.sender, uint64(block.timestamp));
+    }
+
+    /**
+     * @notice Check whether a degree is revoked by collegeIdHash.
+     * @return revoked true if valid tokenId exists and has been revoked.
+     */
+    function isRevoked(bytes32 collegeIdHash) external view returns (bool revoked) {
+        uint256 tokenId = _tokenIdByCollegeIdHash[collegeIdHash];
+        if (tokenId == 0) return false;
+        return degreeByTokenId[tokenId].revoked;
     }
 
     function getDegreeByCollegeIdHash(bytes32 collegeIdHash)
@@ -125,6 +155,25 @@ contract AltriumDegreeSBT is ERC721URIStorage, AccessControl {
         return super._update(to, tokenId, auth);
     }
 
+    /**
+     * @notice Burn a degree token and clear its data to allow re-minting for the same PRN.
+     * @dev Only callable by MINTER_ROLE or VERIFIER_ROLE.
+     */
+    function burnDegree(uint256 tokenId) external {
+        require(hasRole(MINTER_ROLE, msg.sender) || hasRole(VERIFIER_ROLE, msg.sender), "SBT: unauthorized burn");
+        require(_ownerOf(tokenId) != address(0), "SBT: degree missing");
+
+        bytes32 collegeIdHash = degreeByTokenId[tokenId].collegeIdHash;
+        
+        // Clear mapping first
+        delete _tokenIdByCollegeIdHash[collegeIdHash];
+        // Clear metadata
+        delete degreeByTokenId[tokenId];
+        
+        // Perform the burn
+        _burn(tokenId);
+    }
+
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -134,4 +183,3 @@ contract AltriumDegreeSBT is ERC721URIStorage, AccessControl {
         return super.supportsInterface(interfaceId);
     }
 }
-

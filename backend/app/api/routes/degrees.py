@@ -83,6 +83,35 @@ async def delete_degree(
     return {"detail": "Degree deleted"}
 
 
+@router.patch("/{credential_id}/revoke", response_model=CredentialResponse)
+async def revoke_degree(
+    credential_id: UUID,
+    current_user: User = Depends(require_role(UserRole.ADMIN)),
+):
+    """Revoke a previously minted SBT credential."""
+    from datetime import datetime
+    from app.crud.crud import CredentialCRUD
+    cred = await CredentialCRUD.get_by_id(credential_id)
+    if not cred:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Credential not found")
+    cred.revoked = True
+    cred.revoked_at = datetime.utcnow()
+    cred.updated_at = datetime.utcnow()
+    await cred.save()
+    return _to_response(cred)
+
+
+@router.post("/{credential_id}/reset", response_model=CredentialResponse)
+async def reset_degree(
+    credential_id: UUID,
+    current_user: User = Depends(require_role(UserRole.ADMIN)),
+):
+    """Reset a degree submission after on-chain burn (test phase toggle)."""
+    cred = await DegreeService.reset_submission(credential_id)
+    return _to_response(cred)
+
+
 # ---- Document upload & download ----
 
 @router.post("/{credential_id}/document", response_model=CredentialResponse)

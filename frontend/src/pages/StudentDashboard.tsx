@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { Navbar } from "@/components/Navbar";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { Upload, FileText, CreditCard, Clock, Shield, XCircle, ArrowRight, Eye } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+
 
 type CredentialStatus = "PENDING" | "APPROVED" | "REJECTED";
 
@@ -21,21 +23,35 @@ interface Credential {
 }
 
 const StudentDashboard: React.FC = () => {
+  const { user } = useAuth();
   const [submissions, setSubmissions] = useState<Credential[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [showForm, setShowForm] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
-    prn_number: "",
-    studentName: "",
+    prn_number: user?.prn_number || "",
+    studentName: user?.full_name || "",
     entryYear: "",
     passingYear: "",
     cgpa: "",
     credits: "",
     title: "",
     description: "",
+    college_name: user?.college_name || "",
   });
+
+  // Keep form data in sync with user if user profile loads late
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        prn_number: prev.prn_number || user.prn_number || "",
+        studentName: prev.studentName || user.full_name || "",
+        college_name: prev.college_name || user.college_name || "",
+      }));
+    }
+  }, [user]);
 
   useEffect(() => {
     void fetchSubmissions();
@@ -95,6 +111,7 @@ const StudentDashboard: React.FC = () => {
         title: formData.title,
         description: formData.description || null,
         prn_number: formData.prn_number,
+        college_name: formData.college_name,
         metadata_json: studentBasicsPayload,
       });
 
@@ -120,6 +137,7 @@ const StudentDashboard: React.FC = () => {
         credits: "",
         title: "",
         description: "",
+        college_name: "",
       });
 
       await fetchSubmissions();
@@ -161,14 +179,12 @@ const StudentDashboard: React.FC = () => {
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1.5">PRN Number</label>
+                    <label className="block text-sm font-medium mb-1.5 opacity-70">PRN Number (From Profile)</label>
                     <input
                       type="text"
                       value={formData.prn_number}
-                      onChange={(e) => setFormData({ ...formData, prn_number: e.target.value })}
-                      placeholder="e.g. PRN2024003"
-                      required
-                      className="w-full px-3 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                      readOnly
+                      className="w-full px-3 py-2.5 rounded-lg border bg-muted text-sm cursor-not-allowed outline-none"
                     />
                   </div>
                   <div>
@@ -191,6 +207,15 @@ const StudentDashboard: React.FC = () => {
                       placeholder="e.g. B.Tech Computer Science"
                       required
                       className="w-full px-3 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5 opacity-70">University (From Profile)</label>
+                    <input
+                      type="text"
+                      value={formData.college_name}
+                      readOnly
+                      className="w-full px-3 py-2.5 rounded-lg border bg-muted text-sm cursor-not-allowed outline-none"
                     />
                   </div>
                   <div>

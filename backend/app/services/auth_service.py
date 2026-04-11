@@ -25,6 +25,13 @@ class AuthService:
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid credentials",
             )
+            
+        if user.role == "ADMIN" and not user.is_legal_admin_verified:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Admin account pending verification. Please wait for platform admin approval."
+            )
+            
         return AuthService.issue_token_pair(str(user.id))
 
     @staticmethod
