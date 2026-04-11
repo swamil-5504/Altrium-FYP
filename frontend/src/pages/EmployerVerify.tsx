@@ -5,7 +5,6 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { toast } from "sonner";
-import { generateSVG, getTierInfo } from "@/utils/svgGenerator";
 import { ethers } from "ethers";
 import {
   Search,
@@ -235,44 +234,31 @@ const EmployerVerify: React.FC = () => {
 
           <ScrollReveal delay={80}>
             <form onSubmit={handleSearch} className="flex gap-2 mb-8 relative">
-              <form onSubmit={handleSearch} className="flex gap-2 mb-8 relative">
-                <input
-                  type="text"
-                  value={query}
-                  onChange={handleQueryChange}
-                  onChange={handleQueryChange}
-                  placeholder="Enter PRN Number (e.g. PRN2024001)"
-                  required
-                  className="flex-1 px-4 py-3 rounded-lg border bg-card text-sm font-mono focus:outline-none focus:ring-2 focus:ring-accent transition-all"
-                />
-                {query && (
-                  <button
-                    type="button"
-                    onClick={() => handleQueryChange({ target: { value: "" } } as any)}
-                    className="absolute right-[110px] top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-foreground"
-                  >
-                    ✕
-                  </button>
-                )}
+              <input
+                type="text"
+                value={query}
+                onChange={handleQueryChange}
+                placeholder="Enter PRN Number (e.g. PRN2024001)"
+                required
                 className="flex-1 px-4 py-3 rounded-lg border bg-card text-sm font-mono focus:outline-none focus:ring-2 focus:ring-accent transition-all"
               />
-                {query && (
-                  <button
-                    type="button"
-                    onClick={() => handleQueryChange({ target: { value: "" } } as any)}
-                    className="absolute right-[110px] top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-foreground"
-                  >
-                    ✕
-                  </button>
-                )}
+              {query && (
                 <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-5 py-3 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity active:scale-[0.98] disabled:opacity-50"
+                  type="button"
+                  onClick={() => handleQueryChange({ target: { value: "" } } as any)}
+                  className="absolute right-[110px] top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-foreground"
                 >
-                  {loading ? "Verifying..." : "Verify"}
+                  ✕
                 </button>
-              </form>
+              )}
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-5 py-3 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity active:scale-[0.98] disabled:opacity-50"
+              >
+                {loading ? "Verifying..." : "Verify"}
+              </button>
+            </form>
           </ScrollReveal>
 
           {result && (
@@ -333,17 +319,11 @@ const EmployerVerify: React.FC = () => {
 
                       <div className="p-5 rounded-xl bg-muted/20 border border-muted-foreground/10 space-y-3">
                         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">On-Chain Proof</p>
-                        <div className="p-5 rounded-xl bg-muted/20 border border-muted-foreground/10 space-y-3">
-                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">On-Chain Proof</p>
 
-                          <div className="flex items-center justify-between text-sm py-1 border-b border-muted-foreground/10">
-                            <span className="text-muted-foreground">Token ID</span>
-                            <span className="font-mono font-bold text-foreground">{result.token_id ?? "-"}</span>
-                          </div>
-                          <div className="flex items-center justify-between text-sm py-1 border-b border-muted-foreground/10">
-                            <span className="text-muted-foreground">Token ID</span>
-                            <span className="font-mono font-bold text-foreground">{result.token_id ?? "-"}</span>
-                          </div>
+                        <div className="flex items-center justify-between text-sm py-1 border-b border-muted-foreground/10">
+                          <span className="text-muted-foreground">Token ID</span>
+                          <span className="font-mono font-bold text-foreground">{result.token_id ?? "-"}</span>
+                        </div>
 
                           {result.tx_hash && (
                             <div className="flex items-center justify-between text-sm py-1 border-b border-muted-foreground/10">
@@ -403,23 +383,15 @@ const EmployerVerify: React.FC = () => {
                 </div>
                 <h3 className="font-semibold mb-1">No Record Found</h3>
                 <p className="text-sm text-muted-foreground mb-6">
-                  <p className="text-sm text-muted-foreground mb-6">
-                    No APPROVED degree was found for PRN{" "}
-                    <span className="font-mono font-medium">{query}</span>. The admin may not have minted it yet.
-                    <span className="font-mono font-medium">{query}</span>. The admin may not have minted it yet.
-                  </p>
-                  <button
-                    onClick={() => handleQueryChange({ target: { value: "" } } as any)}
-                    className="px-4 py-2 bg-muted text-foreground rounded-lg text-sm font-medium hover:bg-accent/10 hover:text-accent transition-colors"
-                  >
-                    Back to Directory
-                  </button>
-                  <button
-                    onClick={() => handleQueryChange({ target: { value: "" } } as any)}
-                    className="px-4 py-2 bg-muted text-foreground rounded-lg text-sm font-medium hover:bg-accent/10 hover:text-accent transition-colors"
-                  >
-                    Back to Directory
-                  </button>
+                  No APPROVED degree was found for PRN{" "}
+                  <span className="font-mono font-medium">{query}</span>. The admin may not have minted it yet.
+                </p>
+                <button
+                  onClick={() => handleQueryChange({ target: { value: "" } } as any)}
+                  className="px-4 py-2 bg-muted text-foreground rounded-lg text-sm font-medium hover:bg-accent/10 hover:text-accent transition-colors"
+                >
+                  Back to Directory
+                </button>
               </div>
             </ScrollReveal>
           )}
@@ -507,28 +479,6 @@ const EmployerVerify: React.FC = () => {
         </div>
       )}
 
-      {/* Image expanded modal */}
-      {isImageExpanded && result && generatedSvg && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
-          onClick={() => setIsImageExpanded(false)}
-        >
-          <div className="relative max-w-[90vw] max-h-[90vh] flex flex-col items-center">
-            <button
-              className="absolute -top-12 right-0 p-2 text-muted-foreground hover:text-foreground transition-colors"
-              onClick={() => setIsImageExpanded(false)}
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
-            </button>
-            <img
-              src={generatedSvg}
-              alt="SBT Credential Expanded"
-              className="w-full h-full object-contain max-h-[85vh] drop-shadow-2xl rounded-2xl"
-              onClick={(e) => e.stopPropagation()}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 };
