@@ -91,39 +91,6 @@
     --surface-elevated: 215 25% 12%;
     --surface-sunken: 215 25% 6%;
   }
-
-  .dark {
-    --background: 215 25% 8%;
-    --foreground: 210 20% 98%;
-
-    --card: 215 25% 12%;
-    --card-foreground: 210 20% 98%;
-
-    --popover: 215 25% 12%;
-    --popover-foreground: 210 20% 98%;
-
-    /* Lightened Navy for visibility on dark background */
-    --primary: 209 64% 35%;
-    --primary-foreground: 210 20% 98%;
-
-    /* Keep Gold */
-    --secondary: 40 73% 63%;
-    --secondary-foreground: 0 0% 100%;
-
-    --muted: 215 20% 18%;
-    --muted-foreground: 210 16% 70%;
-
-    /* Keep Verification Blue */
-    --accent: 220 83% 56%;
-    --accent-foreground: 0 0% 100%;
-
-    --border: 215 20% 18%;
-    --input: 215 20% 18%;
-    --ring: 220 83% 56%;
-
-    --surface-elevated: 215 25% 12%;
-    --surface-sunken: 215 25% 6%;
-  }
 }
 
 @layer base {
@@ -141,157 +108,150 @@
   h4,
   h5,
   h6 {
-
-    h1,
-    h2,
-    h3,
-    h4,
-    h5,
-    h6 {
-      @apply font-semibold tracking-tight;
-      text-wrap: balance;
-    }
-
-    p {
-      text-wrap: pretty;
-    }
+    @apply font-semibold tracking-tight;
+    text-wrap: balance;
   }
 
-  @layer utilities {
-    .text-gradient {
-      @apply bg-clip-text text-transparent bg-gradient-to-r from-foreground to-muted-foreground;
-    }
+  p {
+    text-wrap: pretty;
+  }
+}
 
-    .glass-card {
-      @apply bg-background/80 backdrop-blur-sm border border-border/60 shadow-sm;
-      @apply bg-background/80 backdrop-blur-sm border border-border/60 shadow-sm;
-    }
-
-    .surface-elevated {
-      background: hsl(var(--surface-elevated));
-      box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04);
-    }
-
-    .blockchain-glow {
-      box-shadow: 0 0 0 1px hsl(var(--accent) / 0.15), 0 4px 16px -2px hsl(var(--accent) / 0.1);
-    }
-
-    .verified-badge {
-      @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
-      background: hsl(var(--success) / 0.1);
-      color: hsl(var(--success));
-    }
-
-    .status-pending {
-      @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
-      background: hsl(var(--warning) / 0.1);
-      color: hsl(var(--warning));
-    }
-
-    .status-minted {
-      @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
-      background: hsl(var(--accent) / 0.1);
-      color: hsl(var(--accent));
-    }
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-foreground to-muted-foreground;
   }
 
-  /* Scroll reveal animations */
-  @keyframes reveal-up {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-      filter: blur(4px);
-    }
-
-
-    to {
-      opacity: 1;
-      transform: translateY(0);
-      filter: blur(0);
-    }
+  .glass-card {
+    @apply bg-background/80 backdrop-blur-sm border border-border/60 shadow-sm;
+    @apply bg-background/80 backdrop-blur-sm border border-border/60 shadow-sm;
   }
 
-  @keyframes fade-in {
-    from {
-      opacity: 0;
-    }
-
-    to {
-      opacity: 1;
-    }
-
-    from {
-      opacity: 0;
-    }
-
-    to {
-      opacity: 1;
-    }
+  .surface-elevated {
+    background: hsl(var(--surface-elevated));
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04);
   }
 
-  @keyframes slide-in-left {
-    from {
-      opacity: 0;
-      transform: translateX(-20px);
-      filter: blur(4px);
-    }
-
-
-    to {
-      opacity: 1;
-      transform: translateX(0);
-      filter: blur(0);
-    }
+  .blockchain-glow {
+    box-shadow: 0 0 0 1px hsl(var(--accent) / 0.15), 0 4px 16px -2px hsl(var(--accent) / 0.1);
   }
 
-  @keyframes slide-in-right {
-    from {
-      opacity: 0;
-      transform: translateX(20px);
-      filter: blur(4px);
-    }
-
-
-    to {
-      opacity: 1;
-      transform: translateX(0);
-      filter: blur(0);
-    }
+  .verified-badge {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
+    background: hsl(var(--success) / 0.1);
+    color: hsl(var(--success));
   }
 
-  @keyframes float {
-
-    0%,
-    100% {
-      transform: translateY(0);
-    }
-
-    50% {
-      transform: translateY(-6px);
-    }
+  .status-pending {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
+    background: hsl(var(--warning) / 0.1);
+    color: hsl(var(--warning));
   }
 
-  @media print {
-    .no-print {
-      display: none !important;
-    }
-
-    nav,
-    footer {
-      display: none !important;
-    }
-
-    body {
-      background: white !important;
-      color: black !important;
-    }
-
-    .blockchain-glow {
-      box-shadow: none !important;
-    }
-
-    .bg-card {
-      background: white !important;
-      border: 1px solid #ddd !important;
-    }
+  .status-minted {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
+    background: hsl(var(--accent) / 0.1);
+    color: hsl(var(--accent));
   }
+}
+
+/* Scroll reveal animations */
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+    filter: blur(4px);
+  }
+
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+    filter: blur(4px);
+  }
+
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+    filter: blur(4px);
+  }
+
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  nav,
+  footer {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .blockchain-glow {
+    box-shadow: none !important;
+  }
+
+  .bg-card {
+    background: white !important;
+    border: 1px solid #ddd !important;
+  }
+}
