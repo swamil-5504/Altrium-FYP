@@ -34,9 +34,12 @@ class DegreeService:
 
     @staticmethod
     async def list_for_user(current_user: User) -> List[Credential]:
+        if current_user.role == UserRole.SUPERADMIN:
+            return await CredentialCRUD.get_all() # We need a get_all method, or just get everything
         if current_user.role == UserRole.ADMIN:
             if current_user.college_name:
-                return await CredentialCRUD.get_by_college(current_user.college_name)
+                creds = await CredentialCRUD.get_by_college(current_user.college_name)
+                return [c for c in creds if c.status == CredentialStatus.PENDING or c.issued_by_id == current_user.id]
             return []  # Return empty if admin has no college assigned
         return await CredentialCRUD.get_by_user(current_user.id)
 
@@ -69,8 +72,16 @@ class DegreeService:
                 detail="Credential not found",
             )
 
-        if current_user.role == UserRole.ADMIN:
-            pass  # Admins can view any submission
+        if current_user.role == UserRole.SUPERADMIN:
+            pass  # Superadmins can view any submission
+        elif current_user.role == UserRole.ADMIN:
+            # Admin can only view if it's pending for their college OR if they issued/approved it themselves
+            if not ((credential.status == CredentialStatus.PENDING and credential.college_name == current_user.college_name) or
+                    credential.issued_by_id == current_user.id):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Not authorized to view documents approved by other admins.",
+                )
         elif credential.issued_to_id != current_user.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -88,23 +99,29 @@ class DegreeService:
         return await CredentialCRUD.get_all_approved()
 
     @staticmethod
-    async def update_status(credential_id: UUID, status_value: CredentialStatus) -> Credential:
+    async def update_status(credential_id: UUID, status_value: CredentialStatus, admin_id: UUID = None) -> Credential:
         credential = await CredentialCRUD.update(credential_id, CredentialUpdate(status=status_value))
         if not credential:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Credential not found",
             )
+        if admin_id:
+            credential.issued_by_id = admin_id
+            await credential.save()
         return credential
 
     @staticmethod
-    async def update(credential_id: UUID, credential_update: CredentialUpdate) -> Credential:
+    async def update(credential_id: UUID, credential_update: CredentialUpdate, admin_id: UUID = None) -> Credential:
         credential = await CredentialCRUD.update(credential_id, credential_update)
         if not credential:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Credential not found",
             )
+        if admin_id:
+            credential.issued_by_id = admin_id
+            await credential.save()
         return credential
 
     @staticmethod
@@ -128,7 +145,7 @@ class DegreeService:
             )
 
         # Only the student who owns the submission (or an admin) may upload
-        if current_user.role != UserRole.ADMIN and credential.issued_to_id != current_user.id:
+        if current_user.role not in (UserRole.ADMIN, UserRole.SUPERADMIN) and credential.issued_to_id != current_user.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not authorized",
@@ -167,8 +184,18 @@ class DegreeService:
                 detail="Credential not found",
             )
 
-        # Only admin or the owning student can view
-        if current_user.role != UserRole.ADMIN and credential.issued_to_id != current_user.id:
+        # Determine if user is authorized to view document
+        is_authorized = False
+        if current_user.role == UserRole.SUPERADMIN:
+            is_authorized = True
+        elif current_user.role == UserRole.ADMIN:
+            if ((credential.status == CredentialStatus.PENDING and credential.college_name == current_user.college_name) or
+                credential.issued_by_id == current_user.id):
+                is_authorized = True
+        elif credential.issued_to_id == current_user.id:
+            is_authorized = True
+
+        if not is_authorized:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not authorized",

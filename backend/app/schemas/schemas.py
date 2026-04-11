@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from typing import Optional, List
 from uuid import UUID
 from datetime import datetime
@@ -7,6 +7,7 @@ from enum import Enum
 class UserRole(str, Enum):
     ADMIN = "ADMIN"
     STUDENT = "STUDENT"
+    SUPERADMIN = "SUPERADMIN"
 
 class CredentialStatus(str, Enum):
     PENDING = "PENDING"
@@ -15,7 +16,7 @@ class CredentialStatus(str, Enum):
 
 # User Schemas
 class UserBase(BaseModel):
-    email: EmailStr
+    email: str
     full_name: Optional[str] = None
     role: UserRole = UserRole.STUDENT
     college_name: Optional[str] = None
@@ -89,8 +90,9 @@ class TokenResponse(BaseModel):
     refresh_expires_in: int
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    email: str
     password: str
+    ignore_verification: bool = False
 
 class RefreshTokenRequest(BaseModel):
     refresh_token: str

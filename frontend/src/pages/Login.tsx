@@ -7,7 +7,9 @@ import axios from "@/api/axios";
 
 export default function Login() {
   const [searchParams] = useSearchParams();
-  const [role, setRole] = useState<"STUDENT" | "ADMIN">(searchParams.get("role") === "ADMIN" ? "ADMIN" : "STUDENT");
+  const [role, setRole] = useState<"STUDENT" | "ADMIN" | "SUPERADMIN">(
+    searchParams.get("role") === "SUPERADMIN" ? "SUPERADMIN" : searchParams.get("role") === "ADMIN" ? "ADMIN" : "STUDENT"
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -17,12 +19,22 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    await performLogin();
+  };
+
+  const performLogin = async () => {
     setLoading(true);
     try {
-      await login(email, password);
+      await login(email, password, false);
 
       const me = await axios.get("/users/me");
-      const userRole = me.data.role as "ADMIN" | "STUDENT";
+      const userRole = me.data.role as "ADMIN" | "STUDENT" | "SUPERADMIN";
+
+      if (userRole === "SUPERADMIN") {
+        toast.success("Successfully logged in as Superadmin!");
+        navigate("/superadmin");
+        return;
+      }
 
       if (userRole !== role) {
         await logout();
@@ -32,8 +44,15 @@ export default function Login() {
 
       toast.success("Successfully logged in!");
 
-      if (userRole === "ADMIN") navigate("/university");
-      else navigate("/student");
+      if (userRole === "ADMIN") {
+        if (!me.data.is_legal_admin_verified) {
+          navigate("/pending-verification");
+        } else {
+          navigate("/university");
+        }
+      } else if (userRole === "STUDENT") {
+        navigate("/student");
+      }
     } catch (err: unknown) {
       const detail =
         typeof err === "object" && err && "response" in err
@@ -72,14 +91,16 @@ export default function Login() {
           <KeyRound className="w-6 h-6 text-accent" />
         </div>
 
-        <h2 className="text-2xl font-bold mb-2">{role === "ADMIN" ? "Admin Login" : "Student Login"}</h2>
+        <h2 className="text-2xl font-bold mb-2">
+          {role === "SUPERADMIN" ? "Superadmin Portal" : role === "ADMIN" ? "Admin Login" : "Student Login"}
+        </h2>
         <p className="text-muted-foreground text-sm mb-6">Sign in to access your portal.</p>
 
-        <div className="flex bg-muted p-1 rounded-lg mb-6">
+        <div className="grid grid-cols-3 bg-muted p-1 rounded-lg mb-6">
           <button
             type="button"
             onClick={() => setRole("STUDENT")}
-            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${role === "STUDENT" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+            className={`py-2 text-sm font-medium rounded-md transition-all ${role === "STUDENT" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
           >
             Student
@@ -87,23 +108,33 @@ export default function Login() {
           <button
             type="button"
             onClick={() => setRole("ADMIN")}
-            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${role === "ADMIN" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+            className={`py-2 text-sm font-medium rounded-md transition-all ${role === "ADMIN" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
           >
-            University Admin
+            Admin
+          </button>
+          <button
+            type="button"
+            onClick={() => setRole("SUPERADMIN")}
+            className={`py-2 text-sm font-medium rounded-md transition-all ${role === "SUPERADMIN" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+          >
+            Superadmin
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Email Address</label>
+            <label className="text-sm font-medium">
+              {role === "SUPERADMIN" ? "Username" : "Email Address"}
+            </label>
             <div className="relative">
               <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
-                type="email"
+                type="text"
                 required
                 className="w-full pl-9 pr-4 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
-                placeholder="Ex. mail@university.edu"
+                placeholder={role === "SUPERADMIN" ? "Enter superadmin username" : "Ex. mail@university.edu"}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />

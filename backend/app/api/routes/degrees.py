@@ -60,7 +60,7 @@ async def update_degree_status(
     status: CredentialStatus,
     current_user: User = Depends(require_role(UserRole.ADMIN)),
 ):
-    cred = await DegreeService.update_status(credential_id, status)
+    cred = await DegreeService.update_status(credential_id, status, current_user.id)
     return _to_response(cred)
 
 
@@ -70,7 +70,7 @@ async def update_degree(
     credential_update: CredentialUpdate,
     current_user: User = Depends(require_role(UserRole.ADMIN)),
 ):
-    cred = await DegreeService.update(credential_id, credential_update)
+    cred = await DegreeService.update(credential_id, credential_update, current_user.id)
     return _to_response(cred)
 
 
