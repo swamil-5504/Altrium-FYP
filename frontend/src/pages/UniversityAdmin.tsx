@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { generateSVG, getTierInfo } from "@/utils/svgGenerator";
-import { generateSVG, getTierInfo } from "@/utils/svgGenerator";
 import { ethers, type Eip1193Provider } from "ethers";
 import { toast } from "sonner";
 import axios from "@/api/axios";
@@ -483,9 +482,7 @@ const UniversityAdmin: React.FC = () => {
       // degreeHash = keccak256(utf8(JSON.stringify(studentBasicsPayload)))
       const m = (credential.metadata_json ?? {}) as Record<string, unknown>;
       const extractedStudentName = typeof m.studentName === "string" ? m.studentName : (typeof m.name === "string" ? m.name : "Student");
-      const extractedStudentName = typeof m.studentName === "string" ? m.studentName : (typeof m.name === "string" ? m.name : "Student");
       const studentBasicsPayload = {
-        studentName: extractedStudentName,
         studentName: extractedStudentName,
         passingYear: typeof m.passingYear === "string" ? m.passingYear : "",
         entryYear: typeof m.entryYear === "string" ? m.entryYear : "",
@@ -562,10 +559,8 @@ const UniversityAdmin: React.FC = () => {
       }
 
       // Persist to backend: status=APPROVED, tx_hash=tx.hash, token_id=tokenId
-      // Persist to backend: status=APPROVED, tx_hash=tx.hash, token_id=tokenId
       await axios.patch(`/degrees/${credential.id}`, {
         status: "APPROVED",
-        tx_hash: tx.hash,
         tx_hash: tx.hash,
         token_id: Number(tokenId),
       });
@@ -578,8 +573,6 @@ const UniversityAdmin: React.FC = () => {
         typeof error === "object" && error
           ? ("reason" in error ? (error as { reason?: string }).reason : undefined) ||
           ("message" in error ? (error as { message?: string }).message : undefined) ||
-          "Minting failed"
-            ("message" in error ? (error as { message?: string }).message : undefined) ||
           "Minting failed"
           : error instanceof Error
             ? error.message
