@@ -7,6 +7,7 @@ import Index from "./pages/Index.tsx";
 import StudentDashboard from "./pages/StudentDashboard.tsx";
 import UniversityAdmin from "./pages/UniversityAdmin.tsx";
 import EmployerVerify from "./pages/EmployerVerify.tsx";
+import SuperadminDashboard from "./pages/SuperadminDashboard.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Login from "./pages/Login.tsx";
 import Register from "./pages/Register.tsx";
@@ -42,6 +43,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="ADMIN">
                   <UniversityAdmin />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/superadmin"
+              element={
+                <ProtectedRoute requiredRole="SUPERADMIN">
+                  <SuperadminDashboard />
                 </ProtectedRoute>
               }
             />

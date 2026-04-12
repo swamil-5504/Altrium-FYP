@@ -5,7 +5,7 @@ export interface IUser {
   id: string;
   email: string;
   full_name: string | null;
-  role: "ADMIN" | "STUDENT";
+  role: "ADMIN" | "STUDENT" | "SUPERADMIN";
   college_name: string | null;
   wallet_address: string | null;
   prn_number: string | null;
@@ -17,8 +17,8 @@ interface IAuthContext {
   user: IUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, fullName: string, role: "ADMIN" | "STUDENT", collegeName?: string, walletAddress?: string, prnNumber?: string) => Promise<any>;
+  login: (email: string, password: string, ignoreVerification?: boolean) => Promise<void>;
+  register: (email: string, password: string, fullName: string, role: "ADMIN" | "STUDENT" | "SUPERADMIN", collegeName?: string, walletAddress?: string, prnNumber?: string) => Promise<any>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
 }
@@ -47,8 +47,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     void checkAuth();
   }, []);
 
-  const login = async (email: string, password: string) => {
-    const response = await axios.post("/auth/login", { email, password });
+  const login = async (email: string, password: string, ignoreVerification = false) => {
+    const response = await axios.post("/auth/login", { email, password, ignore_verification: ignoreVerification });
 
     sessionStorage.setItem("access_token", response.data.access_token);
     sessionStorage.setItem("refresh_token", response.data.refresh_token);
@@ -57,7 +57,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser(userResponse.data);
   };
 
-  const register = async (email: string, password: string, fullName: string, role: "ADMIN" | "STUDENT", collegeName?: string, walletAddress?: string, prnNumber?: string) => {
+  const register = async (email: string, password: string, fullName: string, role: "ADMIN" | "STUDENT" | "SUPERADMIN", collegeName?: string, walletAddress?: string, prnNumber?: string) => {
     const response = await axios.post("/auth/register", {
       email,
       password,
@@ -67,7 +67,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       wallet_address: walletAddress,
       prn_number: prnNumber
     });
-    if (role === "STUDENT") {
+    if (role === "STUDENT" || role === "ADMIN") {
       await login(email, password);
     }
     return response.data;

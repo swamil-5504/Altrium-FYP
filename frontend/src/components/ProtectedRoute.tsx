@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 
 interface Props {
   children: React.ReactElement;
-  requiredRole?: "ADMIN" | "STUDENT";
+  requiredRole?: "SUPERADMIN" | "ADMIN" | "STUDENT";
 }
 
 export const ProtectedRoute: React.FC<Props> = ({ children, requiredRole }) => {

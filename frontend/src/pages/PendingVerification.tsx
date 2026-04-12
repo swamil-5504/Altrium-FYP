@@ -1,8 +1,29 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Clock, ShieldCheck } from "lucide-react";
+import axios from "@/api/axios";
+import { toast } from "sonner";
 
 export default function PendingVerification() {
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const interval = setInterval(async () => {
+            try {
+                const res = await axios.get("/users/me");
+                if (res.data.role === "ADMIN" && res.data.is_legal_admin_verified) {
+                    clearInterval(interval);
+                    toast.success("Superadmin has approved your login!");
+                    navigate("/university");
+                }
+            } catch (err) {
+                // Silently handle polling errors
+            }
+        }, 3000);
+
+        return () => clearInterval(interval);
+    }, [navigate]);
+
     return (
         <div className="min-h-screen bg-background flex flex-col justify-center items-center p-4 relative overflow-hidden">
             <div
@@ -39,9 +60,9 @@ export default function PendingVerification() {
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent" />
                     <p className="text-foreground font-medium mb-1 pl-2">What happens next?</p>
                     <ul className="text-muted-foreground space-y-2 pl-2">
-                        <li>1. Manual verification of your documents</li>
-                        <li>2. On-chain instantiation of your University Role</li>
-                        <li>3. Full access to your dashboard</li>
+                        <li>1. A superadmin will manually review your details</li>
+                        <li>2. Once verified, your login will be approved</li>
+                        <li>3. Full access to your dashboard is granted</li>
                     </ul>
                 </div>
 

@@ -4,12 +4,13 @@ from uuid import UUID, uuid4
 from datetime import datetime
 
 from beanie import Document, Indexed
-from pydantic import Field, EmailStr
+from pydantic import Field
 
 # we keep the same enums so they can be reused in schemas
 class UserRole(str, PyEnum):
     ADMIN = "ADMIN"
     STUDENT = "STUDENT"
+    SUPERADMIN = "SUPERADMIN"
 
 class CredentialStatus(str, PyEnum):
     PENDING = "PENDING"
@@ -18,7 +19,7 @@ class CredentialStatus(str, PyEnum):
 
 class User(Document):
     id: UUID = Field(default_factory=uuid4)
-    email: EmailStr = Indexed(unique=True)
+    email: str = Indexed(unique=True)
     full_name: Optional[str] = None
     hashed_password: str
     role: UserRole = UserRole.STUDENT
