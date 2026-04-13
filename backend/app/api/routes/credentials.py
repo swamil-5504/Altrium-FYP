@@ -52,7 +52,7 @@ async def update_credential_status(
     status: CredentialStatus,
     current_user: User = Depends(require_role(UserRole.ADMIN))
 ):
-    cred = await DegreeService.update_status(credential_id, status)
+    cred = await DegreeService.update_status(credential_id, status, current_user.id)
     return _to_response(cred)
 
 
@@ -66,7 +66,7 @@ async def update_credential(
     ADMIN approves a submission and persists on-chain tx details.
     Expected body fields (all optional): status, tx_hash, token_id, title, description, metadata_json.
     """
-    cred = await DegreeService.update(credential_id, credential_update)
+    cred = await DegreeService.update(credential_id, credential_update, current_user.id)
     return _to_response(cred)
 
 @router.delete("/{credential_id}")

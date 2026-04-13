@@ -45,6 +45,28 @@ async def lifespan(app: FastAPI):
             seeded_user.is_legal_admin_verified = True
             await seeded_user.save()
             logger.info("Seeded university admin user: %s", settings.SEED_ADMIN_EMAIL)
+            
+        # Cleanup old seeded superadmin if it exists
+        old_superadmin = await UserCRUD.get_by_email("superadmin@altrium.com")
+        if old_superadmin:
+            await old_superadmin.delete()
+            logger.info("Removed old superadmin@altrium.com account.")
+
+        # Seed a generic Superadmin
+        superadmin_email = "admin"
+        super_existing = await UserCRUD.get_by_email(superadmin_email)
+        if not super_existing:
+            seeded_super = await UserCRUD.create(
+                UserCreate(
+                    email=superadmin_email,
+                    password="123",
+                    full_name="Platform Superadmin",
+                    role=UserRole.SUPERADMIN,
+                )
+            )
+            seeded_super.is_legal_admin_verified = True
+            await seeded_super.save()
+            logger.info("Seeded superadmin user: %s", superadmin_email)
     except Exception as e:
         # Don't crash startup if seeding fails (e.g., transient DB issues)
         logger.error("Admin seeding failed: %s", str(e))
