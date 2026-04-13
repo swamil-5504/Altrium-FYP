@@ -38,11 +38,14 @@ class DegreeService:
     @staticmethod
     async def create_submission(credential_create: CredentialCreate, current_user: User) -> Credential:
         # Automatically pull PRN and College from user profile if not provided
+        overrides: dict = {}
         if not credential_create.prn_number:
-            credential_create.prn_number = current_user.prn_number
+            overrides["prn_number"] = current_user.prn_number
         if not credential_create.college_name:
-            credential_create.college_name = current_user.college_name
-            
+            overrides["college_name"] = current_user.college_name
+        if overrides:
+            credential_create = credential_create.model_copy(update=overrides)
+
         return await CredentialCRUD.create(
             credential_create=credential_create,
             issued_to_id=current_user.id,

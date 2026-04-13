@@ -1,4 +1,4 @@
-from uuid import UUID
+from uuid import UUID, uuid4
 from typing import List, Optional
 from datetime import datetime
 from app.models.models import User, Credential, UserRole, CredentialStatus
