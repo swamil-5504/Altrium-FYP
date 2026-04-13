@@ -47,6 +47,7 @@ class Credential(Document):
     status: CredentialStatus = CredentialStatus.PENDING
     metadata_json: Optional[dict] = None
     document_path: Optional[str] = None
+    document_uid: Optional[str] = None
     token_id: Optional[int] = None
     tx_hash: Optional[str] = None
     prn_number: Optional[str] = None

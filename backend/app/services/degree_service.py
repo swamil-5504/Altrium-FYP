@@ -1,3 +1,4 @@
+import io
 import os
 import shutil
 from pathlib import Path
@@ -5,6 +6,8 @@ from typing import List
 from uuid import UUID
 
 from fastapi import HTTPException, UploadFile, status
+from pypdf import PdfReader, PdfWriter
+from reportlab.pdfgen import canvas
 
 from app.crud.crud import CredentialCRUD
 from app.models.models import Credential, User, UserRole
@@ -15,6 +18,20 @@ UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", "/app/uploads"))
 
 def _ensure_upload_dir() -> None:
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _create_footer_overlay(page_width: float, page_height: float, footer_text: str):
+    packet = io.BytesIO()
+    c = canvas.Canvas(packet, pagesize=(page_width, page_height))
+    c.setFont("Helvetica", 9)
+    c.setFillColorRGB(0.18, 0.18, 0.18)
+    x = 30
+    y = 18
+    c.drawString(x, y, footer_text)
+    c.save()
+    packet.seek(0)
+    overlay = PdfReader(packet)
+    return overlay.pages[0]
 
 
 class DegreeService:
@@ -169,6 +186,8 @@ class DegreeService:
 
         # Persist the path in the record
         credential.document_path = str(dest)
+        if not credential.document_uid:
+            credential.document_uid = f"DOC-{credential.id}"
         from datetime import datetime
         credential.updated_at = datetime.utcnow()
         await credential.save()
@@ -208,3 +227,59 @@ class DegreeService:
             )
 
         return credential.document_path
+
+    @staticmethod
+    async def get_document_with_footer(credential_id: UUID, current_user: User) -> bytes:
+        credential = await CredentialCRUD.get_by_id(credential_id)
+        if not credential:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Credential not found",
+            )
+
+        # Determine if user is authorized to view document
+        is_authorized = False
+        if current_user.role == UserRole.SUPERADMIN:
+            is_authorized = True
+        elif current_user.role == UserRole.ADMIN:
+            if ((credential.status == CredentialStatus.PENDING and credential.college_name == current_user.college_name) or
+                credential.issued_by_id == current_user.id):
+                is_authorized = True
+        elif credential.issued_to_id == current_user.id:
+            is_authorized = True
+
+        if not is_authorized:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized",
+            )
+
+        if not credential.document_path or not os.path.isfile(credential.document_path):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No document uploaded for this credential",
+            )
+
+        if credential.status != CredentialStatus.APPROVED:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Document must be approved before viewing the official approved PDF.",
+            )
+
+        footer_text = f"Document UID: {credential.document_uid or str(credential.id)}"
+        with open(credential.document_path, "rb") as pdf_file:
+            reader = PdfReader(pdf_file)
+            writer = PdfWriter()
+            for page in reader.pages:
+                overlay_page = _create_footer_overlay(
+                    float(page.mediabox.width),
+                    float(page.mediabox.height),
+                    footer_text,
+                )
+                page.merge_page(overlay_page)
+                writer.add_page(page)
+
+            output = io.BytesIO()
+            writer.write(output)
+            output.seek(0)
+            return output.read()
