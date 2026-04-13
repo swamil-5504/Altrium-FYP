@@ -46,6 +46,8 @@ interface Student {
 const CONTRACT_REGISTRY_ADDRESS = import.meta.env.VITE_REGISTRY_ADDRESS || "";
 // TEMP: Bypass blockchain minting and only approve in backend.
 const BYPASS_BLOCKCHAIN_APPROVAL = false;
+// TEMP: Bypass blockchain minting and only approve in backend.
+const BYPASS_BLOCKCHAIN_APPROVAL = false;
 
 // Minimal ABIs for minting + reading tokenId.
 const registryAbi = [
@@ -799,7 +801,9 @@ const UniversityAdmin: React.FC = () => {
                                                                     disabled={!!mintingById[cred.id]}
                                                                   >
                                                                     <Blocks className="w-3 h-3" />
-                                                                    {mintingById[cred.id] ? "Minting..." : "Mint & Approve"}
+                                                                    {mintingById[cred.id]
+                                                                      ? (BYPASS_BLOCKCHAIN_APPROVAL ? "Approving..." : "Minting...")
+                                                                      : (BYPASS_BLOCKCHAIN_APPROVAL ? "Approve" : "Mint & Approve")}
                                                                   </button>
 
                                                                   <button
