@@ -11,6 +11,7 @@ class UserRole(str, PyEnum):
     ADMIN = "ADMIN"
     STUDENT = "STUDENT"
     SUPERADMIN = "SUPERADMIN"
+    EMPLOYER = "EMPLOYER"
 
 class CredentialStatus(str, PyEnum):
     PENDING = "PENDING"

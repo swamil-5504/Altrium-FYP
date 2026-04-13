@@ -8,6 +8,7 @@ class UserRole(str, Enum):
     ADMIN = "ADMIN"
     STUDENT = "STUDENT"
     SUPERADMIN = "SUPERADMIN"
+    EMPLOYER = "EMPLOYER"
 
 class CredentialStatus(str, Enum):
     PENDING = "PENDING"
