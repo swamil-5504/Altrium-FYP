@@ -25,6 +25,10 @@ class AuthService:
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid credentials",
             )
+            
+        # Verification check removed to allow unverified admins to get a token and poll status.
+        # Guardrails should be implemented on specific sensitive endpoints instead.
+
         return AuthService.issue_token_pair(str(user.id))
 
     @staticmethod

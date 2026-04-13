@@ -7,10 +7,14 @@ import Index from "./pages/Index.tsx";
 import StudentDashboard from "./pages/StudentDashboard.tsx";
 import UniversityAdmin from "./pages/UniversityAdmin.tsx";
 import EmployerVerify from "./pages/EmployerVerify.tsx";
+import SuperadminDashboard from "./pages/SuperadminDashboard.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Login from "./pages/Login.tsx";
 import Register from "./pages/Register.tsx";
+import Web3Guide from "./pages/Web3Guide.tsx";
+import PendingVerification from "./pages/PendingVerification.tsx";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
 const queryClient = new QueryClient();
@@ -42,6 +46,16 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/superadmin"
+              element={
+                <ProtectedRoute requiredRole="SUPERADMIN">
+                  <SuperadminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/guide" element={<Web3Guide />} />
+            <Route path="/pending-verification" element={<PendingVerification />} />
             <Route path="/verify" element={<EmployerVerify />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

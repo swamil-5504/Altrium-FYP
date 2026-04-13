@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from typing import Optional, List
 from uuid import UUID
 from datetime import datetime
@@ -7,6 +7,7 @@ from enum import Enum
 class UserRole(str, Enum):
     ADMIN = "ADMIN"
     STUDENT = "STUDENT"
+    SUPERADMIN = "SUPERADMIN"
 
 class CredentialStatus(str, Enum):
     PENDING = "PENDING"
@@ -15,9 +16,12 @@ class CredentialStatus(str, Enum):
 
 # User Schemas
 class UserBase(BaseModel):
-    email: EmailStr
+    email: str
     full_name: Optional[str] = None
     role: UserRole = UserRole.STUDENT
+    college_name: Optional[str] = None
+    wallet_address: Optional[str] = None
+    prn_number: Optional[str] = None
 
 class UserCreate(UserBase):
     password: str
@@ -28,7 +32,10 @@ class UserUpdate(BaseModel):
 
 class UserResponse(UserBase):
     id: UUID
+    college_name: Optional[str] = None
+    prn_number: Optional[str] = None
     is_active: bool
+    is_legal_admin_verified: bool = False
     created_at: datetime
 
     class Config:
@@ -45,7 +52,8 @@ class CredentialCreate(CredentialBase):
     issued_to_id: Optional[UUID] = None
     token_id: Optional[int] = None
     tx_hash: Optional[str] = None
-    prn_number: str
+    prn_number: Optional[str] = None
+    college_name: Optional[str] = None
 
 class CredentialUpdate(BaseModel):
     title: Optional[str] = None
@@ -54,6 +62,7 @@ class CredentialUpdate(BaseModel):
     metadata_json: Optional[dict] = None
     token_id: Optional[int] = None
     tx_hash: Optional[str] = None
+    revoked: Optional[bool] = None
 
 class CredentialResponse(CredentialBase):
     id: UUID
@@ -63,7 +72,9 @@ class CredentialResponse(CredentialBase):
     token_id: Optional[int] = None
     tx_hash: Optional[str] = None
     prn_number: Optional[str] = None
+    college_name: Optional[str] = None
     has_document: bool = False
+    revoked: bool = False
     created_at: datetime
     updated_at: datetime
 
@@ -79,8 +90,9 @@ class TokenResponse(BaseModel):
     refresh_expires_in: int
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    email: str
     password: str
+    ignore_verification: bool = False
 
 class RefreshTokenRequest(BaseModel):
     refresh_token: str

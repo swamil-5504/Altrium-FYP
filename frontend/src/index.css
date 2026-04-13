@@ -16,14 +16,17 @@
     --popover-foreground: 215 25% 14%;
 
     --primary: 209 64% 16%;
+    --primary: 209 64% 16%;
     --primary-foreground: 210 20% 98%;
 
+    --secondary: 40 73% 63%;
     --secondary: 40 73% 63%;
     --secondary-foreground: 0 0% 100%;
 
     --muted: 210 16% 93%;
     --muted-foreground: 215 12% 48%;
 
+    --accent: 220 83% 56%;
     --accent: 220 83% 56%;
     --accent-foreground: 0 0% 100%;
 
@@ -32,6 +35,7 @@
 
     --border: 214 20% 89%;
     --input: 214 20% 89%;
+    --ring: 220 83% 56%;
     --ring: 220 83% 56%;
 
     --radius: 0.625rem;
@@ -120,6 +124,7 @@
 
   .glass-card {
     @apply bg-background/80 backdrop-blur-sm border border-border/60 shadow-sm;
+    @apply bg-background/80 backdrop-blur-sm border border-border/60 shadow-sm;
   }
 
   .surface-elevated {
@@ -158,6 +163,7 @@
     filter: blur(4px);
   }
 
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -166,6 +172,14 @@
 }
 
 @keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+
   from {
     opacity: 0;
   }
@@ -182,6 +196,7 @@
     filter: blur(4px);
   }
 
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -195,6 +210,7 @@
     transform: translateX(20px);
     filter: blur(4px);
   }
+
 
   to {
     opacity: 1;
@@ -212,5 +228,30 @@
 
   50% {
     transform: translateY(-6px);
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  nav,
+  footer {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .blockchain-glow {
+    box-shadow: none !important;
+  }
+
+  .bg-card {
+    background: white !important;
+    border: 1px solid #ddd !important;
   }
 }

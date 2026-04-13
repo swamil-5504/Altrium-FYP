@@ -14,7 +14,7 @@ contract Deploy is Script {
         address deployer = vm.addr(deployerPrivateKey);
 
         // 1. Deploy Degree SBT (custodied + soulbound)
-        AltriumDegreeSBT degree = new AltriumDegreeSBT(deployer, deployer);
+        AltriumDegreeSBT degree = new AltriumDegreeSBT(deployer);
         console.log("AltriumDegreeSBT deployed at:", address(degree));
         // 3. Deploy Registry (RBAC + orchestration)
         AltriumRegistry registry = new AltriumRegistry(deployer, address(degree));

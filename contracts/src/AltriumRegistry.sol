@@ -69,7 +69,7 @@ contract AltriumRegistry is AccessControl {
         onlyRole(UNIVERSITY_ROLE)
         returns (uint256 tokenId)
     {
-        tokenId = degreeSBT.mintDegree(collegeIdHash, msg.sender, degreeHash, degreeURI);
+        tokenId = degreeSBT.mintDegree(collegeIdHash, msg.sender, msg.sender, degreeHash, degreeURI);
     }
 
     /**
@@ -79,6 +79,35 @@ contract AltriumRegistry is AccessControl {
         uint256 tokenId = degreeSBT.tokenIdByCollegeIdHash(collegeIdHash);
         require(tokenId != 0, "degree missing");
         degreeSBT.setVerified(tokenId, verified);
+    }
+
+    /**
+     * @notice Permanently revoke a degree credential on-chain.
+     * @dev Only callable by UNIVERSITY_ROLE. Revocation is irreversible and emits
+     *      a DegreeRevoked event that is permanently readable on Etherscan.
+     *      The token is NOT burned — revocation history is preserved on-chain.
+     */
+    function revokeDegree(bytes32 collegeIdHash) external onlyRole(UNIVERSITY_ROLE) {
+        uint256 tokenId = degreeSBT.tokenIdByCollegeIdHash(collegeIdHash);
+        require(tokenId != 0, "degree missing");
+        degreeSBT.revokeDegree(tokenId);
+    }
+
+    /**
+     * @notice Permanently burn a degree token and clear its record.
+     * @dev Only callable by UNIVERSITY_ROLE. Used to "reset" a minted credential.
+     */
+    function burnDegree(bytes32 collegeIdHash) external onlyRole(UNIVERSITY_ROLE) {
+        uint256 tokenId = degreeSBT.tokenIdByCollegeIdHash(collegeIdHash);
+        require(tokenId != 0, "degree missing");
+        degreeSBT.burnDegree(tokenId);
+    }
+
+    /**
+     * @notice Public read: check if a degree has been revoked on-chain.
+     */
+    function isDegreeRevoked(bytes32 collegeIdHash) external view returns (bool) {
+        return degreeSBT.isRevoked(collegeIdHash);
     }
 
     /**
