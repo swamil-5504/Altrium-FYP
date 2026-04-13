@@ -325,53 +325,53 @@ const EmployerVerify: React.FC = () => {
                           <span className="font-mono font-bold text-foreground">{result.token_id ?? "-"}</span>
                         </div>
 
-                        {result.tx_hash && (
-                          <div className="flex items-center justify-between text-sm py-1 border-b border-muted-foreground/10">
-                            <span className="text-muted-foreground">Tx Hash</span>
-                            <a
-                              href={`https://sepolia.etherscan.io/tx/${result.tx_hash}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-1 font-mono text-accent hover:text-accent/80 transition-colors max-w-[200px] sm:max-w-[260px] truncate"
-                            >
-                              {result.tx_hash}
-                              <ExternalLink className="w-3.5 h-3.5 shrink-0" />
-                            </a>
-                          </div>
-                        )}
+                          {result.tx_hash && (
+                            <div className="flex items-center justify-between text-sm py-1 border-b border-muted-foreground/10">
+                              <span className="text-muted-foreground">Tx Hash</span>
+                              <a
+                                href={`https://sepolia.etherscan.io/tx/${result.tx_hash}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1 font-mono text-accent hover:text-accent/80 transition-colors max-w-[200px] sm:max-w-[260px] truncate"
+                              >
+                                {result.tx_hash}
+                                <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                              </a>
+                            </div>
+                          )}
 
-                        {/* Hash re-verification */}
-                        <div className="flex items-center justify-between text-sm py-1">
-                          <span className="text-muted-foreground">Integrity Check</span>
-                          <button
-                            onClick={handleVerifyHash}
-                            disabled={verifyingHash}
-                            className="flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium bg-accent/10 text-accent hover:bg-accent/20 transition-colors disabled:opacity-50"
-                          >
-                            <ShieldCheck className="w-3.5 h-3.5" />
-                            {verifyingHash ? "Verifying..." : hashVerified === true ? "✅ Verified" : hashVerified === false ? "❌ Failed" : "Verify Hash"}
-                          </button>
+                          {/* Hash re-verification */}
+                          <div className="flex items-center justify-between text-sm py-1">
+                            <span className="text-muted-foreground">Integrity Check</span>
+                            <button
+                              onClick={handleVerifyHash}
+                              disabled={verifyingHash}
+                              className="flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium bg-accent/10 text-accent hover:bg-accent/20 transition-colors disabled:opacity-50"
+                            >
+                              <ShieldCheck className="w-3.5 h-3.5" />
+                              {verifyingHash ? "Verifying..." : hashVerified === true ? "✅ Verified" : hashVerified === false ? "❌ Failed" : "Verify Hash"}
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div
-                      className="md:col-span-1 flex items-center justify-center border rounded-xl bg-background/50 p-4 shadow-inner relative overflow-hidden group cursor-pointer"
-                      onClick={() => setIsImageExpanded(true)}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-tr from-accent/5 to-transparent opacity-50" />
-                      <div className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm p-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-foreground"><path d="m21 21-6-6m6 6v-4.8m0 4.8h-4.8M3 16.2V21m0 0h4.8M3 21l6-6M21 7.8V3m0 0h-4.8M21 3l-6 6M3 7.8V3m0 0h4.8M3 3l6 6" /></svg>
+                      <div
+                        className="md:col-span-1 flex items-center justify-center border rounded-xl bg-background/50 p-4 shadow-inner relative overflow-hidden group cursor-pointer"
+                        onClick={() => setIsImageExpanded(true)}
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-tr from-accent/5 to-transparent opacity-50" />
+                        <div className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm p-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-foreground"><path d="m21 21-6-6m6 6v-4.8m0 4.8h-4.8M3 16.2V21m0 0h4.8M3 21l6-6M21 7.8V3m0 0h-4.8M21 3l-6 6M3 7.8V3m0 0h4.8M3 3l6 6" /></svg>
+                        </div>
+                        <img
+                          src={generatedSvg}
+                          alt="SBT Credential"
+                          className="w-full max-w-[240px] h-auto object-contain drop-shadow-2xl relative z-10 transition-transform duration-500 group-hover:scale-[1.05]"
+                        />
                       </div>
-                      <img
-                        src={generatedSvg}
-                        alt="SBT Credential"
-                        className="w-full max-w-[240px] h-auto object-contain drop-shadow-2xl relative z-10 transition-transform duration-500 group-hover:scale-[1.05]"
-                      />
                     </div>
                   </div>
                 </div>
-              </div>
             </ScrollReveal>
           )}
 
@@ -478,6 +478,7 @@ const EmployerVerify: React.FC = () => {
           </div>
         </div>
       )}
+
     </div>
   );
 };
