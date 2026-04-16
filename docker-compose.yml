@@ -30,6 +30,7 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_API_URL: http://localhost:8000
+        VITE_REGISTRY_ADDRESS: "0xc2Bf6D24d9B35F8F9780b22a71aD756aBe62B2Df"
     container_name: frontend
     restart: unless-stopped
     ports:
