@@ -1,8 +1,10 @@
 from typing import List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, UploadFile
-from fastapi.responses import FileResponse
+import io
+
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi.responses import FileResponse, StreamingResponse
 
 from app.api.deps.auth import get_current_user, require_role
 from app.core.config import settings
@@ -131,9 +133,19 @@ async def download_document(
     current_user: User = Depends(get_current_user),
 ):
     """Download / view the PDF document for a degree submission."""
-    file_path = await DegreeService.get_document_path(credential_id, current_user)
-    return FileResponse(
-        path=file_path,
-        media_type="application/pdf",
-        filename=f"degree_{credential_id}.pdf",
-    )
+    try:
+        pdf_bytes = await DegreeService.get_document_with_footer(credential_id, current_user)
+        return StreamingResponse(
+            io.BytesIO(pdf_bytes),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"inline; filename=degree_{credential_id}.pdf"},
+        )
+    except HTTPException as exc:
+        if exc.status_code == 403:
+            file_path = await DegreeService.get_document_path(credential_id, current_user)
+            return FileResponse(
+                path=file_path,
+                media_type="application/pdf",
+                filename=f"degree_{credential_id}.pdf",
+            )
+        raise

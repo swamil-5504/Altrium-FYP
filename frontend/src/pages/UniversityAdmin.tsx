@@ -43,6 +43,8 @@ interface Student {
 // - VITE_REGISTRY_ADDRESS
 // Docker should pass it once you have the on-chain deployment.
 const CONTRACT_REGISTRY_ADDRESS = import.meta.env.VITE_REGISTRY_ADDRESS || "";
+// TEMP: Bypass blockchain minting and only approve in backend.
+const BYPASS_BLOCKCHAIN_APPROVAL = false;
 
 // Minimal ABIs for minting + reading tokenId.
 const registryAbi = [
@@ -314,6 +316,30 @@ const UniversityAdmin: React.FC = () => {
   };
 
   const handleMint = async (credential: Credential) => {
+    if (!isAuthenticated) {
+      toast.error("Please login as an admin to approve.");
+      return;
+    }
+
+    if (BYPASS_BLOCKCHAIN_APPROVAL) {
+      setMintingById((prev) => ({ ...prev, [credential.id]: true }));
+      const loadingToast = toast.loading("Approving submission...");
+      try {
+        await axios.patch(`/degrees/${credential.id}`, {
+          status: "APPROVED",
+        });
+        toast.success("Submission approved (blockchain bypass enabled).");
+        await fetchCredentials();
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to approve submission.");
+      } finally {
+        toast.dismiss(loadingToast);
+        setMintingById((prev) => ({ ...prev, [credential.id]: false }));
+      }
+      return;
+    }
+
     if (!CONTRACT_REGISTRY_ADDRESS) {
       toast.error("Missing VITE_REGISTRY_ADDRESS (deployed AltriumRegistry address).");
       return;
@@ -326,11 +352,6 @@ const UniversityAdmin: React.FC = () => {
 
     if (!credential.prn_number) {
       toast.error("PRN number is missing for this submission.");
-      return;
-    }
-
-    if (!isAuthenticated) {
-      toast.error("Please login as an admin to mint.");
       return;
     }
 
@@ -618,7 +639,9 @@ const UniversityAdmin: React.FC = () => {
                                       disabled={!!mintingById[cred.id]}
                                     >
                                       <Blocks className="w-3 h-3" />
-                                      {mintingById[cred.id] ? "Minting..." : "Mint & Approve"}
+                                      {mintingById[cred.id]
+                                        ? (BYPASS_BLOCKCHAIN_APPROVAL ? "Approving..." : "Minting...")
+                                        : (BYPASS_BLOCKCHAIN_APPROVAL ? "Approve" : "Mint & Approve")}
                                     </button>
 
                                     <button

@@ -9,7 +9,7 @@ interface UserInfo {
   id: string;
   email: string;
   full_name: string | null;
-  role: "SUPERADMIN" | "ADMIN" | "STUDENT";
+  role: "SUPERADMIN" | "ADMIN" | "STUDENT" | "EMPLOYER";
   college_name: string | null;
   prn_number: string | null;
   is_legal_admin_verified: boolean;
