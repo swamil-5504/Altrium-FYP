@@ -1,17 +1,26 @@
 import React from "react";
 import { Navbar } from "@/components/Navbar";
 import { ScrollReveal } from "@/components/ScrollReveal";
-import { Shield, ExternalLink, MousePointer2, Wallet, Coins, Settings } from "lucide-react";
+import { Shield, ExternalLink, MousePointer2, Wallet, Coins, Settings, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Web3Guide: React.FC = () => {
+    const navigate = useNavigate();
     return (
         <div className="min-h-screen bg-background">
             <Navbar />
 
             <div className="pt-24 pb-20">
-                <div className="container mx-auto px-4 max-w-4xl">
+                <div className="container mx-auto px-4 max-w-4xl relative">
+                    <button
+                        onClick={() => navigate('/university')}
+                        className="absolute top-0 right-4 md:right-0 p-2 z-50 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                        aria-label="Close guide"
+                    >
+                        <X className="w-6 h-6" />
+                    </button>
                     <ScrollReveal>
-                        <div className="mb-12 text-center">
+                        <div className="mb-12 text-center mt-6">
                             <div className="inline-flex p-3 rounded-2xl bg-accent/10 text-accent mb-4">
                                 <Shield className="w-8 h-8" />
                             </div>
