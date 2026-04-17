@@ -30,10 +30,11 @@ class Settings(BaseSettings):
     CONTRACT_SBT_ADDRESS: str = ""
     CONTRACT_REGISTRY_ADDRESS: str = ""
 
-    # Demo / initial university admin seed (single-university scope)
-    SEED_ADMIN_EMAIL: str = "admin@example.com"
-    SEED_ADMIN_PASSWORD: str = "admin123"
-    SEED_ADMIN_FULL_NAME: str = "University Admin"
+    # Superadmin seeding
+    SUPERADMIN_EMAIL: str = "admin"
+    SUPERADMIN_PASSWORD: str = "123"
+
+
     
     class Config:
         env_file = ".env"

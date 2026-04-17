@@ -4,6 +4,7 @@ import { ethers, type Eip1193Provider } from "ethers";
 import { toast } from "sonner";
 import axios from "@/api/axios";
 import { useAuth } from "@/context/AuthContext";
+import { useAppKit, useAppKitAccount, useAppKitProvider } from '@reown/appkit/react';
 import { Navbar } from "@/components/Navbar";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { Blocks, Clock, Eye, Shield, XCircle, Wallet, Upload, HelpCircle, Users, GraduationCap, AlertTriangle } from "lucide-react";
@@ -36,12 +37,6 @@ interface Student {
   prn_number: string | null;
   is_active: boolean;
   created_at: string;
-}
-
-declare global {
-  interface Window {
-    ethereum?: Eip1193Provider;
-  }
 }
 
 // Provide the deployed registry address via environment:
@@ -130,9 +125,9 @@ const UniversityAdmin: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"degrees" | "students">("degrees");
   const [loading, setLoading] = useState(true);
 
-  const [walletAddress, setWalletAddress] = useState<string>("");
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [showGuide, setShowGuide] = useState(false);
+  const { open } = useAppKit();
+  const { address: walletAddress, isConnected } = useAppKitAccount();
+  const { walletProvider } = useAppKitProvider('eip155');
 
   const [mintingById, setMintingById] = useState<Record<string, boolean>>({});
 
@@ -148,40 +143,7 @@ const UniversityAdmin: React.FC = () => {
 
   useEffect(() => {
     void fetchCredentials();
-
-    // Check if guide has been shown for THIS specific user
-    if (user?.id) {
-      const guideSeenKey = `web3_guide_seen_${user.id}`;
-      const guideSeen = localStorage.getItem(guideSeenKey);
-      if (!guideSeen) {
-        setShowGuide(true);
-      }
-    }
   }, [user?.id]);
-
-  useEffect(() => {
-    if (window.ethereum) {
-      // Sync initial wallet address
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      provider.listAccounts().then(accounts => {
-        if (accounts.length > 0) {
-          setWalletAddress(accounts[0].address);
-        }
-      });
-
-      const handleAccountsChanged = (accounts: string[]) => {
-        if (accounts.length > 0) {
-          setWalletAddress(accounts[0]);
-        } else {
-          setWalletAddress("");
-        }
-      };
-      (window.ethereum as any).on("accountsChanged", handleAccountsChanged);
-      return () => {
-        (window.ethereum as any).removeListener("accountsChanged", handleAccountsChanged);
-      };
-    }
-  }, []);
 
   const fetchCredentials = async () => {
     setLoading(true);
@@ -201,23 +163,10 @@ const UniversityAdmin: React.FC = () => {
   };
 
   const connectWallet = async () => {
-    if (!window.ethereum) {
-      toast.error("MetaMask is not installed!");
-      return;
-    }
-
-    setIsConnecting(true);
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
-      const signer = await provider.getSigner();
-      setWalletAddress(signer.address);
-      toast.success("Wallet connected successfully!");
+      await open();
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Failed to connect wallet";
-      toast.error(message);
-    } finally {
-      setIsConnecting(false);
+      toast.error("Failed to open wallet modal");
     }
   };
 
@@ -243,8 +192,8 @@ const UniversityAdmin: React.FC = () => {
     const revokeToast = toast.loading("Revoking on-chain...");
     try {
       // --- On-chain revocation first ---
-      if (window.ethereum && CONTRACT_REGISTRY_ADDRESS) {
-        const provider = new ethers.BrowserProvider(window.ethereum);
+      if (walletProvider && CONTRACT_REGISTRY_ADDRESS) {
+        const provider = new ethers.BrowserProvider(walletProvider as any);
         const signer = await provider.getSigner();
         const registryContract = new ethers.Contract(CONTRACT_REGISTRY_ADDRESS, registryAbi, signer);
         const combinedString = `${credential.prn_number}-${credential.college_name}`;
@@ -253,7 +202,7 @@ const UniversityAdmin: React.FC = () => {
         await tx.wait();
         toast.loading("On-chain revocation confirmed. Updating backend...", { id: revokeToast });
       } else {
-        toast.warning("MetaMask not connected — revoking on platform only (not on-chain).");
+        toast.warning("Wallet not connected — revoking on platform only (not on-chain).");
       }
 
       await axios.patch(`/degrees/${credentialId}/revoke`);
@@ -275,8 +224,8 @@ const UniversityAdmin: React.FC = () => {
     const burnToast = toast.loading("Burning NFT on-chain...");
     try {
       // 1. On-chain burn
-      if (window.ethereum && CONTRACT_REGISTRY_ADDRESS) {
-        const provider = new ethers.BrowserProvider(window.ethereum);
+      if (walletProvider && CONTRACT_REGISTRY_ADDRESS) {
+        const provider = new ethers.BrowserProvider(walletProvider as any);
         const signer = await provider.getSigner();
         const registryContract = new ethers.Contract(CONTRACT_REGISTRY_ADDRESS, registryAbi, signer);
         const combinedString = `${credential.prn_number}-${credential.college_name}`;
@@ -285,7 +234,7 @@ const UniversityAdmin: React.FC = () => {
         await tx.wait();
         toast.loading("On-chain burn confirmed. Resetting submission in database...", { id: burnToast });
       } else {
-        toast.warning("MetaMask not connected — resetting on platform only (not on-chain).");
+        toast.warning("Wallet not connected — resetting on platform only (not on-chain).");
       }
 
       // 2. Backend reset
@@ -370,8 +319,8 @@ const UniversityAdmin: React.FC = () => {
       return;
     }
 
-    if (!window.ethereum) {
-      toast.error("MetaMask is not installed!");
+    if (!walletProvider) {
+      toast.error("Wallet is not connected!");
       return;
     }
 
@@ -389,7 +338,7 @@ const UniversityAdmin: React.FC = () => {
     const loadingToast = toast.loading(`Minting SBT for ${credential.prn_number} on Sepolia...`);
 
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      const provider = new ethers.BrowserProvider(walletProvider as any);
       const signer = await provider.getSigner();
 
       const registryContract = new ethers.Contract(CONTRACT_REGISTRY_ADDRESS, registryAbi, signer);
@@ -815,52 +764,6 @@ const UniversityAdmin: React.FC = () => {
 
         </div>
       </div >
-
-      {/* Web3 Onboarding Modal */}
-      {
-        showGuide && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
-            <ScrollReveal>
-              <div className="bg-card border rounded-2xl p-8 max-w-lg shadow-2xl relative overflow-hidden blockchain-glow">
-                <div className="absolute top-0 right-0 p-8 opacity-5">
-                  <Shield className="w-24 h-24" />
-                </div>
-                <div className="relative z-10">
-                  <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-6">
-                    <Wallet className="w-6 h-6 text-accent" />
-                  </div>
-                  <h2 className="text-2xl font-bold mb-3">Welcome, University Admin</h2>
-                  <p className="text-muted-foreground mb-6">
-                    To issue decentralized credentials, you'll need to set up your institutional wallet. We've prepared a comprehensive guide to help you get started with MetaMask and Sepolia testnet.
-                  </p>
-
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <Link
-                      to="/guide"
-                      onClick={() => {
-                        if (user?.id) localStorage.setItem(`web3_guide_seen_${user.id}`, "true");
-                        setShowGuide(false);
-                      }}
-                      className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-accent text-accent-foreground font-medium hover:opacity-90 transition active:scale-[0.98]"
-                    >
-                      View Setup Guide
-                    </Link>
-                    <button
-                      onClick={() => {
-                        if (user?.id) localStorage.setItem(`web3_guide_seen_${user.id}`, "true");
-                        setShowGuide(false);
-                      }}
-                      className="flex-1 px-4 py-2.5 rounded-lg border bg-card text-foreground font-medium hover:bg-muted transition active:scale-[0.98]"
-                    >
-                      Skip for now
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </ScrollReveal>
-          </div>
-        )
-      }
 
     </div >
   );

@@ -29,37 +29,15 @@ async def lifespan(app: FastAPI):
     # initialize beanie with our document models
     await init_beanie(database=db, document_models=[models.User, models.Credential])
 
-    # Seed a single University Admin (Verifier) account for demo/dev
+    # Seed a generic Superadmin
     try:
-        existing = await UserCRUD.get_by_email(settings.SEED_ADMIN_EMAIL)
-        if not existing:
-            seeded_user = await UserCRUD.create(
-                UserCreate(
-                    email=settings.SEED_ADMIN_EMAIL,
-                    password=settings.SEED_ADMIN_PASSWORD,
-                    full_name=settings.SEED_ADMIN_FULL_NAME,
-                    role=UserRole.ADMIN,
-                )
-            )
-            # Demo scope: seeded admin is treated as already legally verified.
-            seeded_user.is_legal_admin_verified = True
-            await seeded_user.save()
-            logger.info("Seeded university admin user: %s", settings.SEED_ADMIN_EMAIL)
-            
-        # Cleanup old seeded superadmin if it exists
-        old_superadmin = await UserCRUD.get_by_email("superadmin@altrium.com")
-        if old_superadmin:
-            await old_superadmin.delete()
-            logger.info("Removed old superadmin@altrium.com account.")
-
-        # Seed a generic Superadmin
-        superadmin_email = "admin"
+        superadmin_email = settings.SUPERADMIN_EMAIL
         super_existing = await UserCRUD.get_by_email(superadmin_email)
         if not super_existing:
             seeded_super = await UserCRUD.create(
                 UserCreate(
                     email=superadmin_email,
-                    password="123",
+                    password=settings.SUPERADMIN_PASSWORD,
                     full_name="Platform Superadmin",
                     role=UserRole.SUPERADMIN,
                 )
@@ -68,6 +46,7 @@ async def lifespan(app: FastAPI):
             await seeded_super.save()
             logger.info("Seeded superadmin user: %s", superadmin_email)
     except Exception as e:
+
         # Don't crash startup if seeding fails (e.g., transient DB issues)
         logger.error("Admin seeding failed: %s", str(e))
     

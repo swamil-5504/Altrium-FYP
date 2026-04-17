@@ -11,6 +11,20 @@ from app.core.config import settings
 
 router = APIRouter(prefix=f"{settings.API_V1_STR}/users", tags=["users"])
 
+@router.get("/universities", response_model=List[str])
+async def get_registered_universities():
+    """Return a unique list of college names from all registered and verified admins."""
+    # Find all admins who have a college name set
+    admins = await User.find(
+        User.role == UserRole.ADMIN,
+        User.college_name != None
+    ).to_list()
+    
+    # Get unique college names
+    universities = sorted(list(set(admin.college_name for admin in admins if admin.college_name)))
+    return universities
+
+
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(current_user: User = Depends(get_current_user)):
     return current_user

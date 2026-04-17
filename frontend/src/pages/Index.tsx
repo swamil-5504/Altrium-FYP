@@ -1,20 +1,71 @@
 import { Link } from "react-router-dom";
 import { Shield, GraduationCap, Building2, Briefcase, ArrowRight, FileCheck, Blocks, Search, ChevronRight } from "lucide-react";
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
+
+
+
+
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import ShapeGrid from "@/components/ShapeGrid";
 
 const Index = () => {
+  const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+
+
   return (
-    <div className="min-h-screen bg-background">
+
+    <div className="min-h-screen bg-background overflow-x-hidden">
+
+
       <Navbar />
 
       {/* Hero */}
-      <section className="pt-32 pb-20 md:pt-40 md:pb-28 relative overflow-hidden">
-        {/* Subtle grid background */}
-        <div className="absolute inset-0 opacity-[0.05]" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h60v60H0z' fill='none' stroke='%23000' stroke-width='.5'/%3E%3C/svg%3E")`,
-        }} />
+      <section className="min-h-screen flex flex-col justify-center relative overflow-hidden">
+        {mounted && (
+          <>
+            {/* Animated grid background - Light Mode */}
+            <div className="absolute inset-0 z-0 transition-opacity duration-500 opacity-[0.1] dark:opacity-0 pointer-events-auto dark:pointer-events-none">
+              <ShapeGrid
+                speed={0.5}
+                squareSize={40}
+                direction='diagonal'
+                borderColor='#271E37'
+                hoverFillColor='#222'
+                shape='square'
+                hoverTrailAmount={0}
+              />
+            </div>
+
+            {/* Animated grid background - Dark Mode */}
+            <div className="absolute inset-0 z-0 transition-opacity duration-500 opacity-0 dark:opacity-[0.3] pointer-events-none dark:pointer-events-auto">
+              <ShapeGrid
+                speed={0.5}
+                squareSize={40}
+                direction='diagonal'
+                borderColor='#ffffff'
+                hoverFillColor='rgba(255, 255, 255, 0.1)'
+                shape='square'
+                hoverTrailAmount={0}
+              />
+            </div>
+          </>
+        )}
+
+
+
+
+
+
+
 
         <div className="container mx-auto px-4 relative">
           <ScrollReveal className="max-w-3xl mx-auto text-center">
@@ -51,7 +102,9 @@ const Index = () => {
       </section>
 
       {/* How it works */}
-      <section className="py-20 md:py-28 bg-card border-y">
+      <section className="min-h-screen flex flex-col justify-center bg-card border-y">
+
+
         <div className="container mx-auto px-4">
           <ScrollReveal className="text-center mb-16">
             <p className="text-sm font-medium text-accent mb-2 uppercase tracking-wider">Process</p>
@@ -84,7 +137,9 @@ const Index = () => {
       </section>
 
       {/* Roles */}
-      <section className="py-20 md:py-28">
+      <section className="min-h-screen flex flex-col justify-center">
+
+
         <div className="container mx-auto px-4">
           <ScrollReveal className="text-center mb-16">
             <p className="text-sm font-medium text-accent mb-2 uppercase tracking-wider">Portals</p>
@@ -137,7 +192,9 @@ const Index = () => {
       </section>
 
       {/* Trust banner */}
-      <section className="py-16 bg-primary text-primary-foreground">
+      <section className="py-24 bg-primary text-primary-foreground self-center w-full">
+
+
         <div className="container mx-auto px-4">
           <ScrollReveal className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-4">
@@ -165,7 +222,11 @@ const Index = () => {
         </div>
       </section>
 
-      <Footer />
+      <section>
+
+        <Footer />
+      </section>
+
     </div>
   );
 };
