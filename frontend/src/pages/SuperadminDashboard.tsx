@@ -9,7 +9,7 @@ interface UserInfo {
   id: string;
   email: string;
   full_name: string | null;
-  role: "SUPERADMIN" | "ADMIN" | "STUDENT";
+  role: "SUPERADMIN" | "ADMIN" | "STUDENT" | "EMPLOYER";
   college_name: string | null;
   prn_number: string | null;
   is_legal_admin_verified: boolean;
@@ -63,7 +63,7 @@ const SuperadminDashboard: React.FC = () => {
 
   const handleDeleteUser = async (userId: string) => {
     if (!window.confirm("Are you sure you want to permanently delete this user?")) return;
-    
+
     setDeletingId(userId);
     const toastId = toast.loading("Deleting user from database...");
     try {
@@ -106,40 +106,37 @@ const SuperadminDashboard: React.FC = () => {
 
           {/* Tab Switcher */}
           <div className="flex gap-2 mb-6 p-1 bg-muted rounded-xl">
-             <button
+            <button
               onClick={() => setActiveTab("overview")}
-              className={`flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                activeTab === "overview"
+              className={`flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === "overview"
                   ? "bg-background shadow text-foreground"
                   : "text-muted-foreground hover:text-foreground"
-              }`}
+                }`}
             >
               <BarChart3 className="w-4 h-4" />
               Overview Data
             </button>
             <button
               onClick={() => setActiveTab("admins")}
-              className={`flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                activeTab === "admins"
+              className={`flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === "admins"
                   ? "bg-background shadow text-foreground"
                   : "text-muted-foreground hover:text-foreground"
-              }`}
+                }`}
             >
               <UserCog className="w-4 h-4" />
               Administrators
               {(pendingAdmins.length > 0 || verifiedAdmins.length > 0) && (
-                 <span className="ml-1 px-1.5 py-0.5 rounded-full text-xs bg-accent/10 text-accent">
-                   {pendingAdmins.length + verifiedAdmins.length + superadmins.length}
-                 </span>
+                <span className="ml-1 px-1.5 py-0.5 rounded-full text-xs bg-accent/10 text-accent">
+                  {pendingAdmins.length + verifiedAdmins.length + superadmins.length}
+                </span>
               )}
             </button>
             <button
               onClick={() => setActiveTab("students")}
-              className={`flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                activeTab === "students"
+              className={`flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === "students"
                   ? "bg-background shadow text-foreground"
                   : "text-muted-foreground hover:text-foreground"
-              }`}
+                }`}
             >
               <Users className="w-4 h-4" />
               Students
@@ -152,7 +149,7 @@ const SuperadminDashboard: React.FC = () => {
           {activeTab === "overview" && (
             <ScrollReveal delay={100}>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                
+
                 {/* Students Widget */}
                 <div className="p-6 rounded-2xl border bg-card surface-elevated relative overflow-hidden flex flex-col justify-between">
                   <div className="flex items-start justify-between z-10 relative">
@@ -214,7 +211,7 @@ const SuperadminDashboard: React.FC = () => {
                         </span>
                       </div>
                       <div className="text-xs text-muted-foreground">
-                         Requires approval to grant login access
+                        Requires approval to grant login access
                       </div>
                     </div>
                   </div>
@@ -244,9 +241,9 @@ const SuperadminDashboard: React.FC = () => {
                               <td className="py-3 px-4">{admin.college_name || "N/A"}</td>
                               <td className="py-3 px-4">
                                 {admin.wallet_address ? (
-                                   <span className="font-mono text-xs p-1 rounded bg-muted">
-                                     {admin.wallet_address.substring(0, 8)}...{admin.wallet_address.substring(38)}
-                                   </span>
+                                  <span className="font-mono text-xs p-1 rounded bg-muted">
+                                    {admin.wallet_address.substring(0, 8)}...{admin.wallet_address.substring(38)}
+                                  </span>
                                 ) : (
                                   <span className="text-xs text-destructive">Not connected</span>
                                 )}
@@ -299,20 +296,20 @@ const SuperadminDashboard: React.FC = () => {
                       </thead>
                       <tbody>
                         {[...superadmins, ...verifiedAdmins].length === 0 ? (
-                           <tr><td colSpan={4} className="py-8 text-center text-muted-foreground">No verified admins found.</td></tr>
+                          <tr><td colSpan={4} className="py-8 text-center text-muted-foreground">No verified admins found.</td></tr>
                         ) : (
                           [...superadmins, ...verifiedAdmins].map((admin) => (
-                             <tr key={admin.id} className="border-b last:border-0 hover:bg-muted/10 transition-colors">
+                            <tr key={admin.id} className="border-b last:border-0 hover:bg-muted/10 transition-colors">
                               <td className="py-3 px-4">
                                 <div className="font-medium">{admin.full_name || "N/A"}</div>
                                 <div className="text-xs text-muted-foreground">{admin.email}</div>
                               </td>
                               <td className="py-3 px-4">
-                                 {admin.role === "SUPERADMIN" ? (
-                                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-accent/20 text-accent">SUPERADMIN</span>
-                                 ) : (
-                                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-muted text-muted-foreground border">ADMIN</span>
-                                 )}
+                                {admin.role === "SUPERADMIN" ? (
+                                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-accent/20 text-accent">SUPERADMIN</span>
+                                ) : (
+                                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-muted text-muted-foreground border">ADMIN</span>
+                                )}
                               </td>
                               <td className="py-3 px-4">{admin.college_name || "N/A"}</td>
                               <td className="py-3 px-4">
@@ -330,7 +327,7 @@ const SuperadminDashboard: React.FC = () => {
                                   </button>
                                 )}
                               </td>
-                             </tr>
+                            </tr>
                           ))
                         )}
                       </tbody>
@@ -343,53 +340,53 @@ const SuperadminDashboard: React.FC = () => {
 
           {activeTab === "students" && (
             <ScrollReveal delay={100}>
-               <div className="rounded-xl border bg-card overflow-hidden">
-                  <div className="p-4 border-b bg-muted/30">
-                    <h3 className="font-semibold text-foreground">Registered Students</h3>
-                  </div>
-                  <div className="overflow-x-auto">
+              <div className="rounded-xl border bg-card overflow-hidden">
+                <div className="p-4 border-b bg-muted/30">
+                  <h3 className="font-semibold text-foreground">Registered Students</h3>
+                </div>
+                <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b bg-muted/20">
-                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">Name & Email</th>
-                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">PRN</th>
-                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">University</th>
-                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">Joined</th>
-                          <th className="text-right py-3 px-4 font-medium text-muted-foreground">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                         {loading ? (
-                          <tr><td colSpan={4} className="py-8 text-center text-muted-foreground">Loading students...</td></tr>
-                        ) : studentList.length === 0 ? (
-                          <tr><td colSpan={4} className="py-8 text-center text-muted-foreground">No students registered across the platform yet.</td></tr>
-                        ) : (
-                          studentList.map((stu) => (
-                             <tr key={stu.id} className="border-b last:border-0 hover:bg-muted/10 transition-colors">
-                               <td className="py-3 px-4">
-                                <div className="font-medium">{stu.full_name || "N/A"}</div>
-                                <div className="text-xs text-muted-foreground">{stu.email}</div>
-                              </td>
-                              <td className="py-3 px-4 text-xs font-mono">{stu.prn_number || "N/A"}</td>
-                              <td className="py-3 px-4">{stu.college_name || "N/A"}</td>
-                              <td className="py-3 px-4 text-xs text-muted-foreground">{new Date(stu.created_at).toLocaleDateString()}</td>
-                              <td className="py-3 px-4 text-right">
-                                <button
-                                    className="p-1.5 rounded-md text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
-                                    onClick={() => handleDeleteUser(stu.id)}
-                                    disabled={deletingId === stu.id}
-                                    title="Delete Student"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
-                              </td>
-                             </tr>
-                          ))
-                        )}
-                      </tbody>
-                   </table>
-                  </div>
-               </div>
+                    <thead>
+                      <tr className="border-b bg-muted/20">
+                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">Name & Email</th>
+                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">PRN</th>
+                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">University</th>
+                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">Joined</th>
+                        <th className="text-right py-3 px-4 font-medium text-muted-foreground">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {loading ? (
+                        <tr><td colSpan={4} className="py-8 text-center text-muted-foreground">Loading students...</td></tr>
+                      ) : studentList.length === 0 ? (
+                        <tr><td colSpan={4} className="py-8 text-center text-muted-foreground">No students registered across the platform yet.</td></tr>
+                      ) : (
+                        studentList.map((stu) => (
+                          <tr key={stu.id} className="border-b last:border-0 hover:bg-muted/10 transition-colors">
+                            <td className="py-3 px-4">
+                              <div className="font-medium">{stu.full_name || "N/A"}</div>
+                              <div className="text-xs text-muted-foreground">{stu.email}</div>
+                            </td>
+                            <td className="py-3 px-4 text-xs font-mono">{stu.prn_number || "N/A"}</td>
+                            <td className="py-3 px-4">{stu.college_name || "N/A"}</td>
+                            <td className="py-3 px-4 text-xs text-muted-foreground">{new Date(stu.created_at).toLocaleDateString()}</td>
+                            <td className="py-3 px-4 text-right">
+                              <button
+                                className="p-1.5 rounded-md text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
+                                onClick={() => handleDeleteUser(stu.id)}
+                                disabled={deletingId === stu.id}
+                                title="Delete Student"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </ScrollReveal>
           )}
 

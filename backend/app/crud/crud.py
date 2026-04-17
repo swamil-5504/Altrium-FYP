@@ -1,4 +1,4 @@
-from uuid import UUID
+from uuid import UUID, uuid4
 from typing import List, Optional
 from datetime import datetime
 from app.models.models import User, Credential, UserRole, CredentialStatus
@@ -77,7 +77,8 @@ class CredentialCRUD:
             token_id=credential_create.token_id,
             tx_hash=credential_create.tx_hash,
             prn_number=credential_create.prn_number,
-            college_name=credential_create.college_name
+            college_name=credential_create.college_name,
+            document_uid=f"DOC-{uuid4().hex[:12].upper()}"
         )
         await credential.insert()
         return credential
