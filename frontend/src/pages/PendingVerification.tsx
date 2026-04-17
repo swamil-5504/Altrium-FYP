@@ -3,11 +3,21 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Clock, ShieldCheck, Shield, ExternalLink, MousePointer2, Wallet, Coins, Settings } from "lucide-react";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { useAuth } from "@/context/AuthContext";
+import { useAppKit } from '@reown/appkit/react';
 import { toast } from "sonner";
 
 export default function PendingVerification() {
     const navigate = useNavigate();
     const { isPendingVerification, isAuthenticated, refreshUser } = useAuth();
+    const { close: closeAppKit } = useAppKit();
+
+    // Close any Reown AppKit wallet modal immediately — this page is for unapproved
+    // admins and has no wallet connection UI. AppKit auto-reconnect can fire here
+    // because it initializes globally in App.tsx.
+    useEffect(() => {
+        void closeAppKit();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Poll every 5 seconds to check if superadmin has approved
     useEffect(() => {
