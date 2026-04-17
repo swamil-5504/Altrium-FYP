@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     WEB3_PROVIDER_URI: str = "https://rpc.sepolia.org"
     CONTRACT_SBT_ADDRESS: str = ""
     CONTRACT_REGISTRY_ADDRESS: str = ""
+    PRIVATE_KEY: Optional[str] = None
 
     # Superadmin seeding
     SUPERADMIN_EMAIL: str = "admin"

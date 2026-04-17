@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useAppKit, useAppKitAccount, useAppKitProvider } from '@reown/appkit/react';
 import { Navbar } from "@/components/Navbar";
 import { ScrollReveal } from "@/components/ScrollReveal";
-import { Blocks, Clock, Eye, Shield, XCircle, Wallet, Upload, HelpCircle, Users, GraduationCap, AlertTriangle } from "lucide-react";
+import { Blocks, Clock, Eye, Shield, XCircle, Wallet, HelpCircle, Users, GraduationCap, AlertTriangle } from "lucide-react";
 
 import { Link } from "react-router-dom";
 
@@ -121,7 +121,7 @@ const degreeSbtAbi = [
 ] as const;
 
 const UniversityAdmin: React.FC = () => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, refreshUser } = useAuth();
   const [credentials, setCredentials] = useState<Credential[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [activeTab, setActiveTab] = useState<"degrees" | "students">("degrees");
@@ -132,6 +132,26 @@ const UniversityAdmin: React.FC = () => {
   const { walletProvider } = useAppKitProvider('eip155');
 
   const [mintingById, setMintingById] = useState<Record<string, boolean>>({});
+
+  // When AppKit connects a wallet that differs from the saved profile address,
+  // persist it to the backend. The backend will then call addUniversity() on-chain
+  // granting UNIVERSITY_ROLE + VERIFIER_ROLE so the admin can mint degrees.
+  useEffect(() => {
+    if (!walletAddress || !isConnected) return;
+    if (walletAddress.toLowerCase() === user?.wallet_address?.toLowerCase()) return;
+
+    const saveWallet = async () => {
+      try {
+        await axios.patch("/users/me/wallet", { wallet_address: walletAddress });
+        toast.success("Wallet linked! On-chain roles are being granted…");
+        await refreshUser();
+      } catch (err) {
+        console.error("Failed to save wallet address:", err);
+        toast.error("Could not save wallet address to your profile.");
+      }
+    };
+    void saveWallet();
+  }, [walletAddress, isConnected]);
 
   const pendingCredentials = useMemo(
     () => credentials.filter((c) => c.status === "PENDING"),
@@ -249,57 +269,6 @@ const UniversityAdmin: React.FC = () => {
     }
   };
 
-  // ── CSV Bulk Upload ──────────────────────────────────────────────────
-  const [csvUploading, setCSVUploading] = useState(false);
-
-  const handleCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setCSVUploading(true);
-    try {
-      const text = await file.text();
-      const lines = text.trim().split("\n");
-      const headers = lines[0].split(",").map(h => h.trim().toLowerCase());
-      const rows = lines.slice(1);
-
-      let minted = 0;
-      for (const row of rows) {
-        const values = row.split(",").map(v => v.trim());
-        const obj: Record<string, string> = {};
-        headers.forEach((h, i) => { obj[h] = values[i] || ""; });
-
-        // Expected CSV columns: prn_number, student_name, degree_title, passing_year, entry_year, cgpa, credits, description
-        if (!obj["prn_number"] || !obj["degree_title"]) continue;
-
-        try {
-          await axios.post("/degrees/", {
-            title: obj["degree_title"],
-            description: obj["description"] || "",
-            prn_number: obj["prn_number"],
-            metadata_json: {
-              studentName: obj["student_name"] || "",
-              passingYear: obj["passing_year"] || "",
-              entryYear: obj["entry_year"] || "",
-              cgpa: obj["cgpa"] || "",
-              credits: obj["credits"] || "",
-            },
-          });
-          minted++;
-        } catch (rowErr) {
-          console.error("Row failed:", obj, rowErr);
-        }
-      }
-
-      toast.success(`CSV imported: ${minted} submission(s) queued for minting.`);
-      await fetchCredentials();
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to parse CSV.");
-    } finally {
-      setCSVUploading(false);
-      e.target.value = "";
-    }
-  };
 
   const handleViewDocument = async (credentialId: string) => {
     try {
@@ -490,12 +459,6 @@ const UniversityAdmin: React.FC = () => {
               </div>
 
               <div className="flex gap-3">
-                {/* CSV Upload */}
-                <label className={`inline-flex items-center gap-2 px-4 py-2 border rounded-lg bg-card text-foreground font-medium text-sm hover:bg-muted transition active:scale-[0.98] cursor-pointer ${csvUploading ? "opacity-50 pointer-events-none" : ""}`}>
-                  <Upload className="w-4 h-4" />
-                  {csvUploading ? "Importing..." : "Import CSV"}
-                  <input type="file" className="hidden" accept=".csv" onChange={handleCSVUpload} disabled={csvUploading} />
-                </label>
                 {/* Wallet Status Label */}
                 <div className="flex items-center gap-2 px-4 py-2 border rounded-lg bg-card text-foreground text-sm font-medium">
                   <Wallet className="w-4 h-4 text-accent" />
