@@ -36,6 +36,11 @@ class Settings(BaseSettings):
     SUPERADMIN_PASSWORD: str = "123"
 
 
+    # Superadmin seeding
+    SUPERADMIN_EMAIL: str = "admin"
+    SUPERADMIN_PASSWORD: str = "123"
+
+
     
     class Config:
         env_file = ".env"

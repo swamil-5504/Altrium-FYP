@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import axios from "@/api/axios";
 import { useDisconnect } from '@reown/appkit/react';
+import { useDisconnect } from '@reown/appkit/react';
 
 export interface IUser {
   id: string;
@@ -12,6 +13,7 @@ export interface IUser {
   prn_number: string | null;
   is_active: boolean;
   is_legal_admin_verified?: boolean;
+  is_legal_admin_verified?: boolean;
   created_at: string;
 }
 
@@ -19,10 +21,12 @@ interface IAuthContext {
   user: IUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, fullName: string, role: "ADMIN" | "STUDENT", collegeName?: string, walletAddress?: string, prnNumber?: string) => Promise<any>;
+  isPendingVerification: boolean;
+  login: (email: string, password: string, ignoreVerification?: boolean) => Promise<void>;
+  register: (email: string, password: string, fullName: string, role: "ADMIN" | "STUDENT" | "SUPERADMIN", collegeName?: string, walletAddress?: string, prnNumber?: string) => Promise<any>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
+  refreshUser: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
 
@@ -31,6 +35,7 @@ const AuthContext = createContext<IAuthContext | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<IUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { disconnect: disconnectWallet } = useDisconnect();
   const { disconnect: disconnectWallet } = useDisconnect();
 
   useEffect(() => {
@@ -92,6 +97,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       } catch {
         // Wallet may not be connected; ignore
       }
+      // Disconnect wallet session via AppKit
+      try {
+        await disconnectWallet();
+      } catch {
+        // Wallet may not be connected; ignore
+      }
     }
   };
 
@@ -118,16 +129,32 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const isAuthenticated = !!user && !isUnverifiedAdmin;
   const isPendingVerification = !!user && isUnverifiedAdmin;
 
+  const refreshUser = async () => {
+    try {
+      const response = await axios.get("/users/me");
+      setUser(response.data);
+    } catch {
+      // Silently ignore
+    }
+  };
+
+  // Unverified ADMIN users should NOT be treated as authenticated
+  const isUnverifiedAdmin = user?.role === "ADMIN" && !user?.is_legal_admin_verified;
+  const isAuthenticated = !!user && !isUnverifiedAdmin;
+  const isPendingVerification = !!user && isUnverifiedAdmin;
+
   return (
     <AuthContext.Provider
       value={{
         user,
         isLoading,
-        isAuthenticated: !!user,
+        isAuthenticated,
+        isPendingVerification,
         login,
         register,
         logout,
         refresh,
+        refreshUser,
       }}
     >
       {children}

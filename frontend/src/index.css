@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,36 +8,38 @@
 @layer base {
   :root {
     --background: 33 30% 97%;
+    --background: 33 30% 97%;
     --foreground: 215 25% 14%;
 
+    --card: 33 20% 99%;
     --card: 33 20% 99%;
     --card-foreground: 215 25% 14%;
 
     --popover: 33 20% 99%;
+    --popover: 33 20% 99%;
     --popover-foreground: 215 25% 14%;
 
-    --primary: 209 64% 16%;
     --primary: 209 64% 16%;
     --primary-foreground: 210 20% 98%;
 
     --secondary: 40 73% 63%;
-    --secondary: 40 73% 63%;
     --secondary-foreground: 0 0% 100%;
 
     --muted: 33 15% 92%;
+    --muted: 33 15% 92%;
     --muted-foreground: 215 12% 48%;
 
-    --accent: 220 83% 56%;
     --accent: 220 83% 56%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 20% 89%;
-    --input: 214 20% 89%;
+    --border: 33 15% 88%;
+    --input: 33 15% 88%;
     --ring: 220 83% 56%;
 
+    --radius: 0.75rem;
     --radius: 0.75rem;
 
     --success: 152 56% 42%;
@@ -47,7 +50,9 @@
 
     --surface-elevated: 0 0% 100%;
     --surface-sunken: 33 20% 95%;
+    --surface-sunken: 33 20% 95%;
 
+    --sidebar-background: 33 20% 98%;
     --sidebar-background: 33 20% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -98,7 +103,8 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Outfit', sans-serif;
   }
 
   h1,
@@ -108,6 +114,7 @@
   h5,
   h6 {
     @apply font-semibold tracking-tight;
+    font-family: 'Outfit', sans-serif;
     text-wrap: balance;
   }
 

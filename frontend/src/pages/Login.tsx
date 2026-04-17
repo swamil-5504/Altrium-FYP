@@ -3,17 +3,25 @@ import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { ArrowLeft, KeyRound, Mail, Loader2 } from "lucide-react";
 
 
+
+
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import axios from "@/api/axios";
 
 
+
 export default function Login() {
   const [searchParams] = useSearchParams();
-  const [role, setRole] = useState<"STUDENT" | "ADMIN">(searchParams.get("role") === "ADMIN" ? "ADMIN" : "STUDENT");
+  const [role, setRole] = useState<"STUDENT" | "ADMIN">(
+    searchParams.get("role") === "ADMIN" ? "ADMIN" : "STUDENT"
+  );
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+
 
 
 
@@ -40,10 +48,17 @@ export default function Login() {
         return;
       }
 
-      toast.success("Successfully logged in!");
-
-      if (userRole === "ADMIN") navigate("/university");
-      else navigate("/student");
+      if (userRole === "ADMIN") {
+        if (!me.data.is_legal_admin_verified) {
+          navigate("/pending-verification");
+        } else {
+          toast.success("Successfully logged in!");
+          navigate("/university");
+        }
+      } else if (userRole === "STUDENT") {
+        toast.success("Successfully logged in!");
+        navigate("/student");
+      }
     } catch (err: unknown) {
       const detail =
         typeof err === "object" && err && "response" in err
@@ -71,6 +86,7 @@ export default function Login() {
       />
 
 
+
       <Link
         to="/"
         className="absolute top-8 left-8 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition"
@@ -83,10 +99,13 @@ export default function Login() {
           <KeyRound className="w-6 h-6 text-accent" />
         </div>
 
-        <h2 className="text-2xl font-bold mb-2">{role === "ADMIN" ? "Admin Login" : "Student Login"}</h2>
+        <h2 className="text-2xl font-bold mb-2">
+          {role === "ADMIN" ? "Admin Login" : "Student Login"}
+        </h2>
+
         <p className="text-muted-foreground text-sm mb-6">Sign in to access your portal.</p>
 
-        <div className="flex bg-muted p-1 rounded-lg mb-6">
+        <div className="grid grid-cols-2 bg-muted p-1 rounded-lg mb-6">
           <button
             type="button"
             onClick={() => setRole("STUDENT")}
@@ -101,15 +120,19 @@ export default function Login() {
             className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${role === "ADMIN" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
           >
-            University Admin
+            Admin
           </button>
         </div>
+
 
         <form onSubmit={handleSubmit} className="space-y-4">
 
 
+
+
           <div className="space-y-1.5">
             <label className="text-sm font-medium">
+              Email Address
               Email Address
             </label>
             <div className="relative">
@@ -119,11 +142,14 @@ export default function Login() {
                 required
                 className="w-full pl-9 pr-4 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
                 placeholder="Ex. mail@university.edu"
+                placeholder="Ex. mail@university.edu"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
           </div>
+
+
 
 
 
