@@ -42,7 +42,10 @@ export default function PendingVerification() {
                 <div className="container mx-auto flex items-center justify-between h-16 px-4">
                     <Link to="/" className="flex items-center gap-2.5 group">
                         <div className="w-8 h-8 rounded-lg shadow-inner flex items-center justify-center overflow-hidden">
-                            <img src="/altrium.jpg" alt="Altrium" className="w-full h-full object-cover" />
+                            {/* Light mode logo */}
+                            <img src="/altrium_light.png" alt="Altrium" className="w-full h-full object-cover block dark:hidden" />
+                            {/* Dark mode logo */}
+                            <img src="/altrium_dark.png" alt="Altrium" className="w-full h-full object-cover hidden dark:block" />
                         </div>
                         <span className="font-semibold text-lg tracking-tight">Altrium</span>
                     </Link>
