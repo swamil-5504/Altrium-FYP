@@ -8,6 +8,7 @@ from uuid import UUID
 from fastapi import HTTPException, UploadFile, status
 from pypdf import PdfReader, PdfWriter
 from reportlab.pdfgen import canvas
+import qrcode
 
 from app.crud.crud import CredentialCRUD
 from app.models.models import Credential, User, UserRole
@@ -20,14 +21,58 @@ def _ensure_upload_dir() -> None:
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def _create_footer_overlay(page_width: float, page_height: float, footer_text: str):
+def _create_footer_overlay(page_width: float, page_height: float, tx_hash: str = None, document_uid: str = None):
     packet = io.BytesIO()
     c = canvas.Canvas(packet, pagesize=(page_width, page_height))
-    c.setFont("Helvetica", 9)
-    c.setFillColorRGB(0.18, 0.18, 0.18)
-    x = 30
-    y = 18
-    c.drawString(x, y, footer_text)
+    
+    # Text info on the left
+    c.setFont("Helvetica", 8)
+    c.setFillColorRGB(0.3, 0.3, 0.3)
+    x_text = 30
+    y_text = 20
+    
+    if tx_hash:
+        qr = qrcode.QRCode(version=1, box_size=2, border=0)
+        qr.add_data(f"https://sepolia.etherscan.io/tx/{tx_hash}")
+        qr.make(fit=True)
+        
+        qr_matrix = qr.get_matrix()
+        qr_size = len(qr_matrix)
+        box_size = 1.8 # Small boxes
+
+        footer_text = f"Blockchain Verified: {tx_hash[:10]}...{tx_hash[-10:]}"
+        # Add a link annotation for the text
+        c.linkURL(f"https://sepolia.etherscan.io/tx/{tx_hash}", (x_text, y_text - 2, x_text + 250, y_text + 10), relative=0)
+        c.drawString(x_text, y_text, footer_text)
+    
+        qr_x_start = page_width - (qr_size * box_size) - 40
+        qr_y_start = 15
+        
+        # Draw a small label above QR code
+        c.setFont("Helvetica-Bold", 6)
+        c.setFillColorRGB(0.5, 0.5, 0.5)
+        c.drawCentredString(qr_x_start + (qr_size * box_size) / 2, qr_y_start + (qr_size * box_size) + 4, "SCAN OR CLICK TO VERIFY")
+
+        c.setFillColorRGB(0, 0, 0)
+        for row_index, row in enumerate(qr_matrix):
+            for col_index, pixel in enumerate(row):
+                if pixel:
+                    c.rect(
+                        qr_x_start + (col_index * box_size),
+                        qr_y_start + ((qr_size - 1 - row_index) * box_size),
+                        box_size,
+                        box_size,
+                        stroke=0,
+                        fill=1
+                    )
+        
+        # Clickable hit-box (slightly oversized for ease of use)
+        c.linkURL(
+            f"https://sepolia.etherscan.io/tx/{tx_hash}",
+            (qr_x_start - 5, qr_y_start - 5, qr_x_start + (qr_size * box_size) + 5, qr_y_start + (qr_size * box_size) + 12),
+            relative=0
+        )
+
     c.save()
     packet.seek(0)
     overlay = PdfReader(packet)
@@ -269,7 +314,6 @@ class DegreeService:
                 detail="Document must be approved before viewing the official approved PDF.",
             )
 
-        footer_text = f"Document UID: {credential.document_uid or str(credential.id)}"
         with open(credential.document_path, "rb") as pdf_file:
             reader = PdfReader(pdf_file)
             writer = PdfWriter()
@@ -277,7 +321,8 @@ class DegreeService:
                 overlay_page = _create_footer_overlay(
                     float(page.mediabox.width),
                     float(page.mediabox.height),
-                    footer_text,
+                    tx_hash=credential.tx_hash,
+                    document_uid=credential.document_uid or str(credential.id),
                 )
                 page.merge_page(overlay_page)
                 writer.add_page(page)

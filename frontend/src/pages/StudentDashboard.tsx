@@ -72,23 +72,20 @@ const StudentDashboard: React.FC = () => {
   };
 
   const handleViewDocument = async (credentialId: string) => {
+    const loadingToast = toast.loading("Loading proof document, please wait...");
     try {
       const response = await axios.get(`/degrees/${credentialId}/document`, {
         responseType: "blob",
       });
+      toast.dismiss(loadingToast);
       const blob = new Blob([response.data], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      window.open(url, "_blank");
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
     } catch (err) {
+      toast.dismiss(loadingToast);
       console.error(err);
-      toast.error("Failed to load document. It may not have been uploaded yet.");
+      toast.error("Failed to load document. It may not have been approved or generated yet.");
     }
   };
 
