@@ -18,4 +18,14 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      external: ["@base-org/account"],
+      onwarn(warning, warn) {
+        // Suppress unresolved import warnings from Reown optional deps
+        if (warning.code === 'UNRESOLVED_IMPORT' && warning.exporter?.includes('@base-org')) return;
+        warn(warning);
+      },
+    },
+  },
 }));

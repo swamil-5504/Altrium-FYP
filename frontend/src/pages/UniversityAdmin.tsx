@@ -4,9 +4,10 @@ import { ethers, type Eip1193Provider } from "ethers";
 import { toast } from "sonner";
 import axios from "@/api/axios";
 import { useAuth } from "@/context/AuthContext";
+import { useAppKit, useAppKitAccount, useAppKitProvider } from '@reown/appkit/react';
 import { Navbar } from "@/components/Navbar";
 import { ScrollReveal } from "@/components/ScrollReveal";
-import { Blocks, Clock, Eye, Shield, XCircle, Wallet, Upload, HelpCircle, Users, GraduationCap, AlertTriangle } from "lucide-react";
+import { Blocks, Clock, Eye, Shield, XCircle, Wallet, HelpCircle, Users, GraduationCap, AlertTriangle, Mail, User as UserIcon, Building2 } from "lucide-react";
 
 import { Link } from "react-router-dom";
 
@@ -36,12 +37,6 @@ interface Student {
   prn_number: string | null;
   is_active: boolean;
   created_at: string;
-}
-
-declare global {
-  interface Window {
-    ethereum?: Eip1193Provider;
-  }
 }
 
 // Provide the deployed registry address via environment:
@@ -126,17 +121,37 @@ const degreeSbtAbi = [
 ] as const;
 
 const UniversityAdmin: React.FC = () => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, refreshUser } = useAuth();
   const [credentials, setCredentials] = useState<Credential[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [activeTab, setActiveTab] = useState<"degrees" | "students">("degrees");
   const [loading, setLoading] = useState(true);
 
-  const [walletAddress, setWalletAddress] = useState<string>("");
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [showGuide, setShowGuide] = useState(false);
+  const { open } = useAppKit();
+  const { address: walletAddress, isConnected } = useAppKitAccount();
+  const { walletProvider } = useAppKitProvider('eip155');
 
   const [mintingById, setMintingById] = useState<Record<string, boolean>>({});
+
+  // When AppKit connects a wallet that differs from the saved profile address,
+  // persist it to the backend. The backend will then call addUniversity() on-chain
+  // granting UNIVERSITY_ROLE + VERIFIER_ROLE so the admin can mint degrees.
+  useEffect(() => {
+    if (!walletAddress || !isConnected) return;
+    if (walletAddress.toLowerCase() === user?.wallet_address?.toLowerCase()) return;
+
+    const saveWallet = async () => {
+      try {
+        await axios.patch("/users/me/wallet", { wallet_address: walletAddress });
+        toast.success("Wallet linked! On-chain roles are being granted…");
+        await refreshUser();
+      } catch (err) {
+        console.error("Failed to save wallet address:", err);
+        toast.error("Could not save wallet address to your profile.");
+      }
+    };
+    void saveWallet();
+  }, [walletAddress, isConnected]);
 
   const pendingCredentials = useMemo(
     () => credentials.filter((c) => c.status === "PENDING"),
@@ -150,40 +165,7 @@ const UniversityAdmin: React.FC = () => {
 
   useEffect(() => {
     void fetchCredentials();
-
-    // Check if guide has been shown for THIS specific user
-    if (user?.id) {
-      const guideSeenKey = `web3_guide_seen_${user.id}`;
-      const guideSeen = localStorage.getItem(guideSeenKey);
-      if (!guideSeen) {
-        setShowGuide(true);
-      }
-    }
   }, [user?.id]);
-
-  useEffect(() => {
-    if (window.ethereum) {
-      // Sync initial wallet address
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      provider.listAccounts().then(accounts => {
-        if (accounts.length > 0) {
-          setWalletAddress(accounts[0].address);
-        }
-      });
-
-      const handleAccountsChanged = (accounts: string[]) => {
-        if (accounts.length > 0) {
-          setWalletAddress(accounts[0]);
-        } else {
-          setWalletAddress("");
-        }
-      };
-      (window.ethereum as any).on("accountsChanged", handleAccountsChanged);
-      return () => {
-        (window.ethereum as any).removeListener("accountsChanged", handleAccountsChanged);
-      };
-    }
-  }, []);
 
   const fetchCredentials = async () => {
     setLoading(true);
@@ -203,23 +185,10 @@ const UniversityAdmin: React.FC = () => {
   };
 
   const connectWallet = async () => {
-    if (!window.ethereum) {
-      toast.error("MetaMask is not installed!");
-      return;
-    }
-
-    setIsConnecting(true);
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
-      const signer = await provider.getSigner();
-      setWalletAddress(signer.address);
-      toast.success("Wallet connected successfully!");
+      await open();
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Failed to connect wallet";
-      toast.error(message);
-    } finally {
-      setIsConnecting(false);
+      toast.error("Failed to open wallet modal");
     }
   };
 
@@ -245,8 +214,8 @@ const UniversityAdmin: React.FC = () => {
     const revokeToast = toast.loading("Revoking on-chain...");
     try {
       // --- On-chain revocation first ---
-      if (window.ethereum && CONTRACT_REGISTRY_ADDRESS) {
-        const provider = new ethers.BrowserProvider(window.ethereum);
+      if (walletProvider && CONTRACT_REGISTRY_ADDRESS) {
+        const provider = new ethers.BrowserProvider(walletProvider as any);
         const signer = await provider.getSigner();
         const registryContract = new ethers.Contract(CONTRACT_REGISTRY_ADDRESS, registryAbi, signer);
         const combinedString = `${credential.prn_number}-${credential.college_name}`;
@@ -255,7 +224,7 @@ const UniversityAdmin: React.FC = () => {
         await tx.wait();
         toast.loading("On-chain revocation confirmed. Updating backend...", { id: revokeToast });
       } else {
-        toast.warning("MetaMask not connected — revoking on platform only (not on-chain).");
+        toast.warning("Wallet not connected — revoking on platform only (not on-chain).");
       }
 
       await axios.patch(`/degrees/${credentialId}/revoke`);
@@ -277,8 +246,8 @@ const UniversityAdmin: React.FC = () => {
     const burnToast = toast.loading("Burning NFT on-chain...");
     try {
       // 1. On-chain burn
-      if (window.ethereum && CONTRACT_REGISTRY_ADDRESS) {
-        const provider = new ethers.BrowserProvider(window.ethereum);
+      if (walletProvider && CONTRACT_REGISTRY_ADDRESS) {
+        const provider = new ethers.BrowserProvider(walletProvider as any);
         const signer = await provider.getSigner();
         const registryContract = new ethers.Contract(CONTRACT_REGISTRY_ADDRESS, registryAbi, signer);
         const combinedString = `${credential.prn_number}-${credential.college_name}`;
@@ -287,7 +256,7 @@ const UniversityAdmin: React.FC = () => {
         await tx.wait();
         toast.loading("On-chain burn confirmed. Resetting submission in database...", { id: burnToast });
       } else {
-        toast.warning("MetaMask not connected — resetting on platform only (not on-chain).");
+        toast.warning("Wallet not connected — resetting on platform only (not on-chain).");
       }
 
       // 2. Backend reset
@@ -300,69 +269,22 @@ const UniversityAdmin: React.FC = () => {
     }
   };
 
-  // ── CSV Bulk Upload ──────────────────────────────────────────────────
-  const [csvUploading, setCSVUploading] = useState(false);
-
-  const handleCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setCSVUploading(true);
-    try {
-      const text = await file.text();
-      const lines = text.trim().split("\n");
-      const headers = lines[0].split(",").map(h => h.trim().toLowerCase());
-      const rows = lines.slice(1);
-
-      let minted = 0;
-      for (const row of rows) {
-        const values = row.split(",").map(v => v.trim());
-        const obj: Record<string, string> = {};
-        headers.forEach((h, i) => { obj[h] = values[i] || ""; });
-
-        // Expected CSV columns: prn_number, student_name, degree_title, passing_year, entry_year, cgpa, credits, description
-        if (!obj["prn_number"] || !obj["degree_title"]) continue;
-
-        try {
-          await axios.post("/degrees/", {
-            title: obj["degree_title"],
-            description: obj["description"] || "",
-            prn_number: obj["prn_number"],
-            metadata_json: {
-              studentName: obj["student_name"] || "",
-              passingYear: obj["passing_year"] || "",
-              entryYear: obj["entry_year"] || "",
-              cgpa: obj["cgpa"] || "",
-              credits: obj["credits"] || "",
-            },
-          });
-          minted++;
-        } catch (rowErr) {
-          console.error("Row failed:", obj, rowErr);
-        }
-      }
-
-      toast.success(`CSV imported: ${minted} submission(s) queued for minting.`);
-      await fetchCredentials();
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to parse CSV.");
-    } finally {
-      setCSVUploading(false);
-      e.target.value = "";
-    }
-  };
 
   const handleViewDocument = async (credentialId: string) => {
+    const loadingToast = toast.loading("Loading proof document, please wait...");
     try {
       const response = await axios.get(`/degrees/${credentialId}/document`, {
         responseType: "blob",
       });
+      toast.dismiss(loadingToast);
       const blob = new Blob([response.data], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
       window.open(url, "_blank");
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
     } catch (err) {
+      toast.dismiss(loadingToast);
       console.error(err);
-      toast.error("Failed to load document. It may not have been uploaded yet.");
+      toast.error("Failed to load document. It may not have been approved or generated yet.");
     }
   };
 
@@ -396,8 +318,8 @@ const UniversityAdmin: React.FC = () => {
       return;
     }
 
-    if (!window.ethereum) {
-      toast.error("MetaMask is not installed!");
+    if (!walletProvider) {
+      toast.error("Wallet is not connected!");
       return;
     }
 
@@ -410,7 +332,7 @@ const UniversityAdmin: React.FC = () => {
     const loadingToast = toast.loading(`Minting SBT for ${credential.prn_number} on Sepolia...`);
 
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      const provider = new ethers.BrowserProvider(walletProvider as any);
       const signer = await provider.getSigner();
 
       const registryContract = new ethers.Contract(CONTRACT_REGISTRY_ADDRESS, registryAbi, signer);
@@ -537,16 +459,25 @@ const UniversityAdmin: React.FC = () => {
             <div className="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold mb-1">College Admin</h1>
-                <p className="text-muted-foreground">Review submissions and mint verified degrees to Sepolia.</p>
+                <p className="text-muted-foreground mb-3">Review submissions and mint verified degrees to Sepolia.</p>
+                
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-2 py-2 px-3 rounded-lg bg-muted/40 border text-xs sm:text-sm">
+                  <div className="flex items-center gap-1.5">
+                    <UserIcon className="w-3.5 h-3.5 text-accent" />
+                    <span className="font-semibold">{user?.full_name || "Admin"}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <Mail className="w-3.5 h-3.5" />
+                    <span>{user?.email}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <Building2 className="w-3.5 h-3.5" />
+                    <span>{user?.college_name}</span>
+                  </div>
+                </div>
               </div>
 
               <div className="flex gap-3">
-                {/* CSV Upload */}
-                <label className={`inline-flex items-center gap-2 px-4 py-2 border rounded-lg bg-card text-foreground font-medium text-sm hover:bg-muted transition active:scale-[0.98] cursor-pointer ${csvUploading ? "opacity-50 pointer-events-none" : ""}`}>
-                  <Upload className="w-4 h-4" />
-                  {csvUploading ? "Importing..." : "Import CSV"}
-                  <input type="file" className="hidden" accept=".csv" onChange={handleCSVUpload} disabled={csvUploading} />
-                </label>
                 {/* Wallet Status Label */}
                 <div className="flex items-center gap-2 px-4 py-2 border rounded-lg bg-card text-foreground text-sm font-medium">
                   <Wallet className="w-4 h-4 text-accent" />
@@ -838,52 +769,6 @@ const UniversityAdmin: React.FC = () => {
 
         </div>
       </div >
-
-      {/* Web3 Onboarding Modal */}
-      {
-        showGuide && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
-            <ScrollReveal>
-              <div className="bg-card border rounded-2xl p-8 max-w-lg shadow-2xl relative overflow-hidden blockchain-glow">
-                <div className="absolute top-0 right-0 p-8 opacity-5">
-                  <Shield className="w-24 h-24" />
-                </div>
-                <div className="relative z-10">
-                  <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-6">
-                    <Wallet className="w-6 h-6 text-accent" />
-                  </div>
-                  <h2 className="text-2xl font-bold mb-3">Welcome, University Admin</h2>
-                  <p className="text-muted-foreground mb-6">
-                    To issue decentralized credentials, you'll need to set up your institutional wallet. We've prepared a comprehensive guide to help you get started with MetaMask and Sepolia testnet.
-                  </p>
-
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <Link
-                      to="/guide"
-                      onClick={() => {
-                        if (user?.id) localStorage.setItem(`web3_guide_seen_${user.id}`, "true");
-                        setShowGuide(false);
-                      }}
-                      className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-accent text-accent-foreground font-medium hover:opacity-90 transition active:scale-[0.98]"
-                    >
-                      View Setup Guide
-                    </Link>
-                    <button
-                      onClick={() => {
-                        if (user?.id) localStorage.setItem(`web3_guide_seen_${user.id}`, "true");
-                        setShowGuide(false);
-                      }}
-                      className="flex-1 px-4 py-2.5 rounded-lg border bg-card text-foreground font-medium hover:bg-muted transition active:scale-[0.98]"
-                    >
-                      Skip for now
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </ScrollReveal>
-          </div>
-        )
-      }
 
     </div >
   );

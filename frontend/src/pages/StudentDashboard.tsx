@@ -18,6 +18,7 @@ interface Credential {
   status: CredentialStatus;
   tx_hash?: string | null;
   token_id?: number | null;
+  document_uid?: string | null;
   has_document?: boolean;
   created_at: string;
 }
@@ -71,16 +72,20 @@ const StudentDashboard: React.FC = () => {
   };
 
   const handleViewDocument = async (credentialId: string) => {
+    const loadingToast = toast.loading("Loading proof document, please wait...");
     try {
       const response = await axios.get(`/degrees/${credentialId}/document`, {
         responseType: "blob",
       });
+      toast.dismiss(loadingToast);
       const blob = new Blob([response.data], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
       window.open(url, "_blank");
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
     } catch (err) {
+      toast.dismiss(loadingToast);
       console.error(err);
-      toast.error("Failed to load document. It may not have been uploaded yet.");
+      toast.error("Failed to load document. It may not have been approved or generated yet.");
     }
   };
 
@@ -383,16 +388,21 @@ const StudentDashboard: React.FC = () => {
                         {sub.status === "APPROVED" && sub.token_id !== null && sub.token_id !== undefined && (
                           <span className="text-xs font-mono text-muted-foreground">Token: {sub.token_id}</span>
                         )}
+                        {sub.status === "APPROVED" && sub.document_uid && (
+                          <span className="text-xs font-mono text-muted-foreground">Document ID: {sub.document_uid}</span>
+                        )}
 
-                        {sub.has_document && (
+                        {sub.has_document && sub.status === "APPROVED" ? (
                           <button
                             onClick={() => void handleViewDocument(sub.id)}
                             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-medium hover:bg-accent/20 transition-colors active:scale-[0.97]"
                           >
                             <Eye className="w-3 h-3" />
-                            View PDF
+                            View Approved PDF
                           </button>
-                        )}
+                        ) : sub.has_document ? (
+                          <span className="text-xs text-muted-foreground">Document uploaded — awaiting approval.</span>
+                        ) : null}
                       </div>
                     </div>
                   );

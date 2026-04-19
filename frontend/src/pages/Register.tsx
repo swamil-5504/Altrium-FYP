@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { ArrowLeft, UserPlus, Mail, KeyRound, Building2, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import axios from "@/api/axios";
+
 
 export default function Register() {
   const [searchParams] = useSearchParams();
@@ -16,6 +18,20 @@ export default function Register() {
   const [role, setRole] = useState<"STUDENT" | "ADMIN">(roleFromQuery);
   const [prnNumber, setPrnNumber] = useState("");
   const [loading, setLoading] = useState(false);
+  const [universities, setUniversities] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchUniversities = async () => {
+      try {
+        const response = await axios.get("/users/universities");
+        setUniversities(response.data);
+      } catch (err) {
+        console.error("Failed to fetch universities", err);
+      }
+    };
+    void fetchUniversities();
+  }, []);
+
 
   const { register, login } = useAuth();
   const navigate = useNavigate();
@@ -67,6 +83,7 @@ export default function Register() {
         }}
       />
 
+
       <Link
         to="/"
         className="absolute top-8 left-8 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition"
@@ -104,30 +121,45 @@ export default function Register() {
         <form onSubmit={handleSubmit} className="space-y-4">
 
 
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Full Name</label>
-                <input
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
-                  className="w-full px-3 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                  placeholder="As on your official records"
-                />
-              </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Full Name</label>
+            <input
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              required
+              className="w-full px-3 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+              placeholder="As on your official records"
+            />
+          </div>
 
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">University / College Name</label>
-                <div className="relative">
-                  <Building2 className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <input
-                    value={collegeName}
-                    onChange={(e) => setCollegeName(e.target.value)}
-                    required
-                    className="w-full pl-9 pr-4 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
-                    placeholder="Ex. Altrium University"
-                  />
-                </div>
-              </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">University / College Name</label>
+            <div className="relative">
+              <Building2 className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              {role === "STUDENT" ? (
+                <select
+                  className="w-full pl-9 pr-4 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent appearance-none transition-all cursor-pointer"
+                  value={collegeName}
+                  onChange={(e) => setCollegeName(e.target.value)}
+                  required
+                >
+                  <option value="" disabled>Choose your university</option>
+                  {universities.map((uni) => (
+                    <option key={uni} value={uni}>{uni}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  value={collegeName}
+                  onChange={(e) => setCollegeName(e.target.value)}
+                  required
+                  className="w-full pl-9 pr-4 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+                  placeholder="Ex. Altrium University"
+                />
+              )}
+            </div>
+          </div>
+
 
 
           {role === "STUDENT" && (

@@ -8,6 +8,7 @@ class UserRole(str, Enum):
     ADMIN = "ADMIN"
     STUDENT = "STUDENT"
     SUPERADMIN = "SUPERADMIN"
+    EMPLOYER = "EMPLOYER"
 
 class CredentialStatus(str, Enum):
     PENDING = "PENDING"
@@ -73,6 +74,7 @@ class CredentialResponse(CredentialBase):
     tx_hash: Optional[str] = None
     prn_number: Optional[str] = None
     college_name: Optional[str] = None
+    document_uid: Optional[str] = None
     has_document: bool = False
     revoked: bool = False
     created_at: datetime
