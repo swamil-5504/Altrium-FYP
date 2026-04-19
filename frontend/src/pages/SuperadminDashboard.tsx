@@ -9,6 +9,13 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, Legend
 } from 'recharts';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface UserInfo {
   id: string;
@@ -612,53 +619,94 @@ const SuperadminDashboard: React.FC = () => {
 
           {activeTab === "students" && (
             <ScrollReveal delay={100}>
-               <div className="rounded-xl border bg-card overflow-hidden">
-                  <div className="p-4 border-b bg-muted/30">
-                    <h3 className="font-semibold text-foreground">Registered Students</h3>
-                  </div>
-                  <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b bg-muted/20">
-                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">Name & Email</th>
-                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">PRN</th>
-                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">University</th>
-                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">Joined</th>
-                          <th className="text-right py-3 px-4 font-medium text-muted-foreground">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                         {loading ? (
-                          <tr><td colSpan={4} className="py-8 text-center text-muted-foreground">Loading students...</td></tr>
-                        ) : studentList.length === 0 ? (
-                          <tr><td colSpan={4} className="py-8 text-center text-muted-foreground">No students registered across the platform yet.</td></tr>
-                        ) : (
-                          studentList.map((stu) => (
-                             <tr key={stu.id} className="border-b last:border-0 hover:bg-muted/10 transition-colors">
-                               <td className="py-3 px-4">
-                                <div className="font-medium">{stu.full_name || "N/A"}</div>
-                                <div className="text-xs text-muted-foreground">{stu.email}</div>
-                              </td>
-                              <td className="py-3 px-4 text-xs font-mono">{stu.prn_number || "N/A"}</td>
-                              <td className="py-3 px-4">{stu.college_name || "N/A"}</td>
-                              <td className="py-3 px-4 text-xs text-muted-foreground">{new Date(stu.created_at).toLocaleDateString()}</td>
-                              <td className="py-3 px-4 text-right">
-                                <button
-                                    className="p-1.5 rounded-md text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
-                                    onClick={() => handleDeleteUser(stu.id)}
-                                    disabled={deletingId === stu.id}
-                                    title="Delete Student"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
-                              </td>
-                             </tr>
-                          ))
-                        )}
-                      </tbody>
-                   </table>
-                  </div>
-               </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {loading ? (
+                  <div className="py-12 text-center text-muted-foreground bg-card rounded-xl border col-span-full">Loading students...</div>
+                ) : studentList.length === 0 ? (
+                  <div className="py-12 text-center text-muted-foreground bg-card rounded-xl border col-span-full">No students registered across the platform yet.</div>
+                ) : (
+                  Object.entries(
+                    studentList.reduce((acc, student) => {
+                      const college = student.college_name || "Unassigned / Independent";
+                      if (!acc[college]) acc[college] = [];
+                      acc[college].push(student);
+                      return acc;
+                    }, {} as Record<string, typeof studentList>)
+                  ).sort(([a], [b]) => a.localeCompare(b)).map(([college, students]) => (
+                    <Dialog key={college}>
+                      <DialogTrigger asChild>
+                        <div className="rounded-xl border bg-card overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-primary/30 group">
+                          <div className="p-6 flex flex-col h-full justify-between gap-4">
+                            <div className="flex items-start justify-between">
+                              <div className="p-2.5 bg-primary/10 rounded-xl group-hover:bg-primary/20 transition-colors">
+                                <Building2 className="w-6 h-6 text-primary" />
+                              </div>
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-lg text-foreground line-clamp-2 mb-1">{college}</h3>
+                              <p className="text-3xl font-bold tracking-tight text-foreground">
+                                {students.length}
+                                <span className="text-sm font-medium text-muted-foreground ml-2 tracking-normal">
+                                  {students.length === 1 ? 'Student' : 'Students'}
+                                </span>
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col">
+                        <DialogHeader>
+                          <DialogTitle className="flex items-center gap-2 text-xl">
+                            <Building2 className="w-5 h-5 text-primary" />
+                            {college} Students
+                          </DialogTitle>
+                        </DialogHeader>
+                        <div className="overflow-y-auto flex-1 mt-4 -mx-6 px-6">
+                          <div className="rounded-xl border bg-card overflow-hidden">
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-sm">
+                                <thead>
+                                  <tr className="border-b bg-muted/10">
+                                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Name & Email</th>
+                                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">PRN</th>
+                                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Joined</th>
+                                    <th className="text-right py-3 px-4 font-medium text-muted-foreground">Actions</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {students.map((stu) => (
+                                    <tr key={stu.id} className="border-b last:border-0 hover:bg-muted/5 transition-colors">
+                                      <td className="py-3 px-4">
+                                        <div className="font-medium">{stu.full_name || "N/A"}</div>
+                                        <div className="text-xs text-muted-foreground">{stu.email}</div>
+                                      </td>
+                                      <td className="py-3 px-4 text-xs font-mono">{stu.prn_number || "N/A"}</td>
+                                      <td className="py-3 px-4 text-xs text-muted-foreground">{new Date(stu.created_at).toLocaleDateString()}</td>
+                                      <td className="py-3 px-4 text-right">
+                                        <button
+                                            className="p-1.5 rounded-md text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
+                                            onClick={(e) => {
+                                              e.stopPropagation(); // prevent modal click issues if any
+                                              handleDeleteUser(stu.id);
+                                            }}
+                                            disabled={deletingId === stu.id}
+                                            title="Delete Student"
+                                          >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  ))
+                )}
+              </div>
             </ScrollReveal>
           )}
 
