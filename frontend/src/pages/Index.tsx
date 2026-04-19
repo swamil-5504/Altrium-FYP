@@ -1,10 +1,7 @@
 import { Link } from "react-router-dom";
-import { Shield, GraduationCap, Building2, Briefcase, ArrowRight, FileCheck, Blocks, Search, ChevronRight } from "lucide-react";
+import { ShieldCheck, GraduationCap, Building2, Briefcase, ArrowRight, FileCheck, Blocks, Search, ChevronRight } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
-
-
-
 
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { Navbar } from "@/components/Navbar";
@@ -20,12 +17,8 @@ const Index = () => {
     setMounted(true);
   }, []);
 
-
-
   return (
-
     <div className="min-h-screen bg-background overflow-x-hidden">
-
 
       <Navbar />
 
@@ -60,13 +53,6 @@ const Index = () => {
             </div>
           </>
         )}
-
-
-
-
-
-
-
 
         <div className="container mx-auto px-4 relative">
           <ScrollReveal className="max-w-3xl mx-auto text-center">
@@ -104,8 +90,6 @@ const Index = () => {
 
       {/* How it works */}
       <section className="min-h-screen flex flex-col justify-center bg-card border-y">
-
-
         <div className="container mx-auto px-4">
           <ScrollReveal className="text-center mb-16">
             <p className="text-sm font-medium text-accent mb-2 uppercase tracking-wider">Process</p>
@@ -139,8 +123,6 @@ const Index = () => {
 
       {/* Roles */}
       <section className="min-h-screen flex flex-col justify-center">
-
-
         <div className="container mx-auto px-4">
           <ScrollReveal className="text-center mb-16">
             <p className="text-sm font-medium text-accent mb-2 uppercase tracking-wider">Portals</p>
@@ -193,9 +175,7 @@ const Index = () => {
       </section>
 
       {/* Trust banner */}
-      <section className="py-24 bg-primary text-primary-foreground self-center w-full">
-
-
+      <section className="py-24 border-y self-center w-full bg-accent/5 dark:bg-[hsl(209,64%,16%)]">
         <div className="container mx-auto px-4">
           <ScrollReveal className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-4">
@@ -221,7 +201,6 @@ const Index = () => {
       </section>
 
       <section>
-
         <Footer />
       </section>
 
