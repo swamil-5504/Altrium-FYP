@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr
 from typing import Optional, List
 from uuid import UUID
 from datetime import datetime
@@ -19,8 +20,13 @@ class CredentialStatus(str, Enum):
 WALLET_ADDRESS_PATTERN = r"^0x[a-fA-F0-9]{40}$"
 TX_HASH_PATTERN = r"^0x[a-fA-F0-9]{64}$"
 
+# Regex Patterns
+WALLET_ADDRESS_PATTERN = r"^0x[a-fA-F0-9]{40}$"
+TX_HASH_PATTERN = r"^0x[a-fA-F0-9]{64}$"
+
 # User Schemas
 class UserBase(BaseModel):
+    email: EmailStr
     email: EmailStr
     full_name: Optional[str] = None
     role: UserRole = UserRole.STUDENT
@@ -62,6 +68,7 @@ class CredentialCreate(CredentialBase):
     issued_to_id: Optional[UUID] = None
     token_id: Optional[int] = None
     tx_hash: Optional[str] = Field(None, pattern=TX_HASH_PATTERN)
+    tx_hash: Optional[str] = Field(None, pattern=TX_HASH_PATTERN)
     prn_number: Optional[str] = None
     college_name: Optional[str] = None
 
@@ -72,6 +79,7 @@ class CredentialUpdate(BaseModel):
     metadata_json: Optional[dict] = None
     token_id: Optional[int] = None
     tx_hash: Optional[str] = Field(None, pattern=TX_HASH_PATTERN)
+    tx_hash: Optional[str] = Field(None, pattern=TX_HASH_PATTERN)
     revoked: Optional[bool] = None
 
 class CredentialResponse(CredentialBase):
@@ -81,10 +89,12 @@ class CredentialResponse(CredentialBase):
     status: CredentialStatus
     token_id: Optional[int] = None
     tx_hash: Optional[str] = Field(None, pattern=TX_HASH_PATTERN)
+    tx_hash: Optional[str] = Field(None, pattern=TX_HASH_PATTERN)
     prn_number: Optional[str] = None
     college_name: Optional[str] = None
     has_document: bool = False
     revoked: bool = False
+    revoked_at: Optional[datetime] = None
     revoked_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
@@ -102,6 +112,7 @@ class TokenResponse(BaseModel):
 
 class LoginRequest(BaseModel):
     email: EmailStr
+    email: EmailStr
     password: str
     ignore_verification: bool = False
 
@@ -110,4 +121,5 @@ class RefreshTokenRequest(BaseModel):
 
 class RegisterRequest(UserCreate):
     pass
+
 

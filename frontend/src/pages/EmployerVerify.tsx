@@ -76,6 +76,13 @@ const isEmail = (value: string): boolean => {
   return hasAt && parts[0].length > 0 && hasDot;
 };
 
+const isEmail = (value: string): boolean => {
+  const parts = value.split("@");
+  const hasAt = parts.length === 2;
+  const hasDot = hasAt && parts[1].includes(".");
+  return hasAt && parts[0].length > 0 && hasDot;
+};
+
 const EmployerVerify: React.FC = () => {
   const [query, setQuery] = useState("");
   const [result, setResult] = useState<Credential | null>(null);
@@ -107,7 +114,13 @@ const EmployerVerify: React.FC = () => {
     setLoading(true);
     setHashVerified(null);
 
+
     try {
+      const params = isEmail(trimmed)
+        ? { email: trimmed }
+        : { prn_number: trimmed };
+
+      const response = await axios.get("/degrees/public", { params });
       const params = isEmail(trimmed)
         ? { email: trimmed }
         : { prn_number: trimmed };
