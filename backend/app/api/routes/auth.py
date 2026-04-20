@@ -1,4 +1,5 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request, Depends, HTTPException, status
+from fastapi.security import HTTPBearer
 from app.schemas.schemas import (
     LoginRequest,
     RefreshTokenRequest,
@@ -8,9 +9,9 @@ from app.schemas.schemas import (
 )
 from app.core.config import settings
 from app.services.auth_service import AuthService
-
-from fastapi import Request
-from app.main import limiter
+from app.core.limiter import limiter
+from app.api.deps.auth import get_current_user
+from app.models.models import User, UserRole
 
 router = APIRouter(prefix=f"{settings.API_V1_STR}/auth", tags=["auth"])
 
@@ -62,21 +63,25 @@ async def upload_verification_document(
 
 
 @router.post("/logout")
-async def logout(current_user: User = Depends(get_current_user), credentials=Depends(HTTPBearer())):
+async def logout(request: Request):
     """
-    Stateless JWT logout is handled client-side, but we also blacklist the token
-    server-side to prevent session reuse until expiry.
+    Stateless JWT logout is handled client-side, but if a token is provided, 
+    we blacklist it server-side to prevent session reuse until expiry.
     """
-    from app.models.models import BlacklistedToken
-    from datetime import datetime, timedelta
-    
-    token = credentials.credentials
-    # Blacklist the token with an expiry (e.g., 1 hour, or match JWT exp if available)
-    blacklist = BlacklistedToken(
-        token=token,
-        expires_at=datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    )
-    await blacklist.insert()
-    
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ")[1]
+        try:
+            from app.models.models import BlacklistedToken
+            from datetime import datetime, timedelta
+            # Blacklist the token
+            blacklist = BlacklistedToken(
+                token=token,
+                expires_at=datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+            )
+            await blacklist.insert()
+        except Exception:
+            pass # Ignore errors during optional logout blacklisting
+            
     return {"detail": "Logged out and token blacklisted"}
 
