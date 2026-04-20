@@ -14,9 +14,9 @@ from app.crud.crud import UserCRUD
 from app.schemas.schemas import UserCreate
 from app.models.models import UserRole, BlacklistedToken
 from app.api.routes import auth, users, credentials, degrees
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from app.core.limiter import limiter
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
@@ -24,7 +24,7 @@ configure_logging()
 
 logger = logging.getLogger(__name__)
 
-limiter = Limiter(key_func=get_remote_address)
+# Add SlowAPI exception handler
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

@@ -88,7 +88,7 @@ export default function Register() {
 
     setLoading(true);
     try {
-      const user = await register(email, password, fullName, role, collegeName, walletAddress, prnNumber);
+      const user = await register(email, password, fullName, role, collegeName, undefined, prnNumber);
 
       if (role === "ADMIN" && file && user?.id) {
         const formData = new FormData();
@@ -103,11 +103,22 @@ export default function Register() {
         navigate("/student");
       }
     } catch (err: unknown) {
-      const detail =
-        typeof err === "object" && err && "response" in err
-          ? (err as { response?: { data?: { detail?: string } } }).response?.data?.detail
-          : undefined;
-      toast.error(detail || "Registration failed");
+      console.error("Registration error:", err);
+      let errorMessage = "Registration failed";
+
+      if (typeof err === "object" && err && "response" in err) {
+        const responseData = (err as any).response?.data;
+        if (responseData) {
+          if (typeof responseData.detail === "string") {
+            errorMessage = responseData.detail;
+          } else if (Array.isArray(responseData.detail)) {
+            errorMessage = responseData.detail[0]?.msg || "Validation error";
+          } else if (responseData.message) {
+            errorMessage = responseData.message;
+          }
+        }
+      }
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

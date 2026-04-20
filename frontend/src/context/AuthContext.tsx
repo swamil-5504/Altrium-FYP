@@ -72,9 +72,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       password,
       full_name: fullName,
       role,
-      college_name: collegeName,
-      wallet_address: walletAddress,
-      prn_number: prnNumber
+      college_name: collegeName || null,
+      wallet_address: walletAddress || null,
+      prn_number: prnNumber || null
     });
     if (role === "STUDENT") {
       await login(email, password);
