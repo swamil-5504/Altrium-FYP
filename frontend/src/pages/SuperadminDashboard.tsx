@@ -166,6 +166,22 @@ const SuperadminDashboard: React.FC = () => {
     .sort((a, b) => b.count - a.count)
     .slice(0, 8);
 
+  const uniqueUniversities = new Set(
+    users
+      .map((u) => u.college_name?.trim())
+      .filter((name): name is string => !!name)
+  ).size;
+
+  const recentSignups = users.filter((u) => {
+    const created = new Date(u.created_at);
+    const diffDays = (Date.now() - created.getTime()) / (1000 * 60 * 60 * 24);
+    return diffDays <= 7;
+  }).length;
+
+  const totalCredentials = credApproved + credPending + credRejected;
+  const approvedRatio = totalCredentials > 0 ? Math.round((credApproved / totalCredentials) * 100) : 0;
+  const approvalStatusLabel = pendingAdmins.length > 0 ? "Action required" : "All systems nominal";
+
   // Filtered lists for search
   const filteredStudents = studentList.filter(s =>
     !searchQuery ||
@@ -217,68 +233,108 @@ const SuperadminDashboard: React.FC = () => {
           />
           <div className="container mx-auto px-4 max-w-6xl py-8">
             <ScrollReveal>
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-                <div>
-                  <div className="flex items-center gap-3 mb-3">
+              <div className="flex flex-col gap-6">
+                <div className="space-y-5">
+                  <div className="flex items-center gap-3">
                     <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-accent/20 to-primary/20 border border-accent/20">
                       <Shield className="w-5 h-5 text-accent" />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold uppercase tracking-widest text-accent/80 px-2 py-0.5 rounded-full bg-accent/10 border border-accent/15">
-                        Superadmin
+                    <div className="space-y-1">
+                      <span className="text-xs font-bold uppercase tracking-widest text-accent/80 px-2 py-0.5 rounded-full bg-accent/10 border border-accent/15 inline-flex items-center gap-2">
+                        SUPERADMIN
                       </span>
-                      <span className="text-xs text-muted-foreground">Elevated Access</span>
+                      <div className="text-xs text-muted-foreground">Elevated access to platform controls</div>
                     </div>
                   </div>
-                  <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Platform Control Center</h1>
-                  <p className="text-muted-foreground mt-1 text-sm">
-                    Manage administrator approvals, monitor platform health, and oversee all registered users.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="rounded-3xl border bg-card/90 p-4 shadow-sm">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Platform users</span>
-                      <Users className="w-4 h-4 text-accent" />
-                    </div>
-                    <div className="text-3xl font-bold tracking-tight">{users.length}</div>
-                    <p className="text-sm text-muted-foreground mt-2">Includes {studentList.length} students and {verifiedAdmins.length + superadmins.length} admins.</p>
-                  </div>
-                  <div className="rounded-3xl border bg-card/90 p-4 shadow-sm">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Pending logins</span>
-                      <ShieldAlert className="w-4 h-4 text-amber-500" />
-                    </div>
-                    <div className="text-3xl font-bold tracking-tight">{pendingAdmins.length}</div>
-                    <p className="text-sm text-muted-foreground mt-2">Awaiting your approval before admins can sign in.</p>
-                  </div>
-                  <div className="rounded-3xl border bg-card/90 p-4 shadow-sm">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Credential health</span>
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                    </div>
-                    <div className="text-3xl font-bold tracking-tight">{credApproved}</div>
-                    <p className="text-sm text-muted-foreground mt-2">{credPending} pending, {credRejected} rejected credentials across the platform.</p>
+                  <div className="space-y-3">
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Platform Control Center</h1>
+                    <p className="max-w-2xl text-sm text-muted-foreground">
+                      Manage administrator approvals, monitor platform health, and oversee all registered users from one responsive dashboard.
+                    </p>
                   </div>
                 </div>
 
-                <div className="mt-4 flex flex-wrap gap-3 items-center">
-                  <button
-                    onClick={() => { setActiveTab("admins"); setSearchQuery(""); }}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-accent text-accent-foreground font-semibold text-sm hover:opacity-90 transition"
-                  >
-                    <ShieldCheck className="w-4 h-4" />
-                    Review pending logins
-                  </button>
-                  <button
-                    onClick={() => void fetchUsers(true)}
-                    disabled={refreshing}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl border border-border bg-card text-sm text-muted-foreground hover:text-foreground hover:border-accent/30 transition"
-                  >
-                    <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
-                    Refresh data
-                  </button>
+                <div className="space-y-4 min-w-0">
+                  <div className="rounded-3xl border bg-card/90 p-6 shadow-sm min-w-0">
+                    <div className="grid gap-4 lg:grid-cols-[1.4fr_0.9fr] min-w-0">
+                      <div className="space-y-5 min-w-0">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                          <div className="min-w-0">
+                            <p className="text-xs uppercase tracking-[0.28em] text-muted-foreground">Platform snapshot</p>
+                            <h2 className="text-2xl font-semibold tracking-tight">Operational control center</h2>
+                          </div>
+                          <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${pendingAdmins.length > 0 ? "bg-amber-500/15 text-amber-600" : "bg-emerald-500/15 text-emerald-600"}`}>
+                            <span className={`w-2.5 h-2.5 rounded-full ${pendingAdmins.length > 0 ? "bg-amber-500" : "bg-emerald-500"}`} />
+                            {approvalStatusLabel}
+                          </span>
+                        </div>
+                        <p className="max-w-2xl text-sm text-muted-foreground">
+                          Track latest signups, institution coverage, and credential flow without crowding the page.
+                        </p>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                          <div className="rounded-2xl border border-border bg-background/80 p-4">
+                            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">Universities onboarded</p>
+                            <p className="text-2xl font-semibold tracking-tight">{uniqueUniversities}</p>
+                            <p className="text-xs text-muted-foreground mt-2">Distinct institutions represented</p>
+                          </div>
+                          <div className="rounded-2xl border border-border bg-background/80 p-4">
+                            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">Recent signups</p>
+                            <p className="text-2xl font-semibold tracking-tight">{recentSignups}</p>
+                            <p className="text-xs text-muted-foreground mt-2">In the last 7 days</p>
+                          </div>
+                          <div className="rounded-2xl border border-border bg-background/80 p-4">
+                            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">Verification state</p>
+                            <p className="text-2xl font-semibold tracking-tight">{approvalStatusLabel}</p>
+                            <p className="text-xs text-muted-foreground mt-2">Pending admin approvals</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="rounded-3xl border border-border bg-background/90 p-5 min-w-0">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="p-2 rounded-xl bg-primary/10 border border-primary/15">
+                            <TrendingUp className="w-4 h-4 text-primary" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Credential pipeline</p>
+                            <h3 className="text-sm font-semibold">Platform issuance health</h3>
+                          </div>
+                        </div>
+                        <div className="rounded-3xl bg-muted px-4 py-5">
+                          <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
+                            <span>Approved</span>
+                            <span>{credApproved}</span>
+                          </div>
+                          <div className="h-2 rounded-full overflow-hidden bg-border">
+                            <div
+                              className="h-full rounded-full bg-accent transition-all duration-500"
+                              style={{ width: `${approvedRatio}%` }}
+                            />
+                          </div>
+                          <div className="mt-3 text-xs text-muted-foreground">
+                            {credPending} pending · {credRejected} rejected credentials
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap justify-end gap-3">
+                    <button
+                      onClick={() => { setActiveTab("admins"); setSearchQuery(""); }}
+                      className="inline-flex min-w-[180px] items-center gap-2 px-4 py-2 rounded-2xl bg-accent text-accent-foreground font-semibold text-sm hover:opacity-90 transition"
+                    >
+                      <ShieldCheck className="w-4 h-4" />
+                      Review pending logins
+                    </button>
+                    <button
+                      onClick={() => void fetchUsers(true)}
+                      disabled={refreshing}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl border border-border bg-card text-sm text-muted-foreground hover:text-foreground hover:border-accent/30 transition"
+                    >
+                      <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+                      Refresh data
+                    </button>
+                  </div>
                 </div>
               </div>
             </ScrollReveal>
