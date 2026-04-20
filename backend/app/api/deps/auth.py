@@ -15,7 +15,7 @@ async def get_current_user(credentials=Depends(security)) -> User:
     
     # Check if token is blacklisted
     from app.models.models import BlacklistedToken
-    is_blacklisted = await BlacklistedToken.find_one({"token": token})
+    is_blacklisted = await BlacklistedToken.find_one(BlacklistedToken.token == token)
     if is_blacklisted:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

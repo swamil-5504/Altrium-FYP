@@ -35,7 +35,6 @@ from fastapi import UploadFile, File, Form, HTTPException, status
 import shutil
 import os
 from uuid import UUID
-from app.models.models import User
 
 @router.post("/{user_id}/verification-document")
 async def upload_verification_document(
@@ -63,25 +62,20 @@ async def upload_verification_document(
 
 
 @router.post("/logout")
-async def logout(request: Request):
+async def logout(current_user: User = Depends(get_current_user), credentials=Depends(HTTPBearer())):
     """
-    Stateless JWT logout is handled client-side, but if a token is provided, 
-    we blacklist it server-side to prevent session reuse until expiry.
+    Stateless JWT logout is handled client-side, but we also blacklist the token
+    server-side to prevent session reuse until expiry.
     """
-    auth_header = request.headers.get("Authorization")
-    if auth_header and auth_header.startswith("Bearer "):
-        token = auth_header.split(" ")[1]
-        try:
-            from app.models.models import BlacklistedToken
-            from datetime import datetime, timedelta
-            # Blacklist the token
-            blacklist = BlacklistedToken(
-                token=token,
-                expires_at=datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-            )
-            await blacklist.insert()
-        except Exception:
-            pass # Ignore errors during optional logout blacklisting
-            
+    from app.models.models import BlacklistedToken
+    from datetime import datetime, timedelta
+    
+    token = credentials.credentials
+    # Blacklist the token with an expiry (e.g., 1 hour, or match JWT exp if available)
+    blacklist = BlacklistedToken(
+        token=token,
+        expires_at=datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+    await blacklist.insert()
     return {"detail": "Logged out and token blacklisted"}
 
