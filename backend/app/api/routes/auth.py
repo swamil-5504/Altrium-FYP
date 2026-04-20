@@ -9,19 +9,26 @@ from app.schemas.schemas import (
 from app.core.config import settings
 from app.services.auth_service import AuthService
 
+from fastapi import Request
+from app.main import limiter
+
 router = APIRouter(prefix=f"{settings.API_V1_STR}/auth", tags=["auth"])
 
 @router.post("/register", response_model=UserResponse)
-async def register(request: RegisterRequest):
-    return await AuthService.register(request)
+@limiter.limit("50/minute")
+async def register(request: Request, reg_request: RegisterRequest):
+    return await AuthService.register(reg_request)
 
 @router.post("/login", response_model=TokenResponse)
-async def login(request: LoginRequest):
-    return await AuthService.login(request)
+@limiter.limit("50/minute")
+async def login(request: Request, login_request: LoginRequest):
+    return await AuthService.login(login_request)
 
 @router.post("/refresh", response_model=TokenResponse)
-async def refresh(request: RefreshTokenRequest):
-    return AuthService.refresh(request.refresh_token)
+@limiter.limit("50/minute")
+async def refresh(request: Request, refresh_request: RefreshTokenRequest):
+    return AuthService.refresh(refresh_request.refresh_token)
+
 
 from fastapi import UploadFile, File, Form, HTTPException, status
 import shutil
@@ -30,8 +37,17 @@ from uuid import UUID
 from app.models.models import User
 
 @router.post("/{user_id}/verification-document")
-async def upload_verification_document(user_id: UUID, file: UploadFile = File(...)):
+async def upload_verification_document(
+    user_id: UUID, 
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    # Only the user themselves or a superadmin can upload the verification document
+    if current_user.role != UserRole.SUPERADMIN and current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to upload documentation for this user")
+
     user = await User.get(user_id)
+
     if not user:
          raise HTTPException(status_code=404, detail="User not found")
          
@@ -46,9 +62,21 @@ async def upload_verification_document(user_id: UUID, file: UploadFile = File(..
 
 
 @router.post("/logout")
-async def logout():
+async def logout(current_user: User = Depends(get_current_user), credentials=Depends(HTTPBearer())):
     """
-    Stateless JWT logout is handled client-side by deleting tokens.
-    This endpoint exists for symmetry with login flows.
+    Stateless JWT logout is handled client-side, but we also blacklist the token
+    server-side to prevent session reuse until expiry.
     """
-    return {"detail": "Logged out"}
+    from app.models.models import BlacklistedToken
+    from datetime import datetime, timedelta
+    
+    token = credentials.credentials
+    # Blacklist the token with an expiry (e.g., 1 hour, or match JWT exp if available)
+    blacklist = BlacklistedToken(
+        token=token,
+        expires_at=datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+    await blacklist.insert()
+    
+    return {"detail": "Logged out and token blacklisted"}
+

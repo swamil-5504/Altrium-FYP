@@ -16,9 +16,7 @@ router = APIRouter(prefix=f"{settings.API_V1_STR}/degrees", tags=["degrees"])
 
 
 def _to_response(cred) -> dict:
-    """Convert a Credential document to a CredentialResponse-compatible dict,
-    including the computed `has_document` flag."""
-    data = cred.dict()
+    data = cred.model_dump()
     data["has_document"] = bool(cred.document_path)
     return data
 
