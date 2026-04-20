@@ -1,10 +1,7 @@
 import { Link } from "react-router-dom";
-import { Shield, GraduationCap, Building2, Briefcase, ArrowRight, FileCheck, Blocks, Search, ChevronRight } from "lucide-react";
+import { ShieldCheck, GraduationCap, Building2, Briefcase, ArrowRight, FileCheck, Blocks, Search, ChevronRight } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
-
-
-
 
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { Navbar } from "@/components/Navbar";
@@ -19,12 +16,8 @@ const Index = () => {
     setMounted(true);
   }, []);
 
-
-
   return (
-
     <div className="min-h-screen bg-background overflow-x-hidden">
-
 
       <Navbar />
 
@@ -59,13 +52,6 @@ const Index = () => {
             </div>
           </>
         )}
-
-
-
-
-
-
-
 
         <div className="container mx-auto px-4 relative">
           <ScrollReveal className="max-w-3xl mx-auto text-center">
@@ -103,8 +89,6 @@ const Index = () => {
 
       {/* How it works */}
       <section className="min-h-screen flex flex-col justify-center bg-card border-y">
-
-
         <div className="container mx-auto px-4">
           <ScrollReveal className="text-center mb-16">
             <p className="text-sm font-medium text-accent mb-2 uppercase tracking-wider">Process</p>
@@ -138,8 +122,6 @@ const Index = () => {
 
       {/* Roles */}
       <section className="min-h-screen flex flex-col justify-center">
-
-
         <div className="container mx-auto px-4">
           <ScrollReveal className="text-center mb-16">
             <p className="text-sm font-medium text-accent mb-2 uppercase tracking-wider">Portals</p>
@@ -192,30 +174,25 @@ const Index = () => {
       </section>
 
       {/* Trust banner */}
-      <section className="py-24 bg-primary text-primary-foreground self-center w-full">
-
-
+      <section className="py-24 border-y self-center w-full bg-accent/5 dark:bg-[hsl(209,64%,16%)]">
         <div className="container mx-auto px-4">
           <ScrollReveal className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-4">
-              <Shield className="w-8 h-8 text-accent" />
-              <div>
-                <h3 className="text-lg font-semibold">Built on Trust, Secured by Blockchain</h3>
-                <p className="text-sm opacity-70">Inspired by India's Academic Bank of Credits (ABC) framework</p>
-              </div>
+              <ShieldCheck className="w-10 h-10 text-accent" />
+              <h3 className="text-lg font-semibold text-foreground dark:text-white">Built on Trust, Secured by Blockchain</h3>
             </div>
             <div className="flex items-center gap-8 text-sm">
               <div className="text-center">
                 <div className="text-2xl font-bold text-accent">SBT</div>
-                <div className="opacity-60 text-xs">Soulbound Tokens</div>
+                <div className="text-xs text-muted-foreground dark:text-white/60">Soulbound Tokens</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-accent">Sepolia</div>
-                <div className="opacity-60 text-xs">Testnet</div>
+                <div className="text-xs text-muted-foreground dark:text-white/60">Testnet</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-accent">Free</div>
-                <div className="opacity-60 text-xs">For Employers</div>
+                <div className="text-xs text-muted-foreground dark:text-white/60">For Employers</div>
               </div>
             </div>
           </ScrollReveal>
@@ -223,7 +200,6 @@ const Index = () => {
       </section>
 
       <section>
-
         <Footer />
       </section>
 
