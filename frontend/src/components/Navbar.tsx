@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Shield, Menu, X, Sun, Moon } from "lucide-react";
+import { Menu, X, Sun, Moon } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/components/ThemeProvider";
@@ -29,8 +29,8 @@ export const Navbar = () => {
     ...(isAuthenticated ? [
       {
         key: "primary",
-        to: role === "ADMIN" ? "/university" : "/student",
-        label: role === "ADMIN" ? "Submissions" : "My Degree",
+        to: role === "SUPERADMIN" ? "/superadmin" : (role === "ADMIN" ? "/university" : "/student"),
+        label: role === "SUPERADMIN" ? "Superadmin Dashboard" : (role === "ADMIN" ? "Submissions" : "My Degree"),
         enabled: true,
       }
     ] : []),
@@ -42,7 +42,7 @@ export const Navbar = () => {
       return (
         <span
           key={link.key}
-          className="px-3.5 py-2 rounded-lg text-sm font-medium text-muted-foreground/50 cursor-not-allowed"
+          className="px-3 py-1.5 text-sm font-medium text-muted-foreground/40 cursor-not-allowed"
           aria-disabled="true"
         >
           {link.label}
@@ -53,9 +53,9 @@ export const Navbar = () => {
       <Link
         key={link.key}
         to={link.to}
-        className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${isActive
-          ? "bg-primary text-primary-foreground shadow-sm"
-          : "text-muted-foreground hover:text-accent hover:bg-accent/10"
+        className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${isActive
+          ? "text-foreground font-semibold"
+          : "text-muted-foreground hover:text-foreground"
           }`}
       >
         {link.label}
@@ -70,95 +70,90 @@ export const Navbar = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b">
-      <div className="container mx-auto flex items-center justify-between h-16 px-4">
-        <Link to={isAuthenticated ? (role === "ADMIN" ? "/university" : "/student") : "/"} className="flex items-center gap-2.5 group">
-          <div className="w-8 h-8 rounded-lg shadow-inner flex items-center justify-center overflow-hidden">
-            <img src="/altrium.jpg" alt="Altrium" className="w-full h-full object-cover" />
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50">
+      <div className="container mx-auto flex items-center justify-between h-14 px-4">
+
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-2 group">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center overflow-hidden bg-primary">
+            <img src="/altrium_light.png" alt="Altrium" className="w-full h-full object-cover block dark:hidden" />
+            <img src="/altrium_dark.png" alt="Altrium" className="w-full h-full object-cover hidden dark:block" />
           </div>
-          <span className="font-semibold text-lg tracking-tight">Altrium</span>
+          <span className="font-semibold text-sm tracking-tight text-foreground">Altrium</span>
         </Link>
 
         {/* Desktop */}
-        <div className="hidden md:flex items-center gap-2">
-          <div className="flex items-center gap-1">
-            {navLinks.map(renderNavItem)}
-          </div>
+        <div className="hidden md:flex items-center gap-5">
+          {navLinks.map(renderNavItem)}
 
-          <div className="ml-2 pl-2 border-l flex items-center gap-2">
+          <button
+            onClick={toggleTheme}
+            className="text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Toggle theme"
+          >
+            <Sun className="h-4 w-4 hidden dark:block" />
+            <Moon className="h-4 w-4 block dark:hidden" />
+          </button>
+
+          {isAuthenticated ? (
             <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors mr-1"
-              aria-label="Toggle theme"
+              type="button"
+              onClick={() => void handleLogout()}
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              <Sun className="h-5 w-5 hidden dark:block" />
-              <Moon className="h-5 w-5 block dark:hidden" />
+              Logout
             </button>
-
-            {isAuthenticated ? (
-              <button
-                type="button"
-                onClick={() => void handleLogout()}
-                className="px-3.5 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          ) : (
+            <div className="flex items-center gap-4">
+              <Link
+                to="/login"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
-                Logout
-              </button>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${location.pathname === "/login"
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-accent hover:bg-accent/10"
-                    }`}
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/register"
-                  className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${location.pathname === "/register"
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-accent hover:bg-accent/10"
-                    }`}
-                >
-                  Register
-                </Link>
-              </>
-            )}
-          </div>
+                Login
+              </Link>
+              <Link
+                to="/register"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Register
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Mobile toggle */}
-        <div className="flex items-center gap-2 md:hidden">
+        <div className="flex items-center gap-3 md:hidden">
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-lg text-muted-foreground hover:bg-muted transition-colors"
+            className="text-muted-foreground hover:text-foreground transition-colors"
             aria-label="Toggle theme"
           >
-            <Sun className="h-5 w-5 hidden dark:block" />
-            <Moon className="h-5 w-5 block dark:hidden" />
+            <Sun className="h-4 w-4 hidden dark:block" />
+            <Moon className="h-4 w-4 block dark:hidden" />
           </button>
           <button
-            className="p-2 rounded-lg hover:bg-muted transition-colors"
+            className="text-muted-foreground hover:text-foreground transition-colors"
             onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
           >
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
+
         </div>
       </div>
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="md:hidden border-t bg-card px-4 py-3 space-y-1">
+        <div className="md:hidden border-t border-border/50 bg-background px-4 py-3 space-y-1">
           {navLinks.map((link) => (
             link.enabled ? (
               <Link
                 key={link.key}
                 to={link.to}
                 onClick={() => setMobileOpen(false)}
-                className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === link.to
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                className={`block px-3 py-2 rounded-md text-sm font-medium transition-colors ${location.pathname === link.to
+                  ? "text-foreground font-semibold"
+                  : "text-muted-foreground hover:text-foreground"
                   }`}
               >
                 {link.label}
@@ -166,19 +161,19 @@ export const Navbar = () => {
             ) : (
               <span
                 key={link.key}
-                className="block px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground/50 cursor-not-allowed"
+                className="block px-3 py-2 text-sm font-medium text-muted-foreground/40 cursor-not-allowed"
               >
                 {link.label}
               </span>
             )
           ))}
 
-          <div className="pt-2 mt-2 border-t">
+          <div className="pt-2 mt-2 border-t border-border/50 flex flex-col gap-2">
             {isAuthenticated ? (
               <button
                 type="button"
                 onClick={() => void handleLogout()}
-                className="w-full text-left block px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                className="text-left px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
                 Logout
               </button>
@@ -187,20 +182,14 @@ export const Navbar = () => {
                 <Link
                   to="/login"
                   onClick={() => setMobileOpen(false)}
-                  className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === "/login"
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-accent hover:bg-accent/10"
-                    }`}
+                  className="block px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Login
                 </Link>
                 <Link
                   to="/register"
                   onClick={() => setMobileOpen(false)}
-                  className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === "/register"
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-accent hover:bg-accent/10"
-                    }`}
+                  className="block px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Register
                 </Link>

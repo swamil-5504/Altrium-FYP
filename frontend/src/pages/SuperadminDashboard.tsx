@@ -3,7 +3,19 @@ import { toast } from "sonner";
 import axios from "@/api/axios";
 import { Navbar } from "@/components/Navbar";
 import { ScrollReveal } from "@/components/ScrollReveal";
-import { Shield, ShieldAlert, ShieldCheck, UserCog, Users, Trash2, BarChart3, Clock, CheckCircle } from "lucide-react";
+import { Shield, ShieldAlert, ShieldCheck, UserCog, Users, Trash2, BarChart3, Clock, CheckCircle, GraduationCap, Building2, TrendingUp } from "lucide-react";
+import {
+  PieChart, Pie, Cell,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  BarChart, Bar, Legend
+} from 'recharts';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface UserInfo {
   id: string;
@@ -17,8 +29,17 @@ interface UserInfo {
   created_at: string;
 }
 
+interface CredentialInfo {
+  id: string;
+  title: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  college_name: string | null;
+  created_at: string;
+}
+
 const SuperadminDashboard: React.FC = () => {
   const [users, setUsers] = useState<UserInfo[]>([]);
+  const [credentials, setCredentials] = useState<CredentialInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"overview" | "admins" | "students">("overview");
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
@@ -27,9 +48,12 @@ const SuperadminDashboard: React.FC = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("/users");
-      // The backend returns all users to the superadmin
-      setUsers(res.data);
+      const [userRes, credRes] = await Promise.all([
+        axios.get("/users"),
+        axios.get("/degrees") // Superadmin can fetch all
+      ]);
+      setUsers(userRes.data);
+      setCredentials(credRes.data);
     } catch (err) {
       console.error(err);
       toast.error("Failed to load users.");
@@ -82,6 +106,46 @@ const SuperadminDashboard: React.FC = () => {
   const verifiedAdmins = users.filter((u) => u.role === "ADMIN" && u.is_legal_admin_verified);
   const studentList = users.filter((u) => u.role === "STUDENT");
   const superadmins = users.filter((u) => u.role === "SUPERADMIN");
+
+  // Chart Data Processing
+  const roleData = [
+    { name: 'Students', value: studentList.length, color: 'hsl(var(--accent))' },
+    { name: 'Admins', value: verifiedAdmins.length + pendingAdmins.length, color: 'hsl(var(--primary))' },
+    { name: 'Superadmins', value: superadmins.length, color: 'hsl(var(--muted-foreground))' },
+  ];
+
+  const statusData = [
+    { name: 'Pending', value: credentials.filter(c => c.status === 'PENDING').length, color: '#f59e0b' },
+    { name: 'Approved', value: credentials.filter(c => c.status === 'APPROVED').length, color: '#10b981' },
+    { name: 'Rejected', value: credentials.filter(c => c.status === 'REJECTED').length, color: '#ef4444' },
+  ];
+
+  // Group registrations by date
+  const registrationsByDate = users.reduce((acc: any, user) => {
+    const date = new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    acc[date] = (acc[date] || 0) + 1;
+    return acc;
+  }, {});
+
+  const growthData = Object.entries(registrationsByDate).map(([date, count]) => ({
+    date,
+    count: count as number,
+  })).slice(-7); // Last 7 days/entries
+
+  // University Distribution - Cleaned and expanded
+  const uniDist = users.reduce((acc: any, user) => {
+    const name = user.college_name?.trim();
+    // Basic filter: ignore emails or very short names that might be junk data
+    if (name && !name.includes('@') && name.length > 2) {
+      acc[name] = (acc[name] || 0) + 1;
+    }
+    return acc;
+  }, {});
+
+  const universityData = Object.entries(uniDist)
+    .map(([name, count]) => ({ name, count: count as number }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10); // Show top 10 instead of 5
 
   return (
     <div className="min-h-screen bg-background">
@@ -195,6 +259,218 @@ const SuperadminDashboard: React.FC = () => {
                   </div>
                 </div>
 
+              </div>
+
+              {/* Charts Perspective - Professional Analytics Layer */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-10">
+                
+                {/* User Roles Pie Chart */}
+                <div className="p-8 rounded-[2rem] border bg-gradient-to-b from-card/80 to-card/40 backdrop-blur-sm overflow-hidden shadow-xl shadow-accent/5">
+                  <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 rounded-xl bg-accent/10 border border-accent/20">
+                        <Users className="w-5 h-5 text-accent" />
+                      </div>
+                      <h4 className="font-bold text-lg tracking-tight">Ecosystem Distribution</h4>
+                    </div>
+                  </div>
+                  <div className="h-[280px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={roleData}
+                          cx="50%"
+                          cy="50%"
+                          stroke="none"
+                          innerRadius={70}
+                          outerRadius={100}
+                          paddingAngle={8}
+                          dataKey="value"
+                        >
+                          {roleData.map((entry, index) => (
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={entry.color} 
+                              className="hover:opacity-80 transition-opacity cursor-pointer focus:outline-none"
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          content={({ active, payload }) => {
+                            if (active && payload && payload.length) {
+                              return (
+                                <div className="glass-card border px-4 py-3 rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200">
+                                  <p className="text-xs font-bold text-muted-foreground uppercase mb-1">{payload[0].name}</p>
+                                  <p className="text-xl font-bold">{payload[0].value} <span className="text-sm font-normal text-muted-foreground">Users</span></p>
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
+                        />
+                        <Legend 
+                          verticalAlign="bottom" 
+                          iconType="circle" 
+                          formatter={(value) => <span className="text-xs font-medium text-muted-foreground ml-1">{value}</span>}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Registration Pipeline (Area) */}
+                <div className="p-8 rounded-[2rem] border bg-gradient-to-b from-card/80 to-card/40 backdrop-blur-sm overflow-hidden shadow-xl shadow-accent/5">
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20">
+                      <TrendingUp className="w-5 h-5 text-primary" />
+                    </div>
+                    <h4 className="font-bold text-lg tracking-tight">Network Growth Velocity</h4>
+                  </div>
+                  <div className="h-[280px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={growthData}>
+                        <defs>
+                          <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.4}/>
+                            <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" strokeOpacity={0.5} />
+                        <XAxis 
+                          dataKey="date" 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))', fontWeight: 500 }} 
+                          dy={10}
+                        />
+                        <YAxis 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} 
+                        />
+                        <Tooltip 
+                          content={({ active, payload, label }) => {
+                            if (active && payload && payload.length) {
+                              return (
+                                <div className="glass-card border px-4 py-3 rounded-2xl shadow-2xl">
+                                  <p className="text-[10px] font-black text-accent uppercase mb-1 tracking-tighter">{label}</p>
+                                  <p className="text-lg font-bold">{payload[0].value} Registrations</p>
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
+                        />
+                        <Area 
+                          type="monotone" 
+                          dataKey="count" 
+                          stroke="hsl(var(--accent))" 
+                          strokeWidth={4} 
+                          fillOpacity={1} 
+                          fill="url(#colorCount)" 
+                          animationDuration={2000}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Degree Status Breakdown - Premium Elevation */}
+                <div className="p-8 rounded-[2rem] border bg-gradient-to-b from-card/80 to-card/40 backdrop-blur-sm overflow-hidden shadow-xl shadow-accent/5">
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="p-2.5 rounded-xl bg-accent/10 border border-accent/20">
+                      <GraduationCap className="w-5 h-5 text-accent" />
+                    </div>
+                    <h4 className="font-bold text-lg tracking-tight">On-Chain Credentialing Status</h4>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 h-auto lg:h-[280px] content-center">
+                    {statusData.map((stat) => {
+                      const total = credentials.length || 1;
+                      const percentage = (stat.value / total) * 100;
+                      const Icon = stat.name === 'Approved' ? CheckCircle : stat.name === 'Pending' ? Clock : ShieldAlert;
+                      
+                      return (
+                        <div key={stat.name} className="relative p-7 rounded-[2rem] border bg-card/40 hover:bg-card/60 transition-all hover:scale-[1.02] duration-300 group cursor-default shadow-sm border-white/5">
+                          {/* Animated background bar */}
+                          <div 
+                            className="absolute bottom-0 left-0 h-1.5 transition-all duration-1000 ease-out opacity-40 group-hover:opacity-100" 
+                            style={{ width: `${percentage}%`, backgroundColor: stat.color, filter: `drop-shadow(0 0 8px ${stat.color})` }}
+                          />
+                          
+                          <div className="flex items-center justify-between mb-5">
+                            <div className="p-3 rounded-2xl shadow-inner bg-black/5 dark:bg-white/5">
+                              <Icon className="w-6 h-6" style={{ color: stat.color }} />
+                            </div>
+                            <span className="text-[10px] font-black tracking-[0.2em] text-muted-foreground uppercase">{stat.name}</span>
+                          </div>
+                          
+                          <div className="space-y-1">
+                            <div className="text-5xl font-black tracking-tighter" style={{ color: stat.color }}>{stat.value}</div>
+                            <div className="text-xs font-semibold text-muted-foreground/80">Credentials</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                 {/* University Impact - Horizontal Refinement */}
+                 <div className="p-8 rounded-[2rem] border bg-gradient-to-b from-card/80 to-card/40 backdrop-blur-sm overflow-hidden shadow-xl shadow-accent/5">
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20">
+                      <Building2 className="w-5 h-5 text-primary" />
+                    </div>
+                    <h4 className="font-bold text-lg tracking-tight">Top Performing Universities</h4>
+                  </div>
+                  <div className="h-[350px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart 
+                        data={universityData} 
+                        layout="vertical" 
+                        margin={{ left: 10, right: 30 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="hsl(var(--muted))" strokeOpacity={0.3} />
+                        <XAxis type="number" hide />
+                        <YAxis 
+                          dataKey="name" 
+                          type="category" 
+                          width={120}
+                          axisLine={false} 
+                          tickLine={false} 
+                          tick={{ fontSize: 11, fill: 'hsl(var(--foreground))', fontWeight: 600 }} 
+                        />
+                        <Tooltip 
+                          cursor={{ fill: 'hsl(var(--accent))', fillOpacity: 0.05 }}
+                          content={({ active, payload }) => {
+                            if (active && payload && payload.length) {
+                              return (
+                                <div className="glass-card border px-4 py-3 rounded-2xl shadow-2xl">
+                                  <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">{payload[0].payload.name}</p>
+                                  <p className="text-lg font-bold">{payload[0].value} <span className="text-sm font-normal text-muted-foreground">Active Users</span></p>
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
+                        />
+                        <Bar 
+                          dataKey="count" 
+                          fill="hsl(var(--primary))" 
+                          radius={[0, 10, 10, 0]} 
+                          barSize={24}
+                        >
+                          {universityData.map((entry, index) => (
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={`hsl(var(--accent), ${1 - (index * 0.1)})`}
+                              className="hover:opacity-80 transition-opacity"
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
               </div>
             </ScrollReveal>
           )}
@@ -343,53 +619,94 @@ const SuperadminDashboard: React.FC = () => {
 
           {activeTab === "students" && (
             <ScrollReveal delay={100}>
-               <div className="rounded-xl border bg-card overflow-hidden">
-                  <div className="p-4 border-b bg-muted/30">
-                    <h3 className="font-semibold text-foreground">Registered Students</h3>
-                  </div>
-                  <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b bg-muted/20">
-                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">Name & Email</th>
-                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">PRN</th>
-                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">University</th>
-                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">Joined</th>
-                          <th className="text-right py-3 px-4 font-medium text-muted-foreground">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                         {loading ? (
-                          <tr><td colSpan={4} className="py-8 text-center text-muted-foreground">Loading students...</td></tr>
-                        ) : studentList.length === 0 ? (
-                          <tr><td colSpan={4} className="py-8 text-center text-muted-foreground">No students registered across the platform yet.</td></tr>
-                        ) : (
-                          studentList.map((stu) => (
-                             <tr key={stu.id} className="border-b last:border-0 hover:bg-muted/10 transition-colors">
-                               <td className="py-3 px-4">
-                                <div className="font-medium">{stu.full_name || "N/A"}</div>
-                                <div className="text-xs text-muted-foreground">{stu.email}</div>
-                              </td>
-                              <td className="py-3 px-4 text-xs font-mono">{stu.prn_number || "N/A"}</td>
-                              <td className="py-3 px-4">{stu.college_name || "N/A"}</td>
-                              <td className="py-3 px-4 text-xs text-muted-foreground">{new Date(stu.created_at).toLocaleDateString()}</td>
-                              <td className="py-3 px-4 text-right">
-                                <button
-                                    className="p-1.5 rounded-md text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
-                                    onClick={() => handleDeleteUser(stu.id)}
-                                    disabled={deletingId === stu.id}
-                                    title="Delete Student"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
-                              </td>
-                             </tr>
-                          ))
-                        )}
-                      </tbody>
-                   </table>
-                  </div>
-               </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {loading ? (
+                  <div className="py-12 text-center text-muted-foreground bg-card rounded-xl border col-span-full">Loading students...</div>
+                ) : studentList.length === 0 ? (
+                  <div className="py-12 text-center text-muted-foreground bg-card rounded-xl border col-span-full">No students registered across the platform yet.</div>
+                ) : (
+                  Object.entries(
+                    studentList.reduce((acc, student) => {
+                      const college = student.college_name || "Unassigned / Independent";
+                      if (!acc[college]) acc[college] = [];
+                      acc[college].push(student);
+                      return acc;
+                    }, {} as Record<string, typeof studentList>)
+                  ).sort(([a], [b]) => a.localeCompare(b)).map(([college, students]) => (
+                    <Dialog key={college}>
+                      <DialogTrigger asChild>
+                        <div className="rounded-xl border bg-card overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-primary/30 group">
+                          <div className="p-6 flex flex-col h-full justify-between gap-4">
+                            <div className="flex items-start justify-between">
+                              <div className="p-2.5 bg-primary/10 rounded-xl group-hover:bg-primary/20 transition-colors">
+                                <Building2 className="w-6 h-6 text-primary" />
+                              </div>
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-lg text-foreground line-clamp-2 mb-1">{college}</h3>
+                              <p className="text-3xl font-bold tracking-tight text-foreground">
+                                {students.length}
+                                <span className="text-sm font-medium text-muted-foreground ml-2 tracking-normal">
+                                  {students.length === 1 ? 'Student' : 'Students'}
+                                </span>
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col">
+                        <DialogHeader>
+                          <DialogTitle className="flex items-center gap-2 text-xl">
+                            <Building2 className="w-5 h-5 text-primary" />
+                            {college} Students
+                          </DialogTitle>
+                        </DialogHeader>
+                        <div className="overflow-y-auto flex-1 mt-4 -mx-6 px-6">
+                          <div className="rounded-xl border bg-card overflow-hidden">
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-sm">
+                                <thead>
+                                  <tr className="border-b bg-muted/10">
+                                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Name & Email</th>
+                                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">PRN</th>
+                                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Joined</th>
+                                    <th className="text-right py-3 px-4 font-medium text-muted-foreground">Actions</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {students.map((stu) => (
+                                    <tr key={stu.id} className="border-b last:border-0 hover:bg-muted/5 transition-colors">
+                                      <td className="py-3 px-4">
+                                        <div className="font-medium">{stu.full_name || "N/A"}</div>
+                                        <div className="text-xs text-muted-foreground">{stu.email}</div>
+                                      </td>
+                                      <td className="py-3 px-4 text-xs font-mono">{stu.prn_number || "N/A"}</td>
+                                      <td className="py-3 px-4 text-xs text-muted-foreground">{new Date(stu.created_at).toLocaleDateString()}</td>
+                                      <td className="py-3 px-4 text-right">
+                                        <button
+                                            className="p-1.5 rounded-md text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
+                                            onClick={(e) => {
+                                              e.stopPropagation(); // prevent modal click issues if any
+                                              handleDeleteUser(stu.id);
+                                            }}
+                                            disabled={deletingId === stu.id}
+                                            title="Delete Student"
+                                          >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  ))
+                )}
+              </div>
             </ScrollReveal>
           )}
 

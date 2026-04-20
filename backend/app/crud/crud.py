@@ -39,7 +39,7 @@ class UserCRUD:
         user = await UserCRUD.get_by_id(user_id)
         if not user:
             return None
-        update_data = user_update.dict(exclude_unset=True)
+        update_data = user_update.model_dump(exclude_unset=True)
         for field, value in update_data.items():
             setattr(user, field, value)
         user.updated_at = datetime.utcnow()
@@ -115,7 +115,7 @@ class CredentialCRUD:
         if not credential:
             return None
 
-        update_data = credential_update.dict(exclude_unset=True)
+        update_data = credential_update.model_dump(exclude_unset=True)
         for field, value in update_data.items():
             setattr(credential, field, value)
 

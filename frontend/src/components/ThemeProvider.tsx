@@ -35,17 +35,25 @@ export function ThemeProvider({
 
         root.classList.remove("light", "dark");
 
+        let resolvedTheme: "dark" | "light";
+
         if (theme === "system") {
-            const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-                .matches
+            resolvedTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
                 ? "dark"
                 : "light";
-
-            root.classList.add(systemTheme);
-            return;
+        } else {
+            resolvedTheme = theme;
         }
 
-        root.classList.add(theme);
+        root.classList.add(resolvedTheme);
+
+        // Swap favicon to match the active theme
+        const favicon = document.querySelector<HTMLLinkElement>("link[rel='icon']");
+        if (favicon) {
+            favicon.href = resolvedTheme === "dark"
+                ? "/favicon_dark.png"
+                : "/favicon_light.png";
+        }
     }, [theme]);
 
     const value = {

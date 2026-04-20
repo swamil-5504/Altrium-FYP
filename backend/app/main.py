@@ -12,11 +12,19 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
 from app.crud.crud import UserCRUD
 from app.schemas.schemas import UserCreate
-from app.models.models import UserRole
+from app.models.models import UserRole, BlacklistedToken
 from app.api.routes import auth, users, credentials, degrees
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
 configure_logging()
+
 logger = logging.getLogger(__name__)
+
+limiter = Limiter(key_func=get_remote_address)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -27,7 +35,8 @@ async def lifespan(app: FastAPI):
     client: AsyncIOMotorClient = session.client  # type: ignore
     db = client[settings.MONGODB_DB]
     # initialize beanie with our document models
-    await init_beanie(database=db, document_models=[models.User, models.Credential])
+    await init_beanie(database=db, document_models=[models.User, models.Credential, models.BlacklistedToken])
+
 
     # Seed a generic Superadmin
     try:
@@ -62,9 +71,19 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Add SlowAPI exception handler
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Industry-Grade Middlewares
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"]) # Should be specific in production
+
 # Add CORS middleware (must come before routes so preflight OPTIONS works)
+
 app.add_middleware(
     CORSMiddleware,
+
     allow_origins=settings.BACKEND_CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],

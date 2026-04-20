@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useAppKit, useAppKitAccount, useAppKitProvider } from '@reown/appkit/react';
 import { Navbar } from "@/components/Navbar";
 import { ScrollReveal } from "@/components/ScrollReveal";
-import { Blocks, Clock, Eye, Shield, XCircle, Wallet, HelpCircle, Users, GraduationCap, AlertTriangle } from "lucide-react";
+import { Blocks, Clock, Eye, Shield, XCircle, Wallet, HelpCircle, Users, GraduationCap, AlertTriangle, Mail, User as UserIcon, Building2 } from "lucide-react";
 
 import { Link } from "react-router-dom";
 
@@ -271,16 +271,20 @@ const UniversityAdmin: React.FC = () => {
 
 
   const handleViewDocument = async (credentialId: string) => {
+    const loadingToast = toast.loading("Loading proof document, please wait...");
     try {
       const response = await axios.get(`/degrees/${credentialId}/document`, {
         responseType: "blob",
       });
+      toast.dismiss(loadingToast);
       const blob = new Blob([response.data], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
       window.open(url, "_blank");
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
     } catch (err) {
+      toast.dismiss(loadingToast);
       console.error(err);
-      toast.error("Failed to load document. It may not have been uploaded yet.");
+      toast.error("Failed to load document. It may not have been approved or generated yet.");
     }
   };
 
@@ -455,7 +459,22 @@ const UniversityAdmin: React.FC = () => {
             <div className="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold mb-1">College Admin</h1>
-                <p className="text-muted-foreground">Review submissions and mint verified degrees to Sepolia.</p>
+                <p className="text-muted-foreground mb-3">Review submissions and mint verified degrees to Sepolia.</p>
+
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-2 py-2 px-3 rounded-lg bg-muted/40 border text-xs sm:text-sm">
+                  <div className="flex items-center gap-1.5">
+                    <UserIcon className="w-3.5 h-3.5 text-accent" />
+                    <span className="font-semibold">{user?.full_name || "Admin"}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <Mail className="w-3.5 h-3.5" />
+                    <span>{user?.email}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <Building2 className="w-3.5 h-3.5" />
+                    <span>{user?.college_name}</span>
+                  </div>
+                </div>
               </div>
 
               <div className="flex gap-3">
