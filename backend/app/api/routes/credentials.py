@@ -3,7 +3,7 @@ from typing import List
 from uuid import UUID
 from app.schemas.schemas import CredentialCreate, CredentialResponse, CredentialStatus, CredentialUpdate
 from app.models.models import User, UserRole
-from app.api.deps.auth import get_current_user, require_role
+from app.api.deps.auth import get_current_user, require_role, require_verified_admin
 from app.core.config import settings
 from app.services.degree_service import DegreeService
 
@@ -50,7 +50,7 @@ async def get_credential(
 async def update_credential_status(
     credential_id: UUID,
     status: CredentialStatus,
-    current_user: User = Depends(require_role(UserRole.ADMIN))
+    current_user: User = Depends(require_verified_admin)
 ):
     cred = await DegreeService.update_status(credential_id, status, current_user.id)
     return _to_response(cred)
@@ -60,7 +60,7 @@ async def update_credential_status(
 async def update_credential(
     credential_id: UUID,
     credential_update: CredentialUpdate,
-    current_user: User = Depends(require_role(UserRole.ADMIN)),
+    current_user: User = Depends(require_verified_admin),
 ):
     """
     ADMIN approves a submission and persists on-chain tx details.
@@ -72,7 +72,7 @@ async def update_credential(
 @router.delete("/{credential_id}")
 async def delete_credential(
     credential_id: UUID,
-    current_user: User = Depends(require_role(UserRole.ADMIN))
+    current_user: User = Depends(require_verified_admin)
 ):
     await DegreeService.delete(credential_id)
     return {"detail": "Credential deleted"}

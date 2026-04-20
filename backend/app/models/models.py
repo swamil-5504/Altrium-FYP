@@ -59,3 +59,13 @@ class Credential(Document):
 
     class Settings:
         name = "credentials"
+
+class BlacklistedToken(Document):
+    token: str
+    expires_at: datetime
+
+    class Settings:
+        name = "blacklisted_tokens"
+        indexes = [
+            "expires_at"
+        ]

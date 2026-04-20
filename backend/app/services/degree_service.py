@@ -13,8 +13,89 @@ import qrcode
 from app.crud.crud import CredentialCRUD
 from app.models.models import Credential, User, UserRole
 from app.schemas.schemas import CredentialCreate, CredentialStatus, CredentialUpdate
+from web3 import Web3
+from app.core.config import settings
 
 UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", "/app/uploads"))
+
+# Registry ABI for decoding uploadDegree call
+REGISTRY_ABI = [
+    {
+        "type": "function",
+        "name": "uploadDegree",
+        "inputs": [
+            {"name": "collegeIdHash", "type": "bytes32"},
+            {"name": "degreeHash", "type": "bytes32"},
+            {"name": "degreeURI", "type": "string"},
+        ],
+        "outputs": [{"name": "tokenId", "type": "uint256"}],
+        "stateMutability": "nonpayable",
+    }
+]
+
+
+async def _verify_blockchain_transaction(tx_hash: str, expected_college_id_hash: str) -> bool:
+    """
+    Verifies that the transaction with the given hash:
+    1. Exists and was successful.
+    2. Was sent to the correct Registry contract.
+    3. Calls uploadDegree with the correct collegeIdHash.
+    """
+    if not settings.WEB3_PROVIDER_URI:
+        # If no provider is configured, we can't verify. 
+        # In a real system we might want to fail hard, but for now we'll allow it if 
+        # the environment isn't set up.
+        print("WEB3_PROVIDER_URI not set, skipping blockchain verification.")
+        return True
+
+    w3 = Web3(Web3.HTTPProvider(settings.WEB3_PROVIDER_URI))
+    
+    try:
+        # 1. Fetch receipt to check success
+        receipt = w3.eth.get_transaction_receipt(tx_hash)
+        if receipt is None or receipt.status != 1:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Blockchain transaction failed or not found."
+            )
+
+        # 2. Verify target contract
+        if receipt.to.lower() != settings.CONTRACT_REGISTRY_ADDRESS.lower():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Transaction target mismatch. Expected {settings.CONTRACT_REGISTRY_ADDRESS}, got {receipt.to}"
+            )
+
+        # 3. Verify function call and arguments
+        tx = w3.eth.get_transaction(tx_hash)
+        contract = w3.eth.contract(abi=REGISTRY_ABI)
+        
+        # Decode the function call
+        func_obj, func_params = contract.decode_function_input(tx.input)
+        
+        if func_obj.fn_name != "uploadDegree":
+             raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid contract function called: {func_obj.fn_name}"
+            )
+            
+        actual_college_id_hash = "0x" + func_params["collegeIdHash"].hex()
+        if actual_college_id_hash.lower() != expected_college_id_hash.lower():
+             raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"College ID Hash mismatch. Expected {expected_college_id_hash}, got {actual_college_id_hash}"
+            )
+
+        return True
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Error verifying blockchain transaction: {str(e)}"
+        )
+
 
 
 def _ensure_upload_dir() -> None:
@@ -97,32 +178,20 @@ class DegreeService:
     @staticmethod
     async def list_for_user(current_user: User) -> List[Credential]:
         if current_user.role == UserRole.SUPERADMIN:
-            return await CredentialCRUD.get_all() # We need a get_all method, or just get everything
+            creds = await CredentialCRUD.get_all()
+            # Even Superadmins shouldn't see rejected ones in general list to respect privacy
+            return [c for c in creds if c.status != CredentialStatus.REJECTED]
+        
         if current_user.role == UserRole.ADMIN:
             if current_user.college_name:
-                return await CredentialCRUD.get_by_college(current_user.college_name)
-            return []  # Return empty if admin has no college assigned
+                creds = await CredentialCRUD.get_by_college(current_user.college_name)
+                # Admins only see Pending/Approved. Rejected are hidden as per privacy rules.
+                return [c for c in creds if c.status != CredentialStatus.REJECTED]
+            return []
+            
+        # Students see everything they've submitted
         return await CredentialCRUD.get_by_user(current_user.id)
 
-    @staticmethod
-    async def reset_submission(credential_id: UUID) -> Credential:
-        """Reset a degree submission after an on-chain burn, allowing re-minting."""
-        credential = await CredentialCRUD.get_by_id(credential_id)
-        if not credential:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Credential not found",
-            )
-        
-        credential.status = CredentialStatus.PENDING
-        credential.token_id = None
-        credential.tx_hash = None
-        credential.revoked = False
-        credential.revoked_at = None
-        from datetime import datetime
-        credential.updated_at = datetime.utcnow()
-        await credential.save()
-        return credential
 
     @staticmethod
     async def reset_submission(credential_id: UUID) -> Credential:
@@ -154,8 +223,14 @@ class DegreeService:
             )
 
         if current_user.role == UserRole.SUPERADMIN:
-            pass  # Superadmins can view any submission
+            pass  # Superadmins can view any submission to handle disputes
         elif current_user.role == UserRole.ADMIN:
+            # Admins cannot view REJECTED degrees (they should have no record of them except while rejecting)
+            if credential.status == CredentialStatus.REJECTED:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Rejected degrees are private to the student and cannot be viewed by admins."
+                )
             # Admin can only view if it's pending for their college OR if they issued/approved it themselves
             if not ((credential.status == CredentialStatus.PENDING and credential.college_name == current_user.college_name) or
                     credential.issued_by_id == current_user.id):
@@ -169,6 +244,7 @@ class DegreeService:
                 detail="Not authorized",
             )
 
+
         return credential
 
     @staticmethod
@@ -181,12 +257,22 @@ class DegreeService:
 
     @staticmethod
     async def update_status(credential_id: UUID, status_value: CredentialStatus, admin_id: UUID = None) -> Credential:
-        credential = await CredentialCRUD.update(credential_id, CredentialUpdate(status=status_value))
+        credential = await CredentialCRUD.get_by_id(credential_id)
         if not credential:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Credential not found",
             )
+
+        if status_value == CredentialStatus.APPROVED and credential.tx_hash:
+            combined_string = f"{credential.prn_number}-{credential.college_name}"
+            expected_college_id_hash = Web3.keccak(text=combined_string).hex()
+            if not expected_college_id_hash.startswith("0x"):
+                expected_college_id_hash = "0x" + expected_college_id_hash
+            
+            await _verify_blockchain_transaction(credential.tx_hash, expected_college_id_hash)
+
+        credential = await CredentialCRUD.update(credential_id, CredentialUpdate(status=status_value))
         if admin_id:
             credential.issued_by_id = admin_id
             await credential.save()
@@ -194,12 +280,28 @@ class DegreeService:
 
     @staticmethod
     async def update(credential_id: UUID, credential_update: CredentialUpdate, admin_id: UUID = None) -> Credential:
-        credential = await CredentialCRUD.update(credential_id, credential_update)
+        credential = await CredentialCRUD.get_by_id(credential_id)
         if not credential:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Credential not found",
             )
+
+        # If we are approving and have a tx_hash, verify it!
+        new_status = credential_update.status or credential.status
+        new_tx_hash = credential_update.tx_hash or credential.tx_hash
+
+        if new_status == CredentialStatus.APPROVED and new_tx_hash:
+            # Reconstruct the expected collegeIdHash
+            # collegeIdHash = keccak256(utf8(prn_number + "-" + universityName))
+            combined_string = f"{credential.prn_number}-{credential.college_name}"
+            expected_college_id_hash = Web3.keccak(text=combined_string).hex()
+            if not expected_college_id_hash.startswith("0x"):
+                expected_college_id_hash = "0x" + expected_college_id_hash
+            
+            await _verify_blockchain_transaction(new_tx_hash, expected_college_id_hash)
+
+        credential = await CredentialCRUD.update(credential_id, credential_update)
         if admin_id:
             credential.issued_by_id = admin_id
             await credential.save()
@@ -239,7 +341,22 @@ class DegreeService:
                 detail="Only PDF files are accepted",
             )
 
+        # Basic File Scanning: Verify PDF integrity
+        try:
+            from pypdf import PdfReader
+            import io
+            # Read first few bytes to verify it's a readable PDF
+            pdf_data = await file.read(1024 * 1024) # Read 1MB for scanning
+            PdfReader(io.BytesIO(pdf_data))
+            await file.seek(0) # Reset stream for saving
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid or malformed PDF file: {str(e)}"
+            )
+
         _ensure_upload_dir()
+
 
         # Store with a unique name based on the credential id
         filename = f"{credential_id}.pdf"

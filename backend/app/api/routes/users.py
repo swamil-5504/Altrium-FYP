@@ -6,7 +6,7 @@ from web3 import Web3
 from app.schemas.schemas import UserResponse
 from app.models.models import User, UserRole
 from app.crud.crud import UserCRUD
-from app.api.deps.auth import get_current_user, require_role
+from app.api.deps.auth import get_current_user, require_role, require_verified_admin
 from app.core.config import settings
 
 router = APIRouter(prefix=f"{settings.API_V1_STR}/users", tags=["users"])
@@ -31,7 +31,7 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
 
 @router.get("/", response_model=List[UserResponse])
 async def get_all_users(
-    current_user: User = Depends(require_role(UserRole.ADMIN, UserRole.SUPERADMIN))
+    current_user: User = Depends(require_verified_admin)
 ):
     return await UserCRUD.get_all()
 
@@ -166,7 +166,7 @@ async def update_wallet_address(
 
 @router.get("/my-students", response_model=List[UserResponse])
 async def get_my_students(
-    current_user: User = Depends(require_role(UserRole.ADMIN))
+    current_user: User = Depends(require_verified_admin)
 ):
     """Return all students enrolled in the same college as this admin."""
     if not current_user.college_name:

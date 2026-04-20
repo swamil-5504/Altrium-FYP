@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, EmailStr
 from typing import Optional, List
 from uuid import UUID
 from datetime import datetime
@@ -15,16 +15,20 @@ class CredentialStatus(str, Enum):
     APPROVED = "APPROVED"
     REJECTED = "REJECTED"
 
+# Regex Patterns
+WALLET_ADDRESS_PATTERN = r"^0x[a-fA-F0-9]{40}$"
+TX_HASH_PATTERN = r"^0x[a-fA-F0-9]{64}$"
+
 # User Schemas
 class UserBase(BaseModel):
-    email: str
+    email: EmailStr
     full_name: Optional[str] = None
     role: UserRole = UserRole.STUDENT
     college_name: Optional[str] = None
-    wallet_address: Optional[str] = None
+    wallet_address: Optional[str] = Field(None, pattern=WALLET_ADDRESS_PATTERN)
     prn_number: Optional[str] = None
     college_name: Optional[str] = None
-    wallet_address: Optional[str] = None
+    wallet_address: Optional[str] = Field(None, pattern=WALLET_ADDRESS_PATTERN)
     prn_number: Optional[str] = None
 
 class UserCreate(UserBase):
@@ -55,12 +59,9 @@ class CredentialBase(BaseModel):
     metadata_json: Optional[dict] = None
 
 class CredentialCreate(CredentialBase):
-    # Optional so STUDENT submissions can omit it; backend will attach it to the logged-in student.
     issued_to_id: Optional[UUID] = None
     token_id: Optional[int] = None
-    tx_hash: Optional[str] = None
-    prn_number: Optional[str] = None
-    college_name: Optional[str] = None
+    tx_hash: Optional[str] = Field(None, pattern=TX_HASH_PATTERN)
     prn_number: Optional[str] = None
     college_name: Optional[str] = None
 
@@ -70,8 +71,7 @@ class CredentialUpdate(BaseModel):
     status: Optional[CredentialStatus] = None
     metadata_json: Optional[dict] = None
     token_id: Optional[int] = None
-    tx_hash: Optional[str] = None
-    revoked: Optional[bool] = None
+    tx_hash: Optional[str] = Field(None, pattern=TX_HASH_PATTERN)
     revoked: Optional[bool] = None
 
 class CredentialResponse(CredentialBase):
@@ -80,12 +80,12 @@ class CredentialResponse(CredentialBase):
     issued_by_id: UUID
     status: CredentialStatus
     token_id: Optional[int] = None
-    tx_hash: Optional[str] = None
+    tx_hash: Optional[str] = Field(None, pattern=TX_HASH_PATTERN)
     prn_number: Optional[str] = None
     college_name: Optional[str] = None
     has_document: bool = False
     revoked: bool = False
-    revoked: bool = False
+    revoked_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
 
@@ -101,7 +101,7 @@ class TokenResponse(BaseModel):
     refresh_expires_in: int
 
 class LoginRequest(BaseModel):
-    email: str
+    email: EmailStr
     password: str
     ignore_verification: bool = False
 
@@ -110,3 +110,4 @@ class RefreshTokenRequest(BaseModel):
 
 class RegisterRequest(UserCreate):
     pass
+
