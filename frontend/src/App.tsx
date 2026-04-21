@@ -72,6 +72,14 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/superadmin"
+              element={
+                <ProtectedRoute requiredRole="SUPERADMIN">
+                  <SuperadminDashboard />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/guide" element={<Web3Guide />} />
             <Route path="/pending-verification" element={<PendingVerification />} />
             <Route path="/verify" element={<EmployerVerify />} />

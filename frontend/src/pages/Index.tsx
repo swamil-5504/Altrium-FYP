@@ -7,7 +7,6 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import ShapeGrid from "@/components/ShapeGrid";
-import ShapeGrid from "@/components/ShapeGrid";
 
 const Index = () => {
   const { theme } = useTheme();

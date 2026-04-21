@@ -8,6 +8,7 @@ import { useAppKit, useAppKitAccount, useAppKitProvider } from '@reown/appkit/re
 import { Navbar } from "@/components/Navbar";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { Blocks, Clock, Eye, Shield, XCircle, Wallet, HelpCircle, Users, GraduationCap, AlertTriangle, Mail, User as UserIcon, Building2 } from "lucide-react";
+
 import { Link } from "react-router-dom";
 
 type CredentialStatus = "PENDING" | "APPROVED" | "REJECTED";
@@ -38,9 +39,14 @@ interface Student {
   created_at: string;
 }
 
+// Provide the deployed registry address via environment:
+// - VITE_REGISTRY_ADDRESS
+// Docker should pass it once you have the on-chain deployment.
 const CONTRACT_REGISTRY_ADDRESS = import.meta.env.VITE_REGISTRY_ADDRESS || "";
+// TEMP: Bypass blockchain minting and only approve in backend.
 const BYPASS_BLOCKCHAIN_APPROVAL = false;
 
+// Minimal ABIs for minting + reading tokenId.
 const registryAbi = [
   {
     type: "function",
@@ -127,6 +133,9 @@ const UniversityAdmin: React.FC = () => {
 
   const [mintingById, setMintingById] = useState<Record<string, boolean>>({});
 
+  // When AppKit connects a wallet that differs from the saved profile address,
+  // persist it to the backend. The backend will then call addUniversity() on-chain
+  // granting UNIVERSITY_ROLE + VERIFIER_ROLE so the admin can mint degrees.
   useEffect(() => {
     if (!walletAddress || !isConnected) return;
     if (walletAddress.toLowerCase() === user?.wallet_address?.toLowerCase()) return;
@@ -142,7 +151,7 @@ const UniversityAdmin: React.FC = () => {
       }
     };
     void saveWallet();
-  }, [walletAddress, isConnected, user?.wallet_address]);
+  }, [walletAddress, isConnected]);
 
   const pendingCredentials = useMemo(
     () => credentials.filter((c) => c.status === "PENDING"),
@@ -195,6 +204,7 @@ const UniversityAdmin: React.FC = () => {
   };
 
   const handleRevoke = async (credentialId: string) => {
+    // Find the credential's PRN to compute the on-chain collegeIdHash
     const credential = credentials.find(c => c.id === credentialId);
     if (!credential?.prn_number) {
       toast.error("Cannot find PRN for this credential.");
@@ -203,6 +213,7 @@ const UniversityAdmin: React.FC = () => {
 
     const revokeToast = toast.loading("Revoking on-chain...");
     try {
+      // --- On-chain revocation first ---
       if (walletProvider && CONTRACT_REGISTRY_ADDRESS) {
         const provider = new ethers.BrowserProvider(walletProvider as any);
         const signer = await provider.getSigner();
@@ -234,6 +245,7 @@ const UniversityAdmin: React.FC = () => {
 
     const burnToast = toast.loading("Burning NFT on-chain...");
     try {
+      // 1. On-chain burn
       if (walletProvider && CONTRACT_REGISTRY_ADDRESS) {
         const provider = new ethers.BrowserProvider(walletProvider as any);
         const signer = await provider.getSigner();
@@ -247,6 +259,7 @@ const UniversityAdmin: React.FC = () => {
         toast.warning("Wallet not connected — resetting on platform only (not on-chain).");
       }
 
+      // 2. Backend reset
       await axios.post(`/degrees/${credentialId}/reset`);
       toast.success("Credential burned and submission reset to pending.", { id: burnToast });
       await fetchCredentials();
@@ -255,6 +268,7 @@ const UniversityAdmin: React.FC = () => {
       toast.error("Failed to burn/reset credential.", { id: burnToast });
     }
   };
+
 
   const handleViewDocument = async (credentialId: string) => {
     const loadingToast = toast.loading("Loading proof document, please wait...");
@@ -326,9 +340,11 @@ const UniversityAdmin: React.FC = () => {
 
       const universityName = user?.college_name || "Altrium University";
 
+      // collegeIdHash = keccak256(utf8(prn_number + universityName))
       const combinedString = `${credential.prn_number}-${universityName}`;
       const collegeIdHash = ethers.keccak256(ethers.toUtf8Bytes(combinedString));
 
+      // degreeHash = keccak256(utf8(JSON.stringify(studentBasicsPayload)))
       const m = (credential.metadata_json ?? {}) as Record<string, unknown>;
       const extractedStudentName = typeof m.studentName === "string" ? m.studentName : (typeof m.name === "string" ? m.name : "Student");
       const studentBasicsPayload = {
@@ -347,6 +363,7 @@ const UniversityAdmin: React.FC = () => {
       const { name: tierName, color: tierColor } = getTierInfo(cgpaVal);
       const dynamicImageURI = generateSVG(universityName, credential.title, String(m.passingYear || "N/A"), tierName, tierColor);
 
+      // Create a native ERC721 metadata JSON object to inject directly to the blockchain
       const descriptionText = `${credential.description || "Soulbound academic credential issued via Altrium"}
 
 🎓 Degree: ${credential.title}
@@ -367,6 +384,7 @@ const UniversityAdmin: React.FC = () => {
         ]
       };
 
+      // Use URL compatible unicode Base64 encoding
       const jsonStr = JSON.stringify(metadata);
       const base64Json = btoa(unescape(encodeURIComponent(jsonStr)));
       const degreeURI = `data:application/json;base64,${base64Json}`;
@@ -374,6 +392,7 @@ const UniversityAdmin: React.FC = () => {
       const tx = await registryContract.uploadDegree(collegeIdHash, degreeHash, degreeURI);
       const receipt = await tx.wait();
 
+      // Best-effort: verify after mint (requires blockchain role permissions).
       try {
         const verifyTx = await registryContract.verifyDegree(collegeIdHash, true);
         await verifyTx.wait();
@@ -382,6 +401,9 @@ const UniversityAdmin: React.FC = () => {
         toast.warning("Minted but on-chain verification failed (role mismatch?).");
       }
 
+      // tokenId extraction:
+      // - prefer parsing DegreeMinted event
+      // - fallback to tokenIdByCollegeIdHash read
       let tokenId: bigint | null = null;
       for (const log of receipt.logs) {
         try {
@@ -391,7 +413,7 @@ const UniversityAdmin: React.FC = () => {
             break;
           }
         } catch {
-          // Ignore
+          // Ignore non-matching logs
         }
       }
 
@@ -401,6 +423,7 @@ const UniversityAdmin: React.FC = () => {
         tokenId = await degreeSbtContract.tokenIdByCollegeIdHash(collegeIdHash);
       }
 
+      // Persist to backend: status=APPROVED, tx_hash=tx.hash, token_id=tokenId
       await axios.patch(`/degrees/${credential.id}`, {
         status: "APPROVED",
         tx_hash: tx.hash,
@@ -455,6 +478,7 @@ const UniversityAdmin: React.FC = () => {
               </div>
 
               <div className="flex gap-3">
+                {/* Wallet Status Label */}
                 <div className="flex items-center gap-2 px-4 py-2 border rounded-lg bg-card text-foreground text-sm font-medium">
                   <Wallet className="w-4 h-4 text-accent" />
                   <span className="font-mono text-xs truncate max-w-[120px]">
@@ -475,6 +499,7 @@ const UniversityAdmin: React.FC = () => {
               </div>
             </div>
 
+            {/* Wallet Warning */}
             {walletAddress && user?.wallet_address && walletAddress.toLowerCase() !== user.wallet_address.toLowerCase() && (
               <div className="mb-6 p-4 rounded-xl border border-amber-500/30 bg-amber-500/10 flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
                 <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
@@ -489,6 +514,7 @@ const UniversityAdmin: React.FC = () => {
             )}
           </ScrollReveal>
 
+          {/* Tab Switcher */}
           <div className="flex gap-2 mb-6 p-1 bg-muted rounded-xl">
             <button
               onClick={() => setActiveTab("degrees")}
@@ -620,6 +646,7 @@ const UniversityAdmin: React.FC = () => {
                 </div>
               </ScrollReveal>
 
+              {/* Approved / Revoke Section */}
               <ScrollReveal delay={150}>
                 <div className="rounded-xl border bg-card overflow-hidden mt-6">
                   <div className="p-4 border-b bg-muted/30 flex items-center justify-between">
@@ -739,9 +766,11 @@ const UniversityAdmin: React.FC = () => {
               </div>
             </ScrollReveal>
           )}
+
         </div>
-      </div>
-    </div>
+      </div >
+
+    </div >
   );
 };
 

@@ -21,6 +21,19 @@ export default defineConfig(({ mode }) => ({
   build: {
     rollupOptions: {
       external: ["@base-org/account"],
+      output: {
+        manualChunks: (id) => {
+          if (id.includes("node_modules")) {
+            if (id.includes("@reown") || id.includes("ethers") || id.includes("walletconnect")) {
+              return "vendor-web3";
+            }
+            if (id.includes("recharts") || id.includes("gsap") || id.includes("lucide-react")) {
+              return "vendor-ui-heavy";
+            }
+            return "vendor";
+          }
+        },
+      },
       onwarn(warning, warn) {
         // Suppress unresolved import warnings from Reown optional deps
         if (warning.code === 'UNRESOLVED_IMPORT' && warning.exporter?.includes('@base-org')) return;

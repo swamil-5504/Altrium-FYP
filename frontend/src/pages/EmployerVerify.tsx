@@ -111,6 +111,7 @@ const EmployerVerify: React.FC = () => {
         : { prn_number: trimmed };
 
       const response = await axios.get("/degrees/public", { params });
+
       const list: Credential[] = response.data;
       if (list.length > 0) setResult(list[0]);
       else setResult(null);
@@ -153,7 +154,7 @@ const EmployerVerify: React.FC = () => {
         const provider = new ethers.BrowserProvider(window.ethereum);
         const contract = new ethers.Contract(CONTRACT_REGISTRY_ADDRESS, registryAbi, provider);
 
-        const [exists, , record] = await contract.getDegree(collegeIdHash);
+        const [exists, tokenId, record] = await contract.getDegree(collegeIdHash);
 
         if (!exists) {
           toast.error("Degree not found on-chain. It might not be minted yet.");
@@ -298,7 +299,8 @@ const EmployerVerify: React.FC = () => {
                       {result.tx_hash && (
                         <div className="flex items-center justify-between text-sm py-1 border-b border-muted-foreground/10">
                           <span className="text-muted-foreground">Tx Hash</span>
-                          <a
+                          
+  <a
                             href={`https://sepolia.etherscan.io/tx/${result.tx_hash}`}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -348,23 +350,29 @@ const EmployerVerify: React.FC = () => {
               </div>
             </ScrollReveal>
           )}
+
         </div>
       </div>
 
       <Footer />
+
     </div>
   );
 };
 
-interface InfoRowProps {
+const InfoRow = ({
+  icon: Icon,
+  label,
+  value,
+  mono,
+  className,
+}: {
   icon: React.ElementType;
   label: string;
   value: string;
   mono?: boolean;
   className?: string;
-}
-
-const InfoRow = ({ icon: Icon, label, value, mono, className }: InfoRowProps) => (
+}) => (
   <div className={`flex items-start gap-3 ${className ?? ""}`}>
     <Icon className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
     <div>

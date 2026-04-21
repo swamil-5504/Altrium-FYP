@@ -37,6 +37,8 @@ class UserUpdate(BaseModel):
 
 class UserResponse(UserBase):
     id: UUID
+    college_name: Optional[str] = None
+    prn_number: Optional[str] = None
     is_active: bool
     is_legal_admin_verified: bool = False
     created_at: datetime
@@ -75,6 +77,7 @@ class CredentialResponse(CredentialBase):
     tx_hash: Optional[str] = Field(None, pattern=TX_HASH_PATTERN)
     prn_number: Optional[str] = None
     college_name: Optional[str] = None
+    document_uid: Optional[str] = None
     has_document: bool = False
     revoked: bool = False
     revoked_at: Optional[datetime] = None
@@ -102,3 +105,4 @@ class RefreshTokenRequest(BaseModel):
 
 class RegisterRequest(UserCreate):
     pass
+

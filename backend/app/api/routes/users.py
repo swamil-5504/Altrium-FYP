@@ -175,3 +175,18 @@ async def get_my_students(
         User.role == UserRole.STUDENT,
         User.college_name == current_user.college_name
     ).to_list()
+
+@router.delete("/{user_id}", status_code=204)
+async def delete_user(
+    user_id: UUID,
+    current_user: User = Depends(require_role(UserRole.SUPERADMIN))
+):
+    """Delete a user from the system."""
+    user = await UserCRUD.get_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    success = await UserCRUD.delete(user_id)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to delete user")
+    return None

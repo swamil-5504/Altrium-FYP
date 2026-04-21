@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from "react";
 
-import React, { useState, useEffect } from "react";
-
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
-import { ArrowLeft, UserPlus, Mail, KeyRound, Building2, Wallet, FileText } from "lucide-react";
+import { ArrowLeft, UserPlus, Mail, KeyRound, Building2, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
-import { ethers, type Eip1193Provider } from "ethers";
 import axios from "@/api/axios";
 
 
@@ -17,27 +14,10 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [collegeName, setCollegeName] = useState("");
-  const [walletAddress, setWalletAddress] = useState("");
   const [file, setFile] = useState<File | null>(null);
-  const [isConnecting, setIsConnecting] = useState(false);
   const [role, setRole] = useState<"STUDENT" | "ADMIN">(roleFromQuery);
   const [prnNumber, setPrnNumber] = useState("");
-  const [prnNumber, setPrnNumber] = useState("");
   const [loading, setLoading] = useState(false);
-  const [universities, setUniversities] = useState<string[]>([]);
-
-  useEffect(() => {
-    const fetchUniversities = async () => {
-      try {
-        const response = await axios.get("/users/universities");
-        setUniversities(response.data);
-      } catch (err) {
-        console.error("Failed to fetch universities", err);
-      }
-    };
-    void fetchUniversities();
-  }, []);
-
   const [universities, setUniversities] = useState<string[]>([]);
 
   useEffect(() => {
@@ -56,31 +36,12 @@ export default function Register() {
   const { register, login } = useAuth();
   const navigate = useNavigate();
 
-  const connectWallet = async () => {
-    if (!window.ethereum) {
-      toast.error("MetaMask is not installed!");
-      return;
-    }
-    setIsConnecting(true);
-    try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
-      const signer = await provider.getSigner();
-      setWalletAddress(signer.address);
-      toast.success("Wallet connected!");
-    } catch (error) {
-      toast.error("Failed to connect wallet");
-    } finally {
-      setIsConnecting(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (role === "ADMIN" && !walletAddress) {
-      toast.error("Connecting your wallet is required for University Admins.");
-      return;
-    }
+
+
+
     if (role === "ADMIN" && !file) {
       toast.error("Proof of Affiliation document is required for University Admins.");
       return;
@@ -134,7 +95,6 @@ export default function Register() {
       />
 
 
-
       <Link
         to="/"
         className="absolute top-8 left-8 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition"
@@ -169,37 +129,9 @@ export default function Register() {
           </button>
         </div>
 
-        <div className="flex bg-muted p-1 rounded-lg mb-6">
-          <button
-            type="button"
-            onClick={() => setRole("STUDENT")}
-            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${role === "STUDENT" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
-              }`}
-          >
-            Student
-          </button>
-          <button
-            type="button"
-            onClick={() => setRole("ADMIN")}
-            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${role === "ADMIN" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
-              }`}
-          >
-            University Admin
-          </button>
-        </div>
-
         <form onSubmit={handleSubmit} className="space-y-4">
 
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Full Name</label>
-            <input
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              required
-              className="w-full px-3 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-              placeholder="As on your official records"
-            />
-          </div>
+
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Full Name</label>
             <input
@@ -256,19 +188,6 @@ export default function Register() {
 
           {role === "ADMIN" && (
             <>
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Institution Wallet</label>
-                <button
-                  type="button"
-                  onClick={connectWallet}
-                  disabled={isConnecting}
-                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border bg-background text-sm font-medium hover:bg-muted transition"
-                >
-                  <Wallet className="w-4 h-4 text-muted-foreground" />
-                  {walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : "Connect MetaMask"}
-                </button>
-              </div>
-
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Proof of Affiliation (PDF)</label>
                 <label className="flex flex-col items-center gap-2 p-4 rounded-lg border-2 border-dashed border-muted-foreground/20 hover:border-accent hover:bg-accent/5 transition cursor-pointer text-center">
@@ -329,9 +248,8 @@ export default function Register() {
         <div className="mt-6 text-center text-sm text-muted-foreground">
           Already have an account?{" "}
           <Link to={`/login?role=${role}`} className="text-accent font-medium hover:underline">
-            <Link to={`/login?role=${role}`} className="text-accent font-medium hover:underline">
-              Sign in
-            </Link>
+            Sign in
+          </Link>
         </div>
       </div>
     </div>

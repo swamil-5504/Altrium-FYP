@@ -26,12 +26,9 @@ class AuthService:
                 detail="Invalid credentials",
             )
             
-        if user.role == "ADMIN" and not user.is_legal_admin_verified:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Admin account pending verification. Please wait for platform admin approval."
-            )
-            
+        # Verification check removed to allow unverified admins to get a token and poll status.
+        # Guardrails should be implemented on specific sensitive endpoints instead.
+
         return AuthService.issue_token_pair(str(user.id))
 
     @staticmethod

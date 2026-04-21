@@ -3,12 +3,9 @@ import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { ArrowLeft, KeyRound, Mail, Loader2 } from "lucide-react";
 
 
-
-
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import axios from "@/api/axios";
-
 
 
 export default function Login() {
@@ -20,8 +17,6 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-
-
 
 
 
@@ -39,11 +34,16 @@ export default function Login() {
       await login(email, password, false);
 
       const me = await axios.get("/users/me");
-      const userRole = me.data.role as "ADMIN" | "STUDENT";
+      const userRole = me.data.role as "ADMIN" | "STUDENT" | "SUPERADMIN";
+
+      if (userRole === "SUPERADMIN") {
+        toast.success("Successfully logged in as Superadmin!");
+        navigate("/superadmin");
+        return;
+      }
 
       if (userRole !== role) {
         await logout();
-        toast.error(`You are a ${userRole}, but you tried to login as a ${role}.`);
         toast.error(`You are a ${userRole}, but you tried to login as a ${role}.`);
         return;
       }
@@ -86,7 +86,6 @@ export default function Login() {
       />
 
 
-
       <Link
         to="/"
         className="absolute top-8 left-8 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition"
@@ -109,7 +108,7 @@ export default function Login() {
           <button
             type="button"
             onClick={() => setRole("STUDENT")}
-            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${role === "STUDENT" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+            className={`py-2 text-sm font-medium rounded-md transition-all ${role === "STUDENT" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
           >
             Student
@@ -117,7 +116,7 @@ export default function Login() {
           <button
             type="button"
             onClick={() => setRole("ADMIN")}
-            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${role === "ADMIN" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+            className={`py-2 text-sm font-medium rounded-md transition-all ${role === "ADMIN" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
           >
             Admin
@@ -128,11 +127,8 @@ export default function Login() {
         <form onSubmit={handleSubmit} className="space-y-4">
 
 
-
-
           <div className="space-y-1.5">
             <label className="text-sm font-medium">
-              Email Address
               Email Address
             </label>
             <div className="relative">
@@ -142,14 +138,11 @@ export default function Login() {
                 required
                 className="w-full pl-9 pr-4 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
                 placeholder="Ex. mail@university.edu"
-                placeholder="Ex. mail@university.edu"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
           </div>
-
-
 
 
 
@@ -186,9 +179,8 @@ export default function Login() {
         <div className="mt-6 text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{" "}
           <Link to={`/register?role=${role}`} className="text-accent font-medium hover:underline">
-            <Link to={`/register?role=${role}`} className="text-accent font-medium hover:underline">
-              Register here
-            </Link>
+            Register here
+          </Link>
         </div>
       </div>
     </div>

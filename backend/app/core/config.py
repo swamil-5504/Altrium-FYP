@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     PRIVATE_KEY: Optional[str] = None
 
     # Superadmin seeding
-    SUPERADMIN_EMAIL: str = "admin"
+    SUPERADMIN_EMAIL: str = "admin@altrium.com"
     SUPERADMIN_PASSWORD: str = "123"
 
 
