@@ -13,6 +13,7 @@ import qrcode
 from app.crud.crud import CredentialCRUD
 from app.models.models import Credential, User, UserRole
 from app.schemas.schemas import CredentialCreate, CredentialStatus, CredentialUpdate
+from app.services.pdf_validation import validate_pdf_upload
 from web3 import Web3
 from app.core.config import settings
 
@@ -337,36 +338,16 @@ class DegreeService:
                 detail="Not authorized",
             )
 
-        # Validate content type
-        if file.content_type not in ("application/pdf",):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Only PDF files are accepted",
-            )
-
-        # Basic File Scanning: Verify PDF integrity
-        try:
-            from pypdf import PdfReader
-            import io
-            # Read first few bytes to verify it's a readable PDF
-            pdf_data = await file.read(1024 * 1024) # Read 1MB for scanning
-            PdfReader(io.BytesIO(pdf_data))
-            await file.seek(0) # Reset stream for saving
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid or malformed PDF file: {str(e)}"
-            )
+        pdf_bytes = await validate_pdf_upload(file)
 
         _ensure_upload_dir()
-
 
         # Store with a unique name based on the credential id
         filename = f"{credential_id}.pdf"
         dest = UPLOAD_DIR / filename
 
         with open(dest, "wb") as buf:
-            shutil.copyfileobj(file.file, buf)
+            buf.write(pdf_bytes)
 
         # Persist the path in the record
         credential.document_path = str(dest)

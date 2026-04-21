@@ -73,7 +73,7 @@ class TestAuthentication:
             "/api/v1/auth/register",
             json={
                 "email": "student@altrium.test",
-                "password": "Other123!",
+                "password": "Other123!Secure",
                 "role": "STUDENT",
             },
         )
@@ -83,7 +83,7 @@ class TestAuthentication:
     async def test_login_returns_token_pair(self, client: AsyncClient, registered_student: dict):
         r = await client.post(
             "/api/v1/auth/login",
-            json={"email": "student@altrium.test", "password": "Student123!"},
+            json={"email": "student@altrium.test", "password": "Student123!Secure"},
         )
         assert r.status_code == 200
         body = r.json()
@@ -95,7 +95,7 @@ class TestAuthentication:
     async def test_login_wrong_password_rejected(self, client: AsyncClient, registered_student: dict):
         r = await client.post(
             "/api/v1/auth/login",
-            json={"email": "student@altrium.test", "password": "WrongPass!"},
+            json={"email": "student@altrium.test", "password": "WrongPass1!Secure"},
         )
         assert r.status_code == 401
         assert "Invalid credentials" in r.json()["detail"]
@@ -103,14 +103,14 @@ class TestAuthentication:
     async def test_login_unknown_email_rejected(self, client: AsyncClient):
         r = await client.post(
             "/api/v1/auth/login",
-            json={"email": "nobody@nowhere.com", "password": "anything"},
+            json={"email": "nobody@nowhere.com", "password": "AnythingWorks1!"},
         )
         assert r.status_code == 401
 
     async def test_token_refresh_issues_new_pair(self, client: AsyncClient, registered_student: dict):
         login = await client.post(
             "/api/v1/auth/login",
-            json={"email": "student@altrium.test", "password": "Student123!"},
+            json={"email": "student@altrium.test", "password": "Student123!Secure"},
         )
         refresh_token = login.json()["refresh_token"]
 
@@ -601,7 +601,7 @@ async def user_to_delete(client: AsyncClient) -> dict:
         "/api/v1/auth/register",
         json={
             "email": "ephemeral@altrium.test",
-            "password": "Ephemeral123!",
+            "password": "Ephemeral123!Secure",
             "full_name": "Ephemeral User",
             "role": "STUDENT",
         },
@@ -625,7 +625,7 @@ class TestSuperadminOperations:
     ):
         r = await client.post(
             "/api/v1/auth/login",
-            json={"email": "ephemeral@altrium.test", "password": "Ephemeral123!"},
+            json={"email": "ephemeral@altrium.test", "password": "Ephemeral123!Secure"},
         )
         assert r.status_code == 401
 

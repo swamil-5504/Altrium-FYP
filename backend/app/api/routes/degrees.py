@@ -3,11 +3,16 @@ from uuid import UUID
 
 import io
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, StreamingResponse
 
-from app.api.deps.auth import get_current_user, require_role
+from app.api.deps.auth import (
+    get_current_user,
+    require_admin_with_wallet,
+    require_role,
+)
 from app.core.config import settings
+from app.core.limiter import limiter
 from app.models.models import User, UserRole
 from app.schemas.schemas import CredentialCreate, CredentialResponse, CredentialStatus, CredentialUpdate
 from app.services.degree_service import DegreeService
@@ -37,7 +42,8 @@ async def get_degrees(current_user: User = Depends(get_current_user)):
 
 
 @router.get("/public", response_model=List[CredentialResponse])
-async def get_public_degrees(prn_number: str = None):
+@limiter.limit("30/minute")
+async def get_public_degrees(request: Request, prn_number: str = None):
     if prn_number:
         creds = await DegreeService.get_public_by_prn(prn_number)
     else:
@@ -58,7 +64,7 @@ async def get_degree(
 async def update_degree_status(
     credential_id: UUID,
     status: CredentialStatus,
-    current_user: User = Depends(require_role(UserRole.ADMIN)),
+    current_user: User = Depends(require_admin_with_wallet),
 ):
     cred = await DegreeService.update_status(credential_id, status, current_user.id)
     return _to_response(cred)
@@ -68,7 +74,7 @@ async def update_degree_status(
 async def update_degree(
     credential_id: UUID,
     credential_update: CredentialUpdate,
-    current_user: User = Depends(require_role(UserRole.ADMIN)),
+    current_user: User = Depends(require_admin_with_wallet),
 ):
     cred = await DegreeService.update(credential_id, credential_update, current_user.id)
     return _to_response(cred)
@@ -77,7 +83,7 @@ async def update_degree(
 @router.delete("/{credential_id}")
 async def delete_degree(
     credential_id: UUID,
-    current_user: User = Depends(require_role(UserRole.ADMIN)),
+    current_user: User = Depends(require_admin_with_wallet),
 ):
     await DegreeService.delete(credential_id)
     return {"detail": "Degree deleted"}
@@ -86,7 +92,7 @@ async def delete_degree(
 @router.patch("/{credential_id}/revoke", response_model=CredentialResponse)
 async def revoke_degree(
     credential_id: UUID,
-    current_user: User = Depends(require_role(UserRole.ADMIN)),
+    current_user: User = Depends(require_admin_with_wallet),
 ):
     """Revoke a previously minted SBT credential."""
     from datetime import datetime
@@ -105,7 +111,7 @@ async def revoke_degree(
 @router.post("/{credential_id}/reset", response_model=CredentialResponse)
 async def reset_degree(
     credential_id: UUID,
-    current_user: User = Depends(require_role(UserRole.ADMIN)),
+    current_user: User = Depends(require_admin_with_wallet),
 ):
     """Reset a degree submission after on-chain burn (test phase toggle)."""
     cred = await DegreeService.reset_submission(credential_id)
@@ -115,7 +121,9 @@ async def reset_degree(
 # ---- Document upload & download ----
 
 @router.post("/{credential_id}/document", response_model=CredentialResponse)
+@limiter.limit("20/minute")
 async def upload_document(
+    request: Request,
     credential_id: UUID,
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),

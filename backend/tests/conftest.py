@@ -92,7 +92,7 @@ async def registered_admin(client: AsyncClient) -> dict:
         "/api/v1/auth/register",
         json={
             "email": "admin@altrium.test",
-            "password": "Admin123!",
+            "password": "Admin123!Secure",
             "full_name": "University Admin",
             "role": "ADMIN",
             "college_name": "Altrium University",
@@ -106,7 +106,7 @@ async def registered_admin(client: AsyncClient) -> dict:
 async def admin_token(client: AsyncClient, registered_admin: dict) -> str:
     r = await client.post(
         "/api/v1/auth/login",
-        json={"email": "admin@altrium.test", "password": "Admin123!"},
+        json={"email": "admin@altrium.test", "password": "Admin123!Secure"},
     )
     assert r.status_code == 200, f"Admin login failed: {r.text}"
     return r.json()["access_token"]
@@ -118,7 +118,7 @@ async def registered_student(client: AsyncClient) -> dict:
         "/api/v1/auth/register",
         json={
             "email": "student@altrium.test",
-            "password": "Student123!",
+            "password": "Student123!Secure",
             "full_name": "Test Student",
             "role": "STUDENT",
             "college_name": "Altrium University",
@@ -133,7 +133,7 @@ async def registered_student(client: AsyncClient) -> dict:
 async def student_token(client: AsyncClient, registered_student: dict) -> str:
     r = await client.post(
         "/api/v1/auth/login",
-        json={"email": "student@altrium.test", "password": "Student123!"},
+        json={"email": "student@altrium.test", "password": "Student123!Secure"},
     )
     assert r.status_code == 200, f"Student login failed: {r.text}"
     return r.json()["access_token"]

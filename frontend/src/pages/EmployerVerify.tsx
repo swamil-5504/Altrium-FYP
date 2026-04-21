@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "@/api/axios";
+import { extractErrorMessage } from "@/utils/errors";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ScrollReveal } from "@/components/ScrollReveal";
@@ -116,12 +117,8 @@ const EmployerVerify: React.FC = () => {
       if (list.length > 0) setResult(list[0]);
       else setResult(null);
     } catch (err: unknown) {
-      const detail =
-        typeof err === "object" && err && "response" in err
-          ? (err as { response?: { data?: { detail?: string } } }).response?.data?.detail
-          : undefined;
       console.error(err);
-      toast.error(detail || "Failed to verify credential.");
+      toast.error(extractErrorMessage(err, "Failed to verify credential."));
       setResult(null);
     } finally {
       setLoading(false);

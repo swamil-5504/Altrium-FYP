@@ -8,10 +8,14 @@ from app.core.security import hash_password, verify_password
 # all methods are async now because beanie operations are async
 class UserCRUD:
     @staticmethod
+    def _norm_email(email: str) -> str:
+        return (email or "").strip().lower()
+
+    @staticmethod
     async def create(user_create: UserCreate) -> User:
         hashed_password = hash_password(user_create.password)
         user = User(
-            email=user_create.email,
+            email=UserCRUD._norm_email(user_create.email),
             full_name=user_create.full_name,
             hashed_password=hashed_password,
             role=user_create.role,
@@ -24,7 +28,7 @@ class UserCRUD:
 
     @staticmethod
     async def get_by_email(email: str) -> Optional[User]:
-        return await User.find_one(User.email == email)
+        return await User.find_one(User.email == UserCRUD._norm_email(email))
 
     @staticmethod
     async def get_by_id(user_id: UUID) -> Optional[User]:

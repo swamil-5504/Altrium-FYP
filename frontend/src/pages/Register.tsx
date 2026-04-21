@@ -5,6 +5,7 @@ import { ArrowLeft, UserPlus, Mail, KeyRound, Building2, FileText } from "lucide
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import axios from "@/api/axios";
+import { PasswordStrengthChecklist } from "@/components/PasswordStrengthChecklist";
 
 
 export default function Register() {
@@ -228,12 +229,17 @@ export default function Register() {
               <input
                 type="password"
                 required
+                minLength={12}
+                maxLength={128}
+                pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{12,128}"
+                title="At least 12 characters, including uppercase, lowercase, a digit, and a symbol."
                 className="w-full pl-9 pr-4 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
                 placeholder="Create a strong password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
+            <PasswordStrengthChecklist password={password} className="pt-1" />
           </div>
 
           <button

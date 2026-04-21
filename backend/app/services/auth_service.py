@@ -1,7 +1,18 @@
 from fastapi import HTTPException, status
 
 from app.core.config import settings
-from app.core.security import create_access_token, create_refresh_token, decode_token
+from datetime import datetime
+
+from app.core.security import (
+    REFRESH_TOKEN_TYPE,
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+    hash_password,
+    verify_password,
+)
+from app.crud.crud import UserCRUD
+from app.models.models import BlacklistedToken, User
 from app.crud.crud import UserCRUD
 from app.schemas.schemas import LoginRequest, RegisterRequest
 
@@ -44,8 +55,8 @@ class AuthService:
         }
 
     @staticmethod
-    def refresh(refresh_token: str) -> dict:
-        payload = decode_token(refresh_token)
+    async def refresh(refresh_token: str) -> dict:
+        payload = decode_token(refresh_token, expected_type=REFRESH_TOKEN_TYPE)
         if not payload:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -58,4 +69,45 @@ class AuthService:
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid refresh token",
             )
+
+        if await BlacklistedToken.find_one({"token": refresh_token}):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Refresh token has been revoked",
+            )
+
         return AuthService.issue_token_pair(str(user_id))
+
+    @staticmethod
+    async def reset_password_direct(email: str, new_password: str) -> bool:
+        """Dev-only self-serve reset. Overwrites the stored hash.
+
+        Returns True if a user was found and updated, False otherwise. Callers
+        in dev mode should surface this to the admin so they aren't left
+        guessing. In production this flow is disabled entirely (config guard).
+        """
+        user = await UserCRUD.get_by_email(email)
+        if user is None:
+            return False
+        user.hashed_password = hash_password(new_password)
+        user.updated_at = datetime.utcnow()
+        await user.save()
+        return True
+
+    @staticmethod
+    async def change_password(
+        user: User, old_password: str, new_password: str
+    ) -> None:
+        if not verify_password(old_password, user.hashed_password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Current password is incorrect",
+            )
+        if verify_password(new_password, user.hashed_password):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="New password must differ from the current one",
+            )
+        user.hashed_password = hash_password(new_password)
+        user.updated_at = datetime.utcnow()
+        await user.save()

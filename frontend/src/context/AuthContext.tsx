@@ -80,7 +80,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = async () => {
     try {
-      await axios.post("/auth/logout");
+      const refresh_token = sessionStorage.getItem("refresh_token");
+      await axios.post("/auth/logout", refresh_token ? { refresh_token } : {});
     } catch {
       // Best-effort: backend logout is optional for stateless JWT.
     } finally {

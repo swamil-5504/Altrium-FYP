@@ -1,10 +1,15 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from typing import List
 from uuid import UUID
 from app.schemas.schemas import CredentialCreate, CredentialResponse, CredentialStatus, CredentialUpdate
 from app.models.models import User, UserRole
-from app.api.deps.auth import get_current_user, require_role, require_verified_admin
+from app.api.deps.auth import (
+    get_current_user,
+    require_admin_with_wallet,
+    require_role,
+)
 from app.core.config import settings
+from app.core.limiter import limiter
 from app.services.degree_service import DegreeService
 
 router = APIRouter(prefix=f"{settings.API_V1_STR}/credentials", tags=["credentials"])
@@ -34,7 +39,8 @@ async def get_credentials(
     return [_to_response(c) for c in creds]
 
 @router.get("/public", response_model=List[CredentialResponse])
-async def get_public_credentials(prn_number: str):
+@limiter.limit("30/minute")
+async def get_public_credentials(request: Request, prn_number: str):
     creds = await DegreeService.get_public_by_prn(prn_number)
     return [_to_response(c) for c in creds]
 
@@ -50,7 +56,7 @@ async def get_credential(
 async def update_credential_status(
     credential_id: UUID,
     status: CredentialStatus,
-    current_user: User = Depends(require_verified_admin)
+    current_user: User = Depends(require_admin_with_wallet)
 ):
     cred = await DegreeService.update_status(credential_id, status, current_user.id)
     return _to_response(cred)
@@ -60,7 +66,7 @@ async def update_credential_status(
 async def update_credential(
     credential_id: UUID,
     credential_update: CredentialUpdate,
-    current_user: User = Depends(require_verified_admin),
+    current_user: User = Depends(require_admin_with_wallet),
 ):
     """
     ADMIN approves a submission and persists on-chain tx details.
@@ -72,7 +78,7 @@ async def update_credential(
 @router.delete("/{credential_id}")
 async def delete_credential(
     credential_id: UUID,
-    current_user: User = Depends(require_verified_admin)
+    current_user: User = Depends(require_admin_with_wallet)
 ):
     await DegreeService.delete(credential_id)
     return {"detail": "Credential deleted"}

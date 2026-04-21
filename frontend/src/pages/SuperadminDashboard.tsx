@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import axios from "@/api/axios";
+import { extractErrorMessage } from "@/utils/errors";
 import { Navbar } from "@/components/Navbar";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { Shield, ShieldAlert, ShieldCheck, UserCog, Users, Trash2, BarChart3, Clock, CheckCircle, GraduationCap, Building2, TrendingUp } from "lucide-react";
@@ -12,6 +13,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -75,11 +77,7 @@ const SuperadminDashboard: React.FC = () => {
       await fetchUsers();
     } catch (err: unknown) {
       console.error(err);
-      const detail =
-        typeof err === "object" && err && "response" in err
-          ? (err as { response?: { data?: { detail?: string } } }).response?.data?.detail
-          : undefined;
-      toast.error(detail || "Approval failed. Check backend logs.", { id: toastId });
+      toast.error(extractErrorMessage(err, "Approval failed. Check backend logs."), { id: toastId });
     } finally {
       setVerifyingId(null);
     }
@@ -660,6 +658,9 @@ const SuperadminDashboard: React.FC = () => {
                             <Building2 className="w-5 h-5 text-primary" />
                             {college} Students
                           </DialogTitle>
+                          <DialogDescription>
+                            Students enrolled at {college}.
+                          </DialogDescription>
                         </DialogHeader>
                         <div className="overflow-y-auto flex-1 mt-4 -mx-6 px-6">
                           <div className="rounded-xl border bg-card overflow-hidden">
