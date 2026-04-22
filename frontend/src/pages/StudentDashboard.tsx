@@ -29,6 +29,10 @@ const StudentDashboard: React.FC = () => {
   const [submissions, setSubmissions] = useState<Credential[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const approvedCount = submissions.filter((sub) => sub.status === "APPROVED").length;
+  const rejectedCount = submissions.filter((sub) => sub.status === "REJECTED").length;
+  const pendingCount = submissions.filter((sub) => sub.status === "PENDING").length;
+
   const [showForm, setShowForm] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
@@ -159,10 +163,10 @@ const StudentDashboard: React.FC = () => {
       <div className="pt-24 pb-20">
         <div className="container mx-auto px-4 max-w-4xl">
           <ScrollReveal>
-            <div className="flex items-center justify-between mb-8 flex-col sm:flex-row gap-3">
+            <div className="flex flex-col gap-4 mb-8 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold mb-1">Student Dashboard</h1>
-                <p className="text-muted-foreground">Submit your degree for verification (Web2 upload + Web3 mint by Admin).</p>
+                <p className="text-muted-foreground">Track your degree submission status and upload documents for approval.</p>
               </div>
               <button
                 onClick={() => setShowForm(!showForm)}
@@ -171,6 +175,26 @@ const StudentDashboard: React.FC = () => {
                 <Upload className="w-4 h-4" />
                 New Submission
               </button>
+            </div>
+          </ScrollReveal>
+
+          <ScrollReveal delay={50}>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+              <div className="rounded-3xl border bg-card p-5 shadow-sm">
+                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3">Pending review</p>
+                <div className="text-3xl font-bold tabular-nums">{pendingCount}</div>
+                <p className="text-sm text-muted-foreground mt-2">Submissions waiting for university admin verification</p>
+              </div>
+              <div className="rounded-3xl border bg-card p-5 shadow-sm">
+                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3">Approved</p>
+                <div className="text-3xl font-bold tabular-nums">{approvedCount}</div>
+                <p className="text-sm text-muted-foreground mt-2">Verified submissions with on-chain minting in progress</p>
+              </div>
+              <div className="rounded-3xl border bg-card p-5 shadow-sm">
+                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3">Rejected</p>
+                <div className="text-3xl font-bold tabular-nums">{rejectedCount}</div>
+                <p className="text-sm text-muted-foreground mt-2">Submissions that need resubmission or correction</p>
+              </div>
             </div>
           </ScrollReveal>
 
