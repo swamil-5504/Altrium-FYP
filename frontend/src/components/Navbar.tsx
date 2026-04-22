@@ -34,6 +34,7 @@ export const Navbar = () => {
         enabled: true,
       }
     ] : []),
+    { key: "docs", to: "/docs", label: "Docs", enabled: true },
   ];
 
   const renderNavItem = (link: NavItem) => {

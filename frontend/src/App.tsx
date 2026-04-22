@@ -13,6 +13,22 @@ import Login from "./pages/Login.tsx";
 import Register from "./pages/Register.tsx";
 import ForgotPassword from "./pages/ForgotPassword.tsx";
 import Web3Guide from "./pages/Web3Guide.tsx";
+import DocsLayout from "./pages/docs/DocsLayout.tsx";
+import DocsIndex from "./pages/docs/Index.tsx";
+import DocsIntroduction from "./pages/docs/sections/Introduction.tsx";
+import DocsQuickstart from "./pages/docs/sections/Quickstart.tsx";
+import DocsArchitecture from "./pages/docs/sections/Architecture.tsx";
+import DocsRoles from "./pages/docs/sections/Roles.tsx";
+import DocsWalkthroughs from "./pages/docs/sections/Walkthroughs.tsx";
+import DocsApiReference from "./pages/docs/sections/ApiReference.tsx";
+import DocsSmartContracts from "./pages/docs/sections/SmartContracts.tsx";
+import DocsSecurity from "./pages/docs/sections/Security.tsx";
+import DocsOperations from "./pages/docs/sections/Operations.tsx";
+import DocsCli from "./pages/docs/sections/Cli.tsx";
+import DocsSupport from "./pages/docs/sections/Support.tsx";
+import DocsBulkUpload from "./pages/docs/coming-soon/BulkUploadWizard.tsx";
+import DocsEmailService from "./pages/docs/coming-soon/EmailService.tsx";
+import DocsLanguageSupport from "./pages/docs/coming-soon/LanguageSupport.tsx";
 import PendingVerification from "./pages/PendingVerification.tsx";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -83,6 +99,23 @@ const App = () => (
               }
             />
             <Route path="/guide" element={<Web3Guide />} />
+            <Route path="/docs" element={<DocsLayout />}>
+              <Route index element={<DocsIndex />} />
+              <Route path="introduction" element={<DocsIntroduction />} />
+              <Route path="quickstart" element={<DocsQuickstart />} />
+              <Route path="architecture" element={<DocsArchitecture />} />
+              <Route path="roles" element={<DocsRoles />} />
+              <Route path="walkthroughs" element={<DocsWalkthroughs />} />
+              <Route path="api-reference" element={<DocsApiReference />} />
+              <Route path="smart-contracts" element={<DocsSmartContracts />} />
+              <Route path="security" element={<DocsSecurity />} />
+              <Route path="operations" element={<DocsOperations />} />
+              <Route path="cli" element={<DocsCli />} />
+              <Route path="support" element={<DocsSupport />} />
+              <Route path="bulk-upload-wizard" element={<DocsBulkUpload />} />
+              <Route path="email-service" element={<DocsEmailService />} />
+              <Route path="language-support" element={<DocsLanguageSupport />} />
+            </Route>
             <Route path="/pending-verification" element={<PendingVerification />} />
             <Route path="/verify" element={<EmployerVerify />} />
             <Route path="*" element={<NotFound />} />
