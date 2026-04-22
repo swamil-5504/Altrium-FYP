@@ -163,6 +163,10 @@ const UniversityAdmin: React.FC = () => {
     [credentials],
   );
 
+  const totalStudents = students.length;
+  const totalPending = pendingCredentials.length;
+  const totalApproved = approvedCredentials.length;
+
   useEffect(() => {
     void fetchCredentials();
   }, [user?.id]);
@@ -498,6 +502,26 @@ const UniversityAdmin: React.FC = () => {
                 </Link>
               </div>
             </div>
+
+            <ScrollReveal delay={60}>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <div className="rounded-3xl border bg-card p-5 shadow-sm">
+                  <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3">Pending submissions</div>
+                  <div className="text-3xl font-bold tabular-nums">{totalPending}</div>
+                  <p className="text-sm text-muted-foreground mt-2">Items waiting for admin review and mint approval.</p>
+                </div>
+                <div className="rounded-3xl border bg-card p-5 shadow-sm">
+                  <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3">Approved degrees</div>
+                  <div className="text-3xl font-bold tabular-nums">{totalApproved}</div>
+                  <p className="text-sm text-muted-foreground mt-2">Credentials already verified and issued on-chain.</p>
+                </div>
+                <div className="rounded-3xl border bg-card p-5 shadow-sm">
+                  <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3">Students enrolled</div>
+                  <div className="text-3xl font-bold tabular-nums">{totalStudents}</div>
+                  <p className="text-sm text-muted-foreground mt-2">Active student profiles linked to this university.</p>
+                </div>
+              </div>
+            </ScrollReveal>
 
             {/* Wallet Warning */}
             {walletAddress && user?.wallet_address && walletAddress.toLowerCase() !== user.wallet_address.toLowerCase() && (
