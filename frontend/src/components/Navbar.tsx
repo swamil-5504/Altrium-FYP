@@ -34,6 +34,7 @@ export const Navbar = () => {
         enabled: true,
       }
     ] : []),
+    { key: "docs", to: "/docs", label: "Docs", enabled: true },
   ];
 
   const renderNavItem = (link: NavItem) => {
@@ -134,9 +135,11 @@ export const Navbar = () => {
           <button
             className="text-muted-foreground hover:text-foreground transition-colors"
             onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
           >
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
+
         </div>
       </div>
 

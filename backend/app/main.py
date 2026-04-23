@@ -12,22 +12,89 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
 from app.crud.crud import UserCRUD
 from app.schemas.schemas import UserCreate
-from app.models.models import UserRole
+from app.models.models import UserRole, BlacklistedToken
 from app.api.routes import auth, users, credentials, degrees
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from app.core.limiter import limiter
+from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from app.core.security_headers import SecurityHeadersMiddleware
 
 configure_logging()
+
 logger = logging.getLogger(__name__)
+
+
+INSECURE_SECRETS = {"change-me-in-production", "your-secret-key-change-in-production", ""}
+INSECURE_PASSWORDS = {"123", "admin", "password", "changeme", "REPLACE_ME_IN_ENV", ""}
+
+
+def _enforce_production_security() -> None:
+    """Refuse to boot with dev-only secrets / wildcard trust in production."""
+    if settings.ENVIRONMENT.lower() != "production":
+        return
+    problems = []
+    if settings.SECRET_KEY in INSECURE_SECRETS or len(settings.SECRET_KEY) < 32:
+        problems.append("SECRET_KEY is unset, too short, or a known default")
+    if settings.SUPERADMIN_PASSWORD in INSECURE_PASSWORDS or len(settings.SUPERADMIN_PASSWORD) < 12:
+        problems.append("SUPERADMIN_PASSWORD is weak or a known default")
+    if "*" in settings.BACKEND_CORS_ORIGINS:
+        problems.append("BACKEND_CORS_ORIGINS must not be '*' in production")
+    if "*" in settings.ALLOWED_HOSTS:
+        problems.append("ALLOWED_HOSTS must not be '*' in production")
+    if settings.ALLOW_SELF_SERVE_PASSWORD_RESET:
+        problems.append(
+            "ALLOW_SELF_SERVE_PASSWORD_RESET must be false in production "
+            "(wire up email-token-based reset instead)"
+        )
+    if problems:
+        raise RuntimeError(
+            "Refusing to start in production with insecure config: "
+            + "; ".join(problems)
+        )
+
+
+async def _reconcile_blacklist_indexes(db) -> None:
+    """Drop any pre-existing `expires_at` index on blacklisted_tokens that was
+    created before we switched to a TTL index. Mongo refuses to redefine an
+    index with different options, so we must drop-then-recreate. Safe to run
+    on every boot — Beanie will (re)create the correct TTL index immediately
+    after init_beanie() runs.
+    """
+    try:
+        existing = await db["blacklisted_tokens"].index_information()
+    except Exception as exc:  # collection may not exist yet on a fresh DB
+        logger.debug("blacklisted_tokens index_information skipped: %s", exc)
+        return
+
+    for name, spec in existing.items():
+        if name == "_id_":
+            continue
+        keys = spec.get("key", [])
+        # Drop any `expires_at` index that is NOT already a TTL index.
+        if any(k[0] == "expires_at" for k in keys) and "expireAfterSeconds" not in spec:
+            try:
+                await db["blacklisted_tokens"].drop_index(name)
+                logger.info("Dropped stale non-TTL index '%s' on blacklisted_tokens", name)
+            except Exception as exc:
+                logger.warning("Could not drop index '%s': %s", name, exc)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
+    _enforce_production_security()
     logger.info("Starting Altrium - Degree Verification System...")
     # initialize Mongo client
     session.init_db()
     client: AsyncIOMotorClient = session.client  # type: ignore
     db = client[settings.MONGODB_DB]
+    # Drop legacy non-TTL indexes BEFORE Beanie tries to (re)create them.
+    await _reconcile_blacklist_indexes(db)
     # initialize beanie with our document models
-    await init_beanie(database=db, document_models=[models.User, models.Credential])
+    await init_beanie(database=db, document_models=[models.User, models.Credential, models.BlacklistedToken])
+
 
     # Seed a generic Superadmin
     try:
@@ -62,9 +129,20 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Add SlowAPI exception handler
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Industry-Grade Middlewares
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.ALLOWED_HOSTS)
+
 # Add CORS middleware (must come before routes so preflight OPTIONS works)
+
 app.add_middleware(
     CORSMiddleware,
+
     allow_origins=settings.BACKEND_CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],

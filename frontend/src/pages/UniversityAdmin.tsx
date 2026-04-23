@@ -464,7 +464,7 @@ const UniversityAdmin: React.FC = () => {
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold mb-1">College Admin</h1>
                 <p className="text-muted-foreground mb-3">Review submissions and mint verified degrees to Sepolia.</p>
-                
+
                 <div className="flex flex-wrap items-center gap-x-5 gap-y-2 py-2 px-3 rounded-lg bg-muted/40 border text-xs sm:text-sm">
                   <div className="flex items-center gap-1.5">
                     <UserIcon className="w-3.5 h-3.5 text-accent" />

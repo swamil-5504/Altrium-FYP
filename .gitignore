@@ -261,3 +261,12 @@ broadcast/
 /contracts/cache/solidity-files-cache.json
 /backend/package-lock.json
 /backend/app/core/AltriumDegreeSBTABI.json
+
+# Local Uploads & Sample Data (Security/Cleanliness)
+backend/uploads/
+*.pdf
+*.xlsx
+*.csv
+!frontend/public/*.pdf
+!frontend/public/*.xlsx
+

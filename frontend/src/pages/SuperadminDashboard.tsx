@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import axios from "@/api/axios";
+import { extractErrorMessage } from "@/utils/errors";
 import { Navbar } from "@/components/Navbar";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import {
@@ -33,6 +34,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -100,11 +102,7 @@ const SuperadminDashboard: React.FC = () => {
       await fetchUsers(true);
     } catch (err: unknown) {
       console.error(err);
-      const detail =
-        typeof err === "object" && err && "response" in err
-          ? (err as { response?: { data?: { detail?: string } } }).response?.data?.detail
-          : undefined;
-      toast.error(detail || "Approval failed. Check backend logs.", { id: toastId });
+      toast.error(extractErrorMessage(err, "Approval failed. Check backend logs."), { id: toastId });
     } finally {
       setVerifyingId(null);
     }
@@ -374,18 +372,16 @@ const SuperadminDashboard: React.FC = () => {
                 <button
                   key={tab.id}
                   onClick={() => { setActiveTab(tab.id); setSearchQuery(""); }}
-                  className={`relative flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                    activeTab === tab.id
+                  className={`relative flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === tab.id
                       ? "bg-background shadow-md text-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-background/40"
-                  }`}
+                    }`}
                 >
                   <tab.icon className="w-4 h-4 flex-shrink-0" />
                   <span className="hidden sm:inline">{tab.label}</span>
                   {tab.badge !== null && tab.badge > 0 && (
-                    <span className={`ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold text-white ${
-                      activeTab === tab.id ? (tab.badgeColor || "bg-accent") : "bg-muted-foreground/60"
-                    }`}>
+                    <span className={`ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold text-white ${activeTab === tab.id ? (tab.badgeColor || "bg-accent") : "bg-muted-foreground/60"
+                      }`}>
                       {tab.badge}
                     </span>
                   )}
@@ -424,25 +420,23 @@ const SuperadminDashboard: React.FC = () => {
                 ].map((stat, i) => (
                   <div
                     key={i}
-                    className={`relative p-5 rounded-2xl border bg-card overflow-hidden group hover:shadow-lg transition-all duration-300 ${
-                      stat.urgent ? "border-amber-500/30 shadow-[0_0_20px_rgba(245,158,11,0.06)]" : "hover:border-accent/20"
-                    }`}
+                    className={`relative p-5 rounded-2xl border bg-card overflow-hidden group hover:shadow-lg transition-all duration-300 ${stat.urgent ? "border-amber-500/30 shadow-[0_0_20px_rgba(245,158,11,0.06)]" : "hover:border-accent/20"
+                      }`}
                   >
                     <div
                       className="absolute top-0 right-0 w-20 h-20 rounded-bl-full opacity-5 group-hover:opacity-10 transition-opacity"
                       style={{
                         background: stat.color === "amber" ? "#f59e0b"
                           : stat.color === "green" ? "#10b981"
-                          : stat.color === "accent" ? "hsl(var(--accent))"
-                          : "hsl(var(--primary))"
+                            : stat.color === "accent" ? "hsl(var(--accent))"
+                              : "hsl(var(--primary))"
                       }}
                     />
-                    <div className={`inline-flex p-2 rounded-xl mb-3 ${
-                      stat.color === "amber" ? "bg-amber-500/10 text-amber-500"
+                    <div className={`inline-flex p-2 rounded-xl mb-3 ${stat.color === "amber" ? "bg-amber-500/10 text-amber-500"
                         : stat.color === "green" ? "bg-green-500/10 text-green-500"
-                        : stat.color === "accent" ? "bg-accent/10 text-accent"
-                        : "bg-primary/10 text-primary"
-                    }`}>
+                          : stat.color === "accent" ? "bg-accent/10 text-accent"
+                            : "bg-primary/10 text-primary"
+                      }`}>
                       <stat.icon className="w-4 h-4" />
                     </div>
                     <div className="text-2xl md:text-3xl font-bold tracking-tight tabular-nums">{stat.value}</div>
@@ -810,7 +804,7 @@ const SuperadminDashboard: React.FC = () => {
                     {searchQuery ? `${filteredStudents.length} of ${studentList.length}` : studentList.length} Students
                   </span>
                   <span className="text-muted-foreground text-xs ml-2">
-                    across {Object.keys(filteredStudents.reduce((a, s) => { if(s.college_name) a[s.college_name] = 1; return a; }, {} as Record<string,number>)).length} universities
+                    across {Object.keys(filteredStudents.reduce((a, s) => { if (s.college_name) a[s.college_name] = 1; return a; }, {} as Record<string, number>)).length} universities
                   </span>
                 </div>
               </div>

@@ -68,9 +68,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       password,
       full_name: fullName,
       role,
-      college_name: collegeName,
-      wallet_address: walletAddress,
-      prn_number: prnNumber
+      college_name: collegeName || null,
+      wallet_address: walletAddress || null,
+      prn_number: prnNumber || null
     });
     if (role === "STUDENT" || role === "ADMIN") {
       await login(email, password);
@@ -80,7 +80,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = async () => {
     try {
-      await axios.post("/auth/logout");
+      const refresh_token = sessionStorage.getItem("refresh_token");
+      await axios.post("/auth/logout", refresh_token ? { refresh_token } : {});
     } catch {
       // Best-effort: backend logout is optional for stateless JWT.
     } finally {

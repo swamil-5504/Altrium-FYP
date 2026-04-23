@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "@/api/axios";
 import { toast } from "sonner";
+import { extractErrorMessage } from "@/utils/errors";
 import { Navbar } from "@/components/Navbar";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { Upload, FileText, CreditCard, Clock, Shield, XCircle, ArrowRight, Eye } from "lucide-react";
@@ -151,11 +152,7 @@ const StudentDashboard: React.FC = () => {
 
       await fetchSubmissions();
     } catch (err: unknown) {
-      const detail =
-        typeof err === "object" && err && "response" in err
-          ? (err as { response?: { data?: { detail?: string } } }).response?.data?.detail
-          : undefined;
-      toast.error(detail || "Failed to submit degree.");
+      toast.error(extractErrorMessage(err, "Failed to submit degree."));
     }
   };
 

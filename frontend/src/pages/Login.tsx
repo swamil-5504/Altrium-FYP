@@ -6,6 +6,7 @@ import { ArrowLeft, KeyRound, Mail, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import axios from "@/api/axios";
+import { extractErrorMessage } from "@/utils/errors";
 
 
 export default function Login() {
@@ -60,17 +61,14 @@ export default function Login() {
         navigate("/student");
       }
     } catch (err: unknown) {
-      const detail =
-        typeof err === "object" && err && "response" in err
-          ? (err as { response?: { data?: { detail?: string } } }).response?.data?.detail
-          : undefined;
+      const message = extractErrorMessage(err, "Login failed");
 
-      if (detail && detail.includes("pending verification")) {
+      if (message.includes("pending verification")) {
         navigate("/pending-verification");
         return;
       }
 
-      toast.error(detail || "Login failed");
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -176,7 +174,13 @@ export default function Login() {
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-muted-foreground">
+        <div className="mt-4 text-center text-sm">
+          <Link to="/forgot-password" className="text-accent font-medium hover:underline">
+            Forgot your password?
+          </Link>
+        </div>
+
+        <div className="mt-4 text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{" "}
           <Link to={`/register?role=${role}`} className="text-accent font-medium hover:underline">
             Register here

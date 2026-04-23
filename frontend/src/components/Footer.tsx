@@ -79,6 +79,7 @@ export const Footer = () => {
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group"
+                  aria-label="View Sepolia Etherscan (opens in new tab)"
                 >
                   <Blocks className="w-3.5 h-3.5 text-accent/70 group-hover:text-accent transition-colors" />
                   Sepolia Etherscan
@@ -91,6 +92,7 @@ export const Footer = () => {
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group"
+                  aria-label="Visit MetaMask Wallet (opens in new tab)"
                 >
                   <ExternalLink className="w-3.5 h-3.5 text-accent/70 group-hover:text-accent transition-colors" />
                   MetaMask Wallet
@@ -103,12 +105,14 @@ export const Footer = () => {
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group"
+                  aria-label="View GitHub Repository (opens in new tab)"
                 >
                   <Github className="w-3.5 h-3.5 text-accent/70 group-hover:text-accent transition-colors" />
                   GitHub Repository
                   <ExternalLink className="w-3 h-3 opacity-50" />
                 </a>
               </li>
+
             </ul>
           </div>
         </div>
