@@ -27,9 +27,7 @@ class CredentialStatus(str, Enum):
 WALLET_ADDRESS_PATTERN = r"^0x[a-fA-F0-9]{40}$"
 # Ethereum transaction hash: 0x + 64 hex chars (32 bytes).
 TX_HASH_PATTERN = r"^0x[a-fA-F0-9]{64}$"
-# University PRN: alphanumeric + dashes, 3–32 chars. Feeds on-chain
-# keccak(prn-college) so we keep the character set tight.
-PRN_NUMBER_PATTERN = r"^[A-Za-z0-9\-]{3,32}$"
+
 # Human names / college names: printable unicode, no control chars.
 # Length-capped at 100 / 150 to avoid denial-of-service via huge strings
 # and to keep PDF rendering bounded.
@@ -47,12 +45,12 @@ def _strip_control(value: Optional[str]) -> Optional[str]:
 # User schemas
 # ---------------------------------------------------------------------------
 class UserBase(BaseModel):
-    email: EmailStr
+    email: str
     full_name: Optional[str] = Field(None, max_length=100)
     role: UserRole = UserRole.STUDENT
     college_name: Optional[str] = Field(None, max_length=150)
     wallet_address: Optional[str] = Field(None, pattern=WALLET_ADDRESS_PATTERN)
-    prn_number: Optional[str] = Field(None, pattern=PRN_NUMBER_PATTERN)
+    prn_number: Optional[str] = None
 
     @field_validator("full_name", "college_name", mode="before")
     @classmethod
@@ -61,22 +59,9 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    password: str = Field(..., min_length=12, max_length=128)
+    password: str = Field(...)
 
-    @field_validator("password")
-    @classmethod
-    def _password_complexity(cls, v: str) -> str:
-        # Require at least one lower, one upper, one digit, one symbol.
-        # This is intentionally strict — relax only if you also add MFA.
-        if not re.search(r"[a-z]", v):
-            raise ValueError("Password must contain a lowercase letter")
-        if not re.search(r"[A-Z]", v):
-            raise ValueError("Password must contain an uppercase letter")
-        if not re.search(r"\d", v):
-            raise ValueError("Password must contain a digit")
-        if not re.search(r"[^A-Za-z0-9]", v):
-            raise ValueError("Password must contain a symbol")
-        return v
+
 
 
 class UserUpdate(BaseModel):
@@ -127,7 +112,7 @@ class CredentialCreate(CredentialBase):
     issued_to_id: Optional[UUID] = None
     token_id: Optional[int] = Field(None, ge=0)
     tx_hash: Optional[str] = Field(None, pattern=TX_HASH_PATTERN)
-    prn_number: Optional[str] = Field(None, pattern=PRN_NUMBER_PATTERN)
+    prn_number: Optional[str] = None
     college_name: Optional[str] = Field(None, max_length=150)
 
     @field_validator("college_name", mode="before")
@@ -183,7 +168,7 @@ class TokenResponse(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    email: str
     password: str
     ignore_verification: bool = False
 
@@ -199,24 +184,13 @@ class RegisterRequest(UserCreate):
 class _PasswordPayload(BaseModel):
     """Base class that shares the complexity validator with UserCreate."""
 
-    new_password: str = Field(..., min_length=12, max_length=128)
+    new_password: str = Field(...)
 
-    @field_validator("new_password")
-    @classmethod
-    def _complexity(cls, v: str) -> str:
-        if not re.search(r"[a-z]", v):
-            raise ValueError("Password must contain a lowercase letter")
-        if not re.search(r"[A-Z]", v):
-            raise ValueError("Password must contain an uppercase letter")
-        if not re.search(r"\d", v):
-            raise ValueError("Password must contain a digit")
-        if not re.search(r"[^A-Za-z0-9]", v):
-            raise ValueError("Password must contain a symbol")
-        return v
+
 
 
 class ForgotPasswordRequest(_PasswordPayload):
-    email: EmailStr
+    email: str
 
 
 class ChangePasswordRequest(_PasswordPayload):

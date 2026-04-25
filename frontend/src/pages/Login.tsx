@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
-import { ArrowLeft, KeyRound, Mail, Loader2 } from "lucide-react";
+import { ArrowLeft, KeyRound, Mail, Loader2, Eye, EyeOff } from "lucide-react";
 
 
 import { toast } from "sonner";
@@ -17,12 +17,29 @@ export default function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
 
 
-  const { login, logout } = useAuth();
+  const { login, logout, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (user) {
+      if (user.role === "SUPERADMIN") {
+        navigate("/superadmin");
+      } else if (user.role === "ADMIN") {
+        if (user.is_legal_admin_verified) {
+          navigate("/university");
+        } else {
+          navigate("/pending-verification");
+        }
+      } else if (user.role === "STUDENT") {
+        navigate("/student");
+      }
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,12 +57,6 @@ export default function Login() {
       if (userRole === "SUPERADMIN") {
         toast.success("Successfully logged in as Superadmin!");
         navigate("/superadmin");
-        return;
-      }
-
-      if (userRole !== role) {
-        await logout();
-        toast.error(`You are a ${userRole}, but you tried to login as a ${role}.`);
         return;
       }
 
@@ -149,13 +160,20 @@ export default function Login() {
             <div className="relative">
               <KeyRound className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
-                className="w-full pl-9 pr-4 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+                className="w-full pl-9 pr-12 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </div>
 

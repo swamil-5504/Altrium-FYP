@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
-import { ArrowLeft, UserPlus, Mail, KeyRound, Building2, FileText } from "lucide-react";
+import { ArrowLeft, UserPlus, Mail, KeyRound, Building2, FileText, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import axios from "@/api/axios";
-import { PasswordStrengthChecklist } from "@/components/PasswordStrengthChecklist";
+
 
 
 export default function Register() {
@@ -13,6 +13,7 @@ export default function Register() {
   const roleFromQuery = searchParams.get("role") === "ADMIN" ? "ADMIN" : "STUDENT";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState("");
   const [collegeName, setCollegeName] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -227,19 +228,21 @@ export default function Register() {
             <div className="relative">
               <KeyRound className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
-                minLength={12}
-                maxLength={128}
-                pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{12,128}"
-                title="At least 12 characters, including uppercase, lowercase, a digit, and a symbol."
-                className="w-full pl-9 pr-4 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
-                placeholder="Create a strong password"
+                className="w-full pl-9 pr-12 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+                placeholder="Create a password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
-            <PasswordStrengthChecklist password={password} className="pt-1" />
           </div>
 
           <button

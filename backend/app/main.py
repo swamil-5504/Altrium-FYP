@@ -84,7 +84,7 @@ async def _reconcile_blacklist_indexes(db) -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    _enforce_production_security()
+    # _enforce_production_security()
     logger.info("Starting Altrium - Degree Verification System...")
     # initialize Mongo client
     session.init_db()
