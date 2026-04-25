@@ -21,7 +21,7 @@ interface IAuthContext {
   isAuthenticated: boolean;
   isPendingVerification: boolean;
   login: (email: string, password: string, ignoreVerification?: boolean) => Promise<void>;
-  register: (email: string, password: string, fullName: string, role: "ADMIN" | "STUDENT" | "SUPERADMIN", collegeName?: string, walletAddress?: string, prnNumber?: string) => Promise<any>;
+  register: (email: string, password: string, fullName: string, role: "ADMIN" | "STUDENT" | "SUPERADMIN", collegeName?: string, walletAddress?: string, prnNumber?: string, telegramId?: string) => Promise<any>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -73,7 +73,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser(userResponse.data);
   };
 
-  const register = async (email: string, password: string, fullName: string, role: "ADMIN" | "STUDENT" | "SUPERADMIN", collegeName?: string, walletAddress?: string, prnNumber?: string) => {
+  const register = async (email: string, password: string, fullName: string, role: "ADMIN" | "STUDENT" | "SUPERADMIN", collegeName?: string, walletAddress?: string, prnNumber?: string, telegramId?: string) => {
     const response = await axios.post("/auth/register", {
       email,
       password,
@@ -81,7 +81,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       role,
       college_name: collegeName || null,
       wallet_address: walletAddress || null,
-      prn_number: prnNumber || null
+      prn_number: prnNumber || null,
+      telegram_id: telegramId || null
     });
     if (role === "STUDENT" || role === "ADMIN") {
       await login(email, password);
