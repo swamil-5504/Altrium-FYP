@@ -1,7 +1,8 @@
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { ShieldCheck, GraduationCap, Building2, Briefcase, ArrowRight, FileCheck, Blocks, Search, ChevronRight } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { Navbar } from "@/components/Navbar";
@@ -9,12 +10,29 @@ import { Footer } from "@/components/Footer";
 import ShapeGrid from "@/components/ShapeGrid";
 
 const Index = () => {
-  const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (mounted && user) {
+      if (user.role === "SUPERADMIN") {
+        navigate("/superadmin");
+      } else if (user.role === "ADMIN") {
+        if (user.is_legal_admin_verified) {
+          navigate("/university");
+        } else {
+          navigate("/pending-verification");
+        }
+      } else if (user.role === "STUDENT") {
+        navigate("/student");
+      }
+    }
+  }, [mounted, user, navigate]);
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
