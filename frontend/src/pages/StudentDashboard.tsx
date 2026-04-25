@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { extractErrorMessage } from "@/utils/errors";
 import { Navbar } from "@/components/Navbar";
 import { ScrollReveal } from "@/components/ScrollReveal";
-import { Upload, FileText, CreditCard, Clock, Shield, XCircle, ArrowRight, Eye } from "lucide-react";
+import { Upload, FileText, CreditCard, Clock, Shield, XCircle, ArrowRight, Eye, User as UserIcon, Mail, Building2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 
@@ -164,9 +164,26 @@ const StudentDashboard: React.FC = () => {
         <div className="container mx-auto px-4 max-w-4xl">
           <ScrollReveal>
             <div className="flex flex-col gap-4 mb-8 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold mb-1">Student Dashboard</h1>
-                <p className="text-muted-foreground">Track your degree submission status and upload documents for approval.</p>
+              <div className="space-y-4">
+                <div>
+                  <h1 className="text-2xl md:text-3xl font-bold mb-1">Student Dashboard</h1>
+                  <p className="text-muted-foreground text-sm">Track your degree submission status and upload documents for approval.</p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-2 py-2 px-3 rounded-lg bg-muted/40 border text-xs sm:text-sm w-fit">
+                  <div className="flex items-center gap-1.5">
+                    <UserIcon className="w-3.5 h-3.5 text-accent" />
+                    <span className="font-semibold">{user?.full_name || "Student"}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <Mail className="w-3.5 h-3.5" />
+                    <span>{user?.email}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <Building2 className="w-3.5 h-3.5" />
+                    <span>{user?.college_name}</span>
+                  </div>
+                </div>
               </div>
               <button
                 onClick={() => setShowForm(!showForm)}
