@@ -51,6 +51,7 @@ class UserBase(BaseModel):
     college_name: Optional[str] = Field(None, max_length=150)
     wallet_address: Optional[str] = Field(None, pattern=WALLET_ADDRESS_PATTERN)
     prn_number: Optional[str] = None
+    telegram_id: Optional[str] = None
 
     @field_validator("full_name", "college_name", mode="before")
     @classmethod
@@ -81,6 +82,8 @@ class UserResponse(BaseModel):
     role: UserRole = UserRole.STUDENT
     college_name: Optional[str] = None
     wallet_address: Optional[str] = None
+    phone_number: Optional[str] = None
+    telegram_id: Optional[str] = None
     prn_number: Optional[str] = None
     is_active: bool
     is_legal_admin_verified: bool = False
