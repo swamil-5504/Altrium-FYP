@@ -4,12 +4,14 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 
 import en from '@/locales/en.json';
 import hi from '@/locales/hi.json';
+import mr from '@/locales/mr.json';
 
 export const APP_LANGUAGE_STORAGE_KEY = 'app-language';
 
 const resources = {
   en: { translation: en },
   hi: { translation: hi },
+  mr: { translation: mr },
 };
 
 i18n

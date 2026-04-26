@@ -2,6 +2,8 @@
   "common": {
     "language": "Language",
     "english": "English",
+    "hindi": "Hindi",
+    "marathi": "Marathi",
     "devanagari": "Hindi",
     "logout": "Logout",
     "back": "Back",
@@ -19,6 +21,72 @@
     "superadminDashboard": "Superadmin Dashboard",
     "submissions": "Submissions",
     "myDegree": "My Degree"
+  },
+  "footer": {
+    "tagline": "Tamper-proof degrees, verified on the Ethereum blockchain.",
+    "platform": "Platform",
+    "studentPortal": "Student Portal",
+    "universityAdmin": "University Admin",
+    "verifyDegree": "Verify a Degree",
+    "registerInstitution": "Register Institution",
+    "resources": "Resources",
+    "sepolia": "Sepolia Etherscan",
+    "metamask": "MetaMask Wallet",
+    "github": "GitHub Repository",
+    "copyright": "© {{year}} Altrium. All rights reserved.",
+    "bottomLine": "Academic Integrity, Anchored on the Blockchain.",
+    "aria": {
+      "sepolia": "View Sepolia Etherscan (opens in new tab)",
+      "metamask": "Visit MetaMask Wallet (opens in new tab)",
+      "github": "View GitHub Repository (opens in new tab)"
+    }
+  },
+  "docsUi": {
+    "documentation": "Documentation",
+    "overview": "Overview",
+    "menu": "Menu",
+    "close": "Close",
+    "searchPlaceholder": "Search docs...",
+    "viewOnGithub": "View on GitHub",
+    "verifyCredential": "Verify a credential",
+    "browseByArea": "Browse by area",
+    "comingSoon": "Coming soon",
+    "readyToVerify": "Ready to verify a credential?",
+    "verifyCtaDescription": "Employers can look up any Altrium-issued degree by PRN - no account required.",
+    "goToVerify": "Go to /verify",
+    "indexTitle": "Build, run, and integrate Altrium.",
+    "indexSummary": "Altrium is a full-stack platform for issuing tamper-proof academic credentials as Soulbound Tokens on Ethereum. These docs walk you through the whole thing - from the first docker compose up to minting a degree, verifying it as an employer, and extending the API.",
+    "highlights": {
+      "quickstart": "Spin up the full stack in 15 minutes with Docker.",
+      "apiReference": "Every REST endpoint, auth requirements, and rate limits.",
+      "smartContracts": "Registry & SBT ABI surface, deployment workflow.",
+      "security": "Auth, RBAC, PDF validation, transport hardening."
+    },
+    "groups": {
+      "getStarted": "Get started",
+      "platform": "Platform",
+      "guides": "Guides",
+      "reference": "Reference",
+      "platformOps": "Platform ops",
+      "help": "Help",
+      "comingSoon": "Coming soon"
+    },
+    "links": {
+      "introduction": { "label": "Introduction", "description": "What Altrium is and who it's for." },
+      "quickstart": { "label": "Quickstart", "description": "Stand up the full stack in 15 minutes." },
+      "architecture": { "label": "Architecture", "description": "How the four layers fit together." },
+      "roles": { "label": "User Roles", "description": "Super Admin, University, Student, Employer." },
+      "walkthroughs": { "label": "Walkthroughs", "description": "End-to-end flows for every role." },
+      "apiReference": { "label": "API Reference", "description": "Every REST endpoint, scoped by role." },
+      "smartContracts": { "label": "Smart Contracts", "description": "Registry & SBT ABI surface." },
+      "security": { "label": "Security", "description": "Auth, RBAC, uploads, transport." },
+      "operations": { "label": "Operations", "description": "Envs, logs, database." },
+      "cli": { "label": "CLI & Scripts", "description": "Backend and Foundry tooling." },
+      "support": { "label": "Support", "description": "Troubleshooting, FAQ, contact." },
+      "bulkUploadWizard": { "label": "Bulk Upload Wizard", "description": "Issue an entire graduating cohort in one import." },
+      "emailService": { "label": "Email Service", "description": "Transactional notifications & templated mail." },
+      "languageSupport": { "label": "Language & Script Support", "description": "i18n + non-Latin credential rendering." }
+    }
   },
   "login": {
     "title": "Altrium - Institutional Degree Platform",

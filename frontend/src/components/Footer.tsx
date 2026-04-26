@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
 import { Blocks, GraduationCap, Building2, Search, ExternalLink, Github, Shield } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export const Footer = () => {
+  const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
 
   return (
@@ -22,13 +24,13 @@ export const Footer = () => {
               <span className="font-bold text-lg tracking-tight">Altrium</span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
-              Tamper-proof degrees, verified on the Ethereum blockchain.
+              {t("footer.tagline")}
             </p>
           </div>
 
           {/* Product column */}
           <div className="flex flex-col gap-4">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Platform</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{t("footer.platform")}</p>
             <ul className="flex flex-col gap-3">
               <li>
                 <Link
@@ -36,7 +38,7 @@ export const Footer = () => {
                   className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group"
                 >
                   <GraduationCap className="w-3.5 h-3.5 text-accent/70 group-hover:text-accent transition-colors" />
-                  Student Portal
+                  {t("footer.studentPortal")}
                 </Link>
               </li>
               <li>
@@ -45,7 +47,7 @@ export const Footer = () => {
                   className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group"
                 >
                   <Building2 className="w-3.5 h-3.5 text-accent/70 group-hover:text-accent transition-colors" />
-                  University Admin
+                  {t("footer.universityAdmin")}
                 </Link>
               </li>
               <li>
@@ -54,7 +56,7 @@ export const Footer = () => {
                   className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group"
                 >
                   <Search className="w-3.5 h-3.5 text-accent/70 group-hover:text-accent transition-colors" />
-                  Verify a Degree
+                  {t("footer.verifyDegree")}
                 </Link>
               </li>
               <li>
@@ -63,7 +65,7 @@ export const Footer = () => {
                   className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group"
                 >
                   <Shield className="w-3.5 h-3.5 text-accent/70 group-hover:text-accent transition-colors" />
-                  Register Institution
+                  {t("footer.registerInstitution")}
                 </Link>
               </li>
             </ul>
@@ -71,7 +73,7 @@ export const Footer = () => {
 
           {/* Resources column */}
           <div className="flex flex-col gap-4">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Resources</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{t("footer.resources")}</p>
             <ul className="flex flex-col gap-3">
               <li>
                 <a
@@ -79,10 +81,10 @@ export const Footer = () => {
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group"
-                  aria-label="View Sepolia Etherscan (opens in new tab)"
+                  aria-label={t("footer.aria.sepolia")}
                 >
                   <Blocks className="w-3.5 h-3.5 text-accent/70 group-hover:text-accent transition-colors" />
-                  Sepolia Etherscan
+                  {t("footer.sepolia")}
                   <ExternalLink className="w-3 h-3 opacity-50" />
                 </a>
               </li>
@@ -92,10 +94,10 @@ export const Footer = () => {
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group"
-                  aria-label="Visit MetaMask Wallet (opens in new tab)"
+                  aria-label={t("footer.aria.metamask")}
                 >
                   <ExternalLink className="w-3.5 h-3.5 text-accent/70 group-hover:text-accent transition-colors" />
-                  MetaMask Wallet
+                  {t("footer.metamask")}
                   <ExternalLink className="w-3 h-3 opacity-50" />
                 </a>
               </li>
@@ -105,10 +107,10 @@ export const Footer = () => {
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group"
-                  aria-label="View GitHub Repository (opens in new tab)"
+                  aria-label={t("footer.aria.github")}
                 >
                   <Github className="w-3.5 h-3.5 text-accent/70 group-hover:text-accent transition-colors" />
-                  GitHub Repository
+                  {t("footer.github")}
                   <ExternalLink className="w-3 h-3 opacity-50" />
                 </a>
               </li>
@@ -122,11 +124,11 @@ export const Footer = () => {
       <div className="border-t">
         <div className="container mx-auto px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-muted-foreground">
-            © {currentYear} Altrium. All rights reserved.
+            {t("footer.copyright", { year: currentYear })}
           </p>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Blocks className="w-3 h-3 text-accent" />
-            <span>Academic Integrity, Anchored on the Blockchain.</span>
+            <span>{t("footer.bottomLine")}</span>
           </div>
         </div>
       </div>
