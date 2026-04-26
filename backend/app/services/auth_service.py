@@ -2,6 +2,7 @@ from fastapi import HTTPException, status
 
 from app.core.config import settings
 from datetime import datetime
+import asyncio
 
 from app.core.security import (
     REFRESH_TOKEN_TYPE,
@@ -12,9 +13,11 @@ from app.core.security import (
     verify_password,
 )
 from app.crud.crud import UserCRUD
+from app.crud.crud import UserCRUD
 from app.models.models import BlacklistedToken, User
 from app.crud.crud import UserCRUD
 from app.schemas.schemas import LoginRequest, RegisterRequest
+from app.services.telegram_bot import service as tg_service
 
 
 class AuthService:
@@ -26,7 +29,16 @@ class AuthService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email already registered",
             )
-        return await UserCRUD.create(request)
+        user = await UserCRUD.create(request)
+        # Fire-and-forget registration notification
+        asyncio.create_task(
+            tg_service.notify_registration(
+                user.full_name or user.email, 
+                user.telegram_id
+            )
+        )
+
+        return user
 
     @staticmethod
     async def login(request: LoginRequest) -> dict:

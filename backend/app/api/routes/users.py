@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List
 from uuid import UUID
+import asyncio
 import os
 from web3 import Web3
 from app.schemas.schemas import UserResponse, WalletPatchRequest
@@ -8,6 +9,7 @@ from app.models.models import User, UserRole
 from app.crud.crud import UserCRUD
 from app.api.deps.auth import get_current_user, require_role, require_verified_admin
 from app.core.config import settings
+# Telegram notification service used below via local import
 
 router = APIRouter(prefix=f"{settings.API_V1_STR}/users", tags=["users"])
 
@@ -106,6 +108,17 @@ async def verify_admin(
         from datetime import datetime
         user.updated_at = datetime.utcnow()
         await user.save()
+
+        from app.services.telegram_bot import service as tg_service
+        # Fire-and-forget notification to the admin
+        asyncio.create_task(
+            tg_service.notify_verification(
+                user.full_name or user.email,
+                user.college_name or "your institution",
+                user.telegram_id
+            )
+        )
+
         return user
     except HTTPException:
         raise

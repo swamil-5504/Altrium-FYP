@@ -14,15 +14,12 @@ class UserCRUD:
     @staticmethod
     async def create(user_create: UserCreate) -> User:
         hashed_password = hash_password(user_create.password)
-        user = User(
-            email=UserCRUD._norm_email(user_create.email),
-            full_name=user_create.full_name,
-            hashed_password=hashed_password,
-            role=user_create.role,
-            college_name=user_create.college_name,
-            wallet_address=user_create.wallet_address,
-            prn_number=user_create.prn_number
-        )
+        # Dump the schema to a dict, remove the raw password, and add the hashed one
+        user_data = user_create.model_dump(exclude={"password"})
+        user_data["hashed_password"] = hashed_password
+        user_data["email"] = UserCRUD._norm_email(user_create.email)
+        
+        user = User(**user_data)
         await user.insert()
         return user
 

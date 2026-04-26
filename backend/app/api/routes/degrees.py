@@ -1,5 +1,6 @@
 from typing import List
 from uuid import UUID
+import asyncio
 
 import io
 
@@ -16,6 +17,7 @@ from app.core.limiter import limiter
 from app.models.models import User, UserRole
 from app.schemas.schemas import CredentialCreate, CredentialResponse, CredentialStatus, CredentialUpdate
 from app.services.degree_service import DegreeService
+# Telegram notification service used below via local import
 
 router = APIRouter(prefix=f"{settings.API_V1_STR}/degrees", tags=["degrees"])
 
@@ -60,6 +62,38 @@ async def get_degree(
     return _to_response(cred)
 
 
+async def _notify_degree_rejected(cred) -> None:
+    """Helper to fetch student and send rejection notice."""
+    from app.crud.crud import UserCRUD
+    from app.services.telegram_bot import service as tg_service
+    
+    student = await UserCRUD.get_by_id(cred.issued_to_id)
+    if student:
+        await tg_service.notify_degree_rejection(
+            student.full_name or student.email,
+            cred.title,
+            None, # Reason not currently stored in DB, using generic dashboard link
+            student.telegram_id
+        )
+
+async def _notify_degree_approved(cred) -> None:
+    """Send degree-approved email to the student (fire-and-forget helper)."""
+    if cred.status != CredentialStatus.APPROVED:
+        return
+    try:
+        student = await User.get(cred.issued_to_id)
+        if student:
+            from app.services.telegram_bot import service as tg_service
+            await tg_service.notify_degree_approval(
+                student_name=student.full_name or student.email,
+                degree_title=cred.title,
+                tx_hash=cred.tx_hash,
+                chat_id=student.telegram_id
+            )
+    except Exception:
+        pass  # Non-critical — logged inside notification service
+
+
 @router.patch("/{credential_id}/status", response_model=CredentialResponse)
 async def update_degree_status(
     credential_id: UUID,
@@ -67,6 +101,11 @@ async def update_degree_status(
     current_user: User = Depends(require_admin_with_wallet),
 ):
     cred = await DegreeService.update_status(credential_id, status, current_user.id)
+
+    # Notify student if degree was just approved
+    if status == CredentialStatus.APPROVED:
+        asyncio.create_task(_notify_degree_approved(cred))
+
     return _to_response(cred)
 
 
@@ -77,6 +116,13 @@ async def update_degree(
     current_user: User = Depends(require_admin_with_wallet),
 ):
     cred = await DegreeService.update(credential_id, credential_update, current_user.id)
+
+    # Notify student if degree was just approved or rejected
+    if credential_update.status == CredentialStatus.APPROVED:
+        asyncio.create_task(_notify_degree_approved(cred))
+    elif credential_update.status == CredentialStatus.REJECTED:
+        asyncio.create_task(_notify_degree_rejected(cred))
+
     return _to_response(cred)
 
 
