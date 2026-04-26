@@ -36,12 +36,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   useEffect(() => {
     const checkAuth = async () => {
+      // Legacy cleanup: ensure no tokens are left in localStorage to avoid confusion
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+
       const token = sessionStorage.getItem("access_token");
       if (token) {
         try {
           const response = await axios.get("/users/me");
           setUser(response.data);
-        } catch {
+          console.log("Auth restored:", response.data.email, response.data.role);
+        } catch (err) {
+          console.error("Auth restoration failed:", err);
           sessionStorage.removeItem("access_token");
           sessionStorage.removeItem("refresh_token");
         }
@@ -53,6 +59,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const login = async (email: string, password: string, ignoreVerification = false) => {
+    // Clear any existing session before logging in
+    sessionStorage.removeItem("access_token");
+    sessionStorage.removeItem("refresh_token");
+    setUser(null);
+
     const response = await axios.post("/auth/login", { email, password, ignore_verification: ignoreVerification });
 
     sessionStorage.setItem("access_token", response.data.access_token);
@@ -68,9 +79,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       password,
       full_name: fullName,
       role,
-      college_name: collegeName,
-      wallet_address: walletAddress,
-      prn_number: prnNumber
+      college_name: collegeName || null,
+      wallet_address: walletAddress || null,
+      prn_number: prnNumber || null
     });
     if (role === "STUDENT" || role === "ADMIN") {
       await login(email, password);
@@ -80,7 +91,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = async () => {
     try {
-      await axios.post("/auth/logout");
+      const refresh_token = sessionStorage.getItem("refresh_token");
+      await axios.post("/auth/logout", refresh_token ? { refresh_token } : {});
     } catch {
       // Best-effort: backend logout is optional for stateless JWT.
     } finally {

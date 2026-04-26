@@ -5,6 +5,7 @@ from datetime import datetime
 
 from beanie import Document, Indexed
 from pydantic import Field
+from pymongo import IndexModel, ASCENDING
 
 # we keep the same enums so they can be reused in schemas
 class UserRole(str, PyEnum):
@@ -59,3 +60,14 @@ class Credential(Document):
 
     class Settings:
         name = "credentials"
+
+class BlacklistedToken(Document):
+    token: str
+    expires_at: datetime
+
+    class Settings:
+        name = "blacklisted_tokens"
+        indexes = [
+            IndexModel([("token", ASCENDING)], unique=True),
+            IndexModel([("expires_at", ASCENDING)], expireAfterSeconds=0),
+        ]

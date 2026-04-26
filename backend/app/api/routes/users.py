@@ -3,10 +3,10 @@ from typing import List
 from uuid import UUID
 import os
 from web3 import Web3
-from app.schemas.schemas import UserResponse
+from app.schemas.schemas import UserResponse, WalletPatchRequest
 from app.models.models import User, UserRole
 from app.crud.crud import UserCRUD
-from app.api.deps.auth import get_current_user, require_role
+from app.api.deps.auth import get_current_user, require_role, require_verified_admin
 from app.core.config import settings
 
 router = APIRouter(prefix=f"{settings.API_V1_STR}/users", tags=["users"])
@@ -31,7 +31,7 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
 
 @router.get("/", response_model=List[UserResponse])
 async def get_all_users(
-    current_user: User = Depends(require_role(UserRole.ADMIN, UserRole.SUPERADMIN))
+    current_user: User = Depends(require_verified_admin)
 ):
     return await UserCRUD.get_all()
 
@@ -114,16 +114,23 @@ async def verify_admin(
 
 @router.patch("/me/wallet", response_model=UserResponse)
 async def update_wallet_address(
-    body: dict,
-    current_user: User = Depends(require_role(UserRole.ADMIN, UserRole.SUPERADMIN))
+    body: WalletPatchRequest,
+    current_user: User = Depends(require_verified_admin),
 ):
     """
-    Saves the admin's wallet address. If already verified, calls addUniversity
-    on-chain to grant roles in both Registry and SBT contracts.
+    Saves the verified admin's wallet address and grants UNIVERSITY_ROLE on-chain.
+
+    The request schema's `pattern=WALLET_ADDRESS_PATTERN` rejects anything that
+    is not an EVM / Ethereum 0x-prefixed 20-byte hex address (so Solana,
+    Bitcoin, Cosmos, etc. never pass — the admin cannot connect via a non-EVM
+    wallet and therefore cannot reach web3 actions).
+
+    Only reachable after the Superadmin has approved the admin
+    (is_legal_admin_verified=True). Unverified admins get a 403 from the
+    dependency — they must wait on the pending-verification screen.
     """
-    wallet_address = body.get("wallet_address", "").strip()
-    if not wallet_address:
-        raise HTTPException(status_code=400, detail="wallet_address is required")
+    # Normalise to EIP-55 checksum so on-chain comparisons are stable.
+    wallet_address = Web3.to_checksum_address(body.wallet_address)
 
     current_user.wallet_address = wallet_address
     from datetime import datetime
@@ -166,7 +173,7 @@ async def update_wallet_address(
 
 @router.get("/my-students", response_model=List[UserResponse])
 async def get_my_students(
-    current_user: User = Depends(require_role(UserRole.ADMIN))
+    current_user: User = Depends(require_verified_admin)
 ):
     """Return all students enrolled in the same college as this admin."""
     if not current_user.college_name:

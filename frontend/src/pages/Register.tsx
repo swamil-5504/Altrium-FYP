@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
-import { ArrowLeft, UserPlus, Mail, KeyRound, Building2, FileText } from "lucide-react";
+import { ArrowLeft, UserPlus, Mail, KeyRound, Building2, FileText, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import axios from "@/api/axios";
+
 
 
 export default function Register() {
@@ -12,6 +13,7 @@ export default function Register() {
   const roleFromQuery = searchParams.get("role") === "ADMIN" ? "ADMIN" : "STUDENT";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState("");
   const [collegeName, setCollegeName] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -49,7 +51,7 @@ export default function Register() {
 
     setLoading(true);
     try {
-      const user = await register(email, password, fullName, role, collegeName, "", prnNumber);
+      const user = await register(email, password, fullName, role, collegeName, undefined, prnNumber);
 
       if (role === "ADMIN" && file && user?.id) {
         const formData = new FormData();
@@ -64,11 +66,22 @@ export default function Register() {
         navigate("/student");
       }
     } catch (err: unknown) {
-      const detail =
-        typeof err === "object" && err && "response" in err
-          ? (err as { response?: { data?: { detail?: string } } }).response?.data?.detail
-          : undefined;
-      toast.error(detail || "Registration failed");
+      console.error("Registration error:", err);
+      let errorMessage = "Registration failed";
+
+      if (typeof err === "object" && err && "response" in err) {
+        const responseData = (err as any).response?.data;
+        if (responseData) {
+          if (typeof responseData.detail === "string") {
+            errorMessage = responseData.detail;
+          } else if (Array.isArray(responseData.detail)) {
+            errorMessage = responseData.detail[0]?.msg || "Validation error";
+          } else if (responseData.message) {
+            errorMessage = responseData.message;
+          }
+        }
+      }
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -215,13 +228,20 @@ export default function Register() {
             <div className="relative">
               <KeyRound className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
-                className="w-full pl-9 pr-4 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
-                placeholder="Create a strong password"
+                className="w-full pl-9 pr-12 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+                placeholder="Create a password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </div>
 

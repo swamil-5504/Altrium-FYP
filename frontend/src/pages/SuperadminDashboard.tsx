@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import axios from "@/api/axios";
+import { extractErrorMessage } from "@/utils/errors";
 import { Navbar } from "@/components/Navbar";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import {
@@ -24,6 +25,7 @@ import {
   X,
   Layers,
   Activity,
+  Mail,
 } from "lucide-react";
 import {
   PieChart, Pie, Cell,
@@ -33,6 +35,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -100,11 +103,7 @@ const SuperadminDashboard: React.FC = () => {
       await fetchUsers(true);
     } catch (err: unknown) {
       console.error(err);
-      const detail =
-        typeof err === "object" && err && "response" in err
-          ? (err as { response?: { data?: { detail?: string } } }).response?.data?.detail
-          : undefined;
-      toast.error(detail || "Approval failed. Check backend logs.", { id: toastId });
+      toast.error(extractErrorMessage(err, "Approval failed. Check backend logs."), { id: toastId });
     } finally {
       setVerifyingId(null);
     }
@@ -374,18 +373,16 @@ const SuperadminDashboard: React.FC = () => {
                 <button
                   key={tab.id}
                   onClick={() => { setActiveTab(tab.id); setSearchQuery(""); }}
-                  className={`relative flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                    activeTab === tab.id
+                  className={`relative flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === tab.id
                       ? "bg-background shadow-md text-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-background/40"
-                  }`}
+                    }`}
                 >
                   <tab.icon className="w-4 h-4 flex-shrink-0" />
                   <span className="hidden sm:inline">{tab.label}</span>
                   {tab.badge !== null && tab.badge > 0 && (
-                    <span className={`ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold text-white ${
-                      activeTab === tab.id ? (tab.badgeColor || "bg-accent") : "bg-muted-foreground/60"
-                    }`}>
+                    <span className={`ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold text-white ${activeTab === tab.id ? (tab.badgeColor || "bg-accent") : "bg-muted-foreground/60"
+                      }`}>
                       {tab.badge}
                     </span>
                   )}
@@ -398,78 +395,52 @@ const SuperadminDashboard: React.FC = () => {
           {activeTab === "overview" && (
             <ScrollReveal delay={100}>
               {/* KPI Cards */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 {[
                   {
-                    label: "Total Users", value: users.length,
+                    label: "Total Platform Users", value: users.length,
                     icon: Users, color: "accent",
                     sub: `${verifiedAdmins.length} admins · ${studentList.length} students`
                   },
                   {
-                    label: "Pending Approvals", value: pendingAdmins.length,
+                    label: "Pending Actions", value: pendingAdmins.length,
                     icon: Clock, color: "amber",
-                    sub: pendingAdmins.length > 0 ? "Action required" : "All clear",
+                    sub: pendingAdmins.length > 0 ? "Approvals required" : "All systems nominal",
                     urgent: pendingAdmins.length > 0
                   },
                   {
-                    label: "Verified Admins", value: verifiedAdmins.length,
+                    label: "Verified Assets", value: verifiedAdmins.length + superadmins.length,
                     icon: ShieldCheck, color: "green",
-                    sub: `${superadmins.length} superadmin${superadmins.length !== 1 ? "s" : ""} included`
-                  },
-                  {
-                    label: "Credentials Issued", value: credApproved,
-                    icon: Star, color: "primary",
-                    sub: `${credPending} pending · ${credRejected} rejected`
+                    sub: `${credApproved} credentials issued`
                   },
                 ].map((stat, i) => (
                   <div
                     key={i}
-                    className={`relative p-5 rounded-2xl border bg-card overflow-hidden group hover:shadow-lg transition-all duration-300 ${
-                      stat.urgent ? "border-amber-500/30 shadow-[0_0_20px_rgba(245,158,11,0.06)]" : "hover:border-accent/20"
-                    }`}
+                    className={`relative p-6 rounded-3xl border bg-card overflow-hidden group hover:shadow-xl transition-all duration-300 ${stat.urgent ? "border-amber-500/30 shadow-[0_0_20px_rgba(245,158,11,0.06)]" : "hover:border-accent/20"
+                      }`}
                   >
                     <div
-                      className="absolute top-0 right-0 w-20 h-20 rounded-bl-full opacity-5 group-hover:opacity-10 transition-opacity"
+                      className="absolute top-0 right-0 w-24 h-24 rounded-bl-full opacity-5 group-hover:opacity-10 transition-opacity"
                       style={{
                         background: stat.color === "amber" ? "#f59e0b"
                           : stat.color === "green" ? "#10b981"
-                          : stat.color === "accent" ? "hsl(var(--accent))"
-                          : "hsl(var(--primary))"
+                            : "hsl(var(--accent))"
                       }}
                     />
-                    <div className={`inline-flex p-2 rounded-xl mb-3 ${
-                      stat.color === "amber" ? "bg-amber-500/10 text-amber-500"
+                    <div className={`inline-flex p-3 rounded-2xl mb-4 ${stat.color === "amber" ? "bg-amber-500/10 text-amber-500"
                         : stat.color === "green" ? "bg-green-500/10 text-green-500"
-                        : stat.color === "accent" ? "bg-accent/10 text-accent"
-                        : "bg-primary/10 text-primary"
-                    }`}>
-                      <stat.icon className="w-4 h-4" />
+                          : "bg-accent/10 text-accent"
+                      }`}>
+                      <stat.icon className="w-5 h-5" />
                     </div>
-                    <div className="text-2xl md:text-3xl font-bold tracking-tight tabular-nums">{stat.value}</div>
-                    <div className="text-xs font-semibold mt-0.5 text-foreground/80">{stat.label}</div>
-                    <div className="text-[10px] text-muted-foreground mt-1">{stat.sub}</div>
+                    <div className="text-3xl md:text-4xl font-bold tracking-tight tabular-nums">{stat.value}</div>
+                    <div className="text-sm font-semibold mt-1 text-foreground/80">{stat.label}</div>
+                    <div className="text-xs text-muted-foreground mt-2">{stat.sub}</div>
                   </div>
                 ))}
               </div>
 
-              {/* Credential Status Highlights */}
-              <div className="grid grid-cols-3 gap-4 mb-8">
-                {[
-                  { label: "Approved", value: credApproved, color: "#10b981", bg: "bg-green-500/8", border: "border-green-500/20", icon: CheckCircle },
-                  { label: "Pending", value: credPending, color: "#f59e0b", bg: "bg-amber-500/8", border: "border-amber-500/20", icon: Clock },
-                  { label: "Rejected", value: credRejected, color: "#ef4444", bg: "bg-red-500/8", border: "border-red-500/20", icon: X },
-                ].map((s) => (
-                  <div key={s.label} className={`p-4 rounded-2xl border ${s.border} ${s.bg} flex items-center gap-4`}>
-                    <div className="p-2.5 rounded-xl" style={{ background: `${s.color}15` }}>
-                      <s.icon className="w-5 h-5" style={{ color: s.color }} />
-                    </div>
-                    <div>
-                      <div className="text-xl font-bold tabular-nums" style={{ color: s.color }}>{s.value}</div>
-                      <div className="text-xs font-medium text-muted-foreground">{s.label} Credentials</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+
 
               {/* Charts Row */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -717,48 +688,59 @@ const SuperadminDashboard: React.FC = () => {
 
               {/* Verified Personnel */}
               <ScrollReveal delay={150}>
-                <div className="rounded-2xl border bg-card overflow-hidden shadow-sm">
-                  <div className="px-5 py-4 border-b bg-muted/20">
+                <div className="rounded-3xl border bg-card overflow-hidden shadow-sm">
+                  <div className="px-6 py-5 border-b bg-muted/20">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="p-1.5 rounded-lg bg-green-500/10">
-                          <ShieldCheck className="w-4 h-4 text-green-500" />
+                        <div className="p-2 rounded-xl bg-green-500/10 border border-green-500/15">
+                          <ShieldCheck className="w-5 h-5 text-green-500" />
                         </div>
                         <div>
-                          <h3 className="font-semibold text-sm">Verified Personnel</h3>
-                          <p className="text-xs text-muted-foreground">Active admins and superadmins</p>
+                          <h3 className="font-semibold text-base">Verified Personnel</h3>
+                          <p className="text-xs text-muted-foreground">System administrators with active credentials</p>
                         </div>
                       </div>
-                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/15">
+                      <span className="px-4 py-1.5 rounded-full text-xs font-bold bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/15">
                         {allVerifiedPersonnel.length} active
                       </span>
                     </div>
                   </div>
 
                   {allVerifiedPersonnel.length === 0 ? (
-                    <div className="py-10 text-center text-sm text-muted-foreground">
+                    <div className="py-12 text-center text-sm text-muted-foreground">
                       {searchQuery ? "No results match your search." : "No verified personnel found."}
                     </div>
                   ) : (
-                    <div className="divide-y divide-border/50">
+                    <div className="grid grid-cols-1 md:grid-cols-2 divide-y divide-x divide-border/50">
                       {allVerifiedPersonnel.map((admin) => (
-                        <div key={admin.id} className="px-5 py-3.5 flex flex-col sm:flex-row sm:items-center gap-3 hover:bg-muted/10 transition-colors">
-                          <div className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-green-400/20 to-accent/20 border border-green-500/15 flex items-center justify-center font-semibold text-green-600 dark:text-green-400 text-sm">
+                        <div key={admin.id} className="px-6 py-5 flex items-start gap-4 hover:bg-muted/10 transition-colors group">
+                          <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-green-400/20 to-accent/20 border border-green-500/15 flex items-center justify-center font-bold text-green-600 dark:text-green-400 text-lg shadow-sm group-hover:scale-105 transition-transform">
                             {admin.full_name ? admin.full_name[0].toUpperCase() : admin.email[0].toUpperCase()}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className="font-medium text-sm">{admin.full_name || "—"}</span>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-bold text-sm text-foreground truncate">{admin.full_name || "—"}</span>
                               {admin.role === "SUPERADMIN" ? (
-                                <span className="text-[9px] px-1.5 py-0.5 rounded bg-accent/15 text-accent font-black uppercase tracking-widest">Superadmin</span>
+                                <span className="text-[9px] px-2 py-0.5 rounded-full bg-accent text-accent-foreground font-black uppercase tracking-widest">Superadmin</span>
                               ) : (
-                                <span className="text-[9px] px-1.5 py-0.5 rounded bg-green-500/10 text-green-600 dark:text-green-400 font-bold uppercase tracking-widest border border-green-500/15">Admin</span>
+                                <span className="text-[9px] px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 font-bold uppercase tracking-widest border border-green-500/15">Admin</span>
                               )}
                             </div>
-                            <div className="text-xs text-muted-foreground mt-0.5 flex flex-wrap gap-x-3 gap-y-0">
-                              <span>{admin.email}</span>
-                              {admin.college_name && <span>{admin.college_name}</span>}
-                              <span>Joined {new Date(admin.created_at).toLocaleDateString()}</span>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <Mail className="w-3 h-3 opacity-70" />
+                                <span className="truncate">{admin.email}</span>
+                              </div>
+                              {admin.college_name && (
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
+                                  <Building2 className="w-3 h-3 opacity-70" />
+                                  <span>{admin.college_name}</span>
+                                </div>
+                              )}
+                              <div className="flex items-center gap-2 text-[10px] text-muted-foreground/60 pt-1">
+                                <Clock className="w-2.5 h-2.5" />
+                                <span>Joined {new Date(admin.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                              </div>
                             </div>
                           </div>
                           {admin.role !== "SUPERADMIN" && (
@@ -766,9 +748,9 @@ const SuperadminDashboard: React.FC = () => {
                               onClick={() => void handleDeleteUser(admin.id)}
                               disabled={deletingId === admin.id}
                               title="Remove Admin"
-                              className="flex-shrink-0 p-1.5 rounded-lg text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
+                              className="flex-shrink-0 p-2 rounded-xl text-destructive/60 hover:text-destructive hover:bg-destructive/10 transition-all opacity-0 group-hover:opacity-100"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           )}
                         </div>
@@ -810,7 +792,7 @@ const SuperadminDashboard: React.FC = () => {
                     {searchQuery ? `${filteredStudents.length} of ${studentList.length}` : studentList.length} Students
                   </span>
                   <span className="text-muted-foreground text-xs ml-2">
-                    across {Object.keys(filteredStudents.reduce((a, s) => { if(s.college_name) a[s.college_name] = 1; return a; }, {} as Record<string,number>)).length} universities
+                    across {Object.keys(filteredStudents.reduce((a, s) => { if (s.college_name) a[s.college_name] = 1; return a; }, {} as Record<string, number>)).length} universities
                   </span>
                 </div>
               </div>
