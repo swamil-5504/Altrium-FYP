@@ -81,8 +81,52 @@ async def _reconcile_blacklist_indexes(db) -> None:
                 logger.warning("Could not drop index '%s': %s", name, exc)
 
 
+import asyncio as _asyncio
+
+
+
+# ---- Weekly pending-degree reminder (background task) ----
+
+async def _weekly_pending_reminder_loop():
+    """Background loop: every 7 days, email each verified admin about pending degrees."""
+    WEEK_SECONDS = 7 * 24 * 60 * 60
+    # Wait 60s after startup before the first check to let the DB settle
+    await _asyncio.sleep(60)
+    while True:
+        try:
+            from app.models.models import Credential
+            from app.schemas.schemas import CredentialStatus
+            admins = await models.User.find(
+                models.User.role == UserRole.ADMIN,
+                models.User.is_legal_admin_verified == True,
+            ).to_list()
+            for admin in admins:
+                if not admin.college_name:
+                    continue
+                pending = await Credential.find(
+                    Credential.college_name == admin.college_name,
+                    Credential.status == CredentialStatus.PENDING,
+                ).count()
+                if pending > 0:
+                    from app.services.telegram_bot import service as tg_service
+                    await tg_service.notify_pending_reminder(
+                        admin_name=admin.full_name or admin.email,
+                        count=pending,
+                        college_name=admin.college_name,
+                        chat_id=admin.telegram_id
+                    )
+            logger.info("Weekly pending-degree reminder cycle complete.")
+        except Exception as exc:
+            logger.error("Weekly reminder error: %s", exc)
+        await _asyncio.sleep(WEEK_SECONDS)
+
+
+_reminder_task = None
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    global _reminder_task
     # Startup
     # _enforce_production_security()
     logger.info("Starting Altrium - Degree Verification System...")
@@ -116,10 +160,21 @@ async def lifespan(app: FastAPI):
 
         # Don't crash startup if seeding fails (e.g., transient DB issues)
         logger.error("Admin seeding failed: %s", str(e))
+
+    # Start the weekly reminder background task
+    _reminder_task = _asyncio.create_task(_weekly_pending_reminder_loop())
+    logger.info("📱 Notification service initialized (Telegram %s)",
+                "active" if settings.TELEGRAM_BOT_TOKEN else "not configured")
     
     yield
     
     # Shutdown
+    if _reminder_task:
+        _reminder_task.cancel()
+        try:
+            await _reminder_task
+        except _asyncio.CancelledError:
+            pass
     logger.info("Shutting down application...")
 
 app = FastAPI(
