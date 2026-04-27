@@ -20,6 +20,7 @@ import {
   Languages,
 } from "lucide-react";
 import type { TFunction } from "i18next";
+import { useDocsContent } from "./content";
 
 /* =============================================================
    PALETTE
@@ -137,6 +138,7 @@ export { BookOpen, Rocket, Layers, Users, Code2, Blocks, Lock, Server, Terminal,
 /* ------------------------------------------------------------------ */
 
 export const CodeBlock = ({ code, lang }: { code: string; lang?: string }) => {
+  const docs = useDocsContent();
   const [copied, setCopied] = useState(false);
   const onCopy = async () => {
     try {
@@ -166,16 +168,16 @@ export const CodeBlock = ({ code, lang }: { code: string; lang?: string }) => {
         </div>
         <button
           onClick={onCopy}
-          aria-label="Copy code"
+          aria-label={docs.shared.copyCode}
           className={`flex items-center gap-1 px-2 py-0.5 rounded-md ${palette.textMuted} hover:${palette.text} hover:bg-black/5 dark:hover:bg-white/5 transition-colors`}
         >
           {copied ? (
             <>
-              <Check className="h-3 w-3" /> Copied
+              <Check className="h-3 w-3" /> {docs.shared.copied}
             </>
           ) : (
             <>
-              <Copy className="h-3 w-3" /> Copy
+              <Copy className="h-3 w-3" /> {docs.shared.copy}
             </>
           )}
         </button>
@@ -276,23 +278,26 @@ export const Sub = ({
   id: string;
   title: string;
   children: React.ReactNode;
-}) => (
-  <section id={id} className="scroll-mt-24 pt-8 group/sub">
-    <h2
-      className={`flex items-center gap-2 text-[20px] font-semibold ${palette.text} mb-3 tracking-tight`}
-    >
-      <a
-        href={`#${id}`}
-        aria-label={`Link to ${title}`}
-        className={`opacity-0 group-hover/sub:opacity-100 transition-opacity ${palette.textFaint} hover:${palette.accent}`}
+}) => {
+  const docs = useDocsContent();
+  return (
+    <section id={id} className="scroll-mt-24 pt-8 group/sub">
+      <h2
+        className={`flex items-center gap-2 text-[20px] font-semibold ${palette.text} mb-3 tracking-tight`}
       >
-        <Hash className="h-4 w-4" />
-      </a>
-      {title}
-    </h2>
-    <div className="space-y-3">{children}</div>
-  </section>
-);
+        <a
+          href={`#${id}`}
+          aria-label={docs.shared.linkToSection(title)}
+          className={`opacity-0 group-hover/sub:opacity-100 transition-opacity ${palette.textFaint} hover:${palette.accent}`}
+        >
+          <Hash className="h-4 w-4" />
+        </a>
+        {title}
+      </h2>
+      <div className="space-y-3">{children}</div>
+    </section>
+  );
+};
 
 export const H3 = ({ children }: { children: React.ReactNode }) => (
   <h3 className={`text-[15px] font-semibold ${palette.text} mt-6 mb-2 tracking-tight`}>
@@ -316,11 +321,12 @@ export const Callout = ({
   kind?: "note" | "warn";
   children: React.ReactNode;
 }) => {
+  const docs = useDocsContent();
   const tone =
     kind === "warn"
       ? "border-amber-500/40 bg-amber-500/10"
       : `${palette.accentBorder} ${palette.accentSoft}`;
-  const label = kind === "warn" ? "Warning" : "Note";
+  const label = kind === "warn" ? docs.shared.warning : docs.shared.note;
   return (
     <div
       className={`rounded-xl p-4 border ${tone} text-[13.5px] leading-relaxed`}
