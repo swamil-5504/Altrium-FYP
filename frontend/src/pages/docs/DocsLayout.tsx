@@ -8,10 +8,10 @@ import { Footer } from "@/components/Footer";
 import { getDocGroups, palette } from "./_shared";
 
 const DocsLayout = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [query, setQuery] = useState("");
   const location = useLocation();
-  const DOC_GROUPS = useMemo(() => getDocGroups(t), [t]);
+  const DOC_GROUPS = useMemo(() => getDocGroups(t), [t, i18n.language]);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() =>
     DOC_GROUPS.reduce((acc, g) => ({ ...acc, [g.id]: true }), {} as Record<string, boolean>)
   );
@@ -35,7 +35,7 @@ const DocsLayout = () => {
           g.label.toLowerCase().includes(q)
       ),
     })).filter((g) => g.links.length > 0);
-  }, [query]);
+  }, [query, DOC_GROUPS]);
 
   const currentLabel = useMemo(() => {
     for (const g of DOC_GROUPS) {
