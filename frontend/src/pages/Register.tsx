@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from "react";
 
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft, UserPlus, Mail, KeyRound, Building2, FileText, Eye, EyeOff, Info } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import axios from "@/api/axios";
 
 
 
 export default function Register() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const roleFromQuery = searchParams.get("role") === "ADMIN" ? "ADMIN" : "STUDENT";
   const [email, setEmail] = useState("");
@@ -46,7 +49,7 @@ export default function Register() {
 
 
     if (role === "ADMIN" && !file) {
-      toast.error("Proof of Affiliation document is required for University Admins.");
+      toast.error(t('errors.required'));
       return;
     }
 
@@ -60,15 +63,15 @@ export default function Register() {
         await axios.post(`/auth/${user.id}/verification-document`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        toast.success("Registration submitted! Pending platform admin verification.");
+        toast.success(t('register.successMessage'));
         navigate("/pending-verification");
       } else {
-        toast.success("Account created!");
+        toast.success(t('register.successMessage'));
         navigate("/student");
       }
     } catch (err: unknown) {
       console.error("Registration error:", err);
-      let errorMessage = "Registration failed";
+      let errorMessage = t('register.errorMessage');
 
       if (typeof err === "object" && err && "response" in err) {
         const responseData = (err as any).response?.data;
@@ -102,16 +105,20 @@ export default function Register() {
         to="/"
         className="absolute top-8 left-8 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition"
       >
-        <ArrowLeft className="w-4 h-4" /> Back to Home
+        <ArrowLeft className="w-4 h-4" /> {t('common.back')}
       </Link>
+
+      <div className="absolute top-8 right-8 z-20">
+        <LanguageSwitcher />
+      </div>
 
       <div className="w-full max-w-md bg-card border rounded-2xl p-8 surface-elevated z-10 animate-fade-in shadow-xl focus-within:ring-1 focus-within:ring-accent transition-all duration-300">
         <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-6">
           <UserPlus className="w-6 h-6 text-accent" />
         </div>
 
-        <h2 className="text-2xl font-bold mb-2">{role === "ADMIN" ? "Create Admin Account" : "Create Student Account"}</h2>
-        <p className="text-muted-foreground text-sm mb-6">Register your role within the network.</p>
+        <h2 className="text-2xl font-bold mb-2">{role === "ADMIN" ? t('register.heading') : t('register.heading')}</h2>
+        <p className="text-muted-foreground text-sm mb-6">{t('register.subtitle')}</p>
 
         <div className="flex bg-muted p-1 rounded-lg mb-6">
           <button
@@ -120,7 +127,7 @@ export default function Register() {
             className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${role === "STUDENT" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
           >
-            Student
+            {t('login.studentRole')}
           </button>
           <button
             type="button"
@@ -128,7 +135,7 @@ export default function Register() {
             className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${role === "ADMIN" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
           >
-            University Admin
+            {t('login.adminRole')}
           </button>
         </div>
 
@@ -136,18 +143,18 @@ export default function Register() {
 
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Full Name</label>
+            <label className="text-sm font-medium">{t('register.fullName')}</label>
             <input
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
               className="w-full px-3 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-              placeholder="As on your official records"
+              placeholder={t('register.fullNamePlaceholder')}
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">University / College Name</label>
+            <label className="text-sm font-medium">{t('register.collegeName')}</label>
             <div className="relative">
               <Building2 className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               {role === "STUDENT" ? (
@@ -157,7 +164,7 @@ export default function Register() {
                   onChange={(e) => setCollegeName(e.target.value)}
                   required
                 >
-                  <option value="" disabled>Choose your university</option>
+                  <option value="" disabled>{t('register.collegeNamePlaceholder')}</option>
                   {universities.map((uni) => (
                     <option key={uni} value={uni}>{uni}</option>
                   ))}
@@ -168,7 +175,7 @@ export default function Register() {
                   onChange={(e) => setCollegeName(e.target.value)}
                   required
                   className="w-full pl-9 pr-4 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
-                  placeholder="Ex. Altrium University"
+                  placeholder={t('register.collegeNamePlaceholder')}
                 />
               )}
             </div>
@@ -178,13 +185,13 @@ export default function Register() {
 
           {role === "STUDENT" && (
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">PRN Number</label>
+              <label className="text-sm font-medium">{t('register.prnNumber')}</label>
               <input
                 value={prnNumber}
                 onChange={(e) => setPrnNumber(e.target.value)}
                 required
                 className="w-full px-3 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                placeholder="Ex. 2021000123"
+                placeholder={t('register.prnNumberPlaceholder')}
               />
             </div>
           )}
@@ -192,11 +199,11 @@ export default function Register() {
           {role === "ADMIN" && (
             <>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium">Proof of Affiliation (PDF)</label>
+                <label className="text-sm font-medium">{t('register.walletAddress')} (PDF)</label>
                 <label className="flex flex-col items-center gap-2 p-4 rounded-lg border-2 border-dashed border-muted-foreground/20 hover:border-accent hover:bg-accent/5 transition cursor-pointer text-center">
                   <FileText className="w-5 h-5 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">
-                    {file ? file.name : "Click to upload ID or Letter"}
+                    {file ? file.name : t('register.prnNumberPlaceholder')}
                   </span>
                   <input
                     type="file"
@@ -234,14 +241,14 @@ export default function Register() {
           )}
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Email Address</label>
+            <label className="text-sm font-medium">{t('register.email')}</label>
             <div className="relative">
               <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
                 required
                 className="w-full pl-9 pr-4 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
-                placeholder="Ex. mail@university.edu"
+                placeholder={t('register.emailPlaceholder')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -249,14 +256,14 @@ export default function Register() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Password</label>
+            <label className="text-sm font-medium">{t('register.password')}</label>
             <div className="relative">
               <KeyRound className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
                 type={showPassword ? "text" : "password"}
                 required
                 className="w-full pl-9 pr-12 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
-                placeholder="Create a password"
+                placeholder={t('register.passwordPlaceholder')}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -275,14 +282,14 @@ export default function Register() {
             disabled={loading}
             className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium mt-6 hover:opacity-90 transition-opacity active:scale-[0.99] disabled:opacity-70 disabled:pointer-events-none flex justify-center items-center gap-2"
           >
-            {loading ? "Please wait..." : "Create Account"}
+            {loading ? t('register.creatingAccount') : t('register.signUp')}
           </button>
         </form>
 
         <div className="mt-6 text-center text-sm text-muted-foreground">
-          Already have an account?{" "}
+          {t('login.hasAccount')}{" "}
           <Link to={`/login?role=${role}`} className="text-accent font-medium hover:underline">
-            Sign in
+            {t('login.signIn')}
           </Link>
         </div>
       </div>

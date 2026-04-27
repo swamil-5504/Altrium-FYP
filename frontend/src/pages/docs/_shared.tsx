@@ -19,6 +19,8 @@ import {
   Mail,
   Languages,
 } from "lucide-react";
+import type { TFunction } from "i18next";
+import { useDocsContent } from "./content";
 
 /* =============================================================
    PALETTE
@@ -55,68 +57,68 @@ export type DocGroup = {
   links: DocLink[];
 };
 
-export const DOC_GROUPS: DocGroup[] = [
+export const getDocGroups = (t: TFunction): DocGroup[] => [
   {
     id: "get-started",
-    label: "Get started",
+    label: t("docsUi.groups.getStarted"),
     icon: BookOpen,
     links: [
-      { to: "/docs/introduction", label: "Introduction", description: "What Altrium is and who it's for." },
-      { to: "/docs/quickstart", label: "Quickstart", description: "Stand up the full stack in 15 minutes." },
+      { to: "/docs/introduction", label: t("docsUi.links.introduction.label"), description: t("docsUi.links.introduction.description") },
+      { to: "/docs/quickstart", label: t("docsUi.links.quickstart.label"), description: t("docsUi.links.quickstart.description") },
     ],
   },
   {
     id: "platform",
-    label: "Platform",
+    label: t("docsUi.groups.platform"),
     icon: Layers,
     links: [
-      { to: "/docs/architecture", label: "Architecture", description: "How the four layers fit together." },
-      { to: "/docs/roles", label: "User Roles", description: "Super Admin, University, Student, Employer." },
+      { to: "/docs/architecture", label: t("docsUi.links.architecture.label"), description: t("docsUi.links.architecture.description") },
+      { to: "/docs/roles", label: t("docsUi.links.roles.label"), description: t("docsUi.links.roles.description") },
     ],
   },
   {
     id: "flows",
-    label: "Guides",
+    label: t("docsUi.groups.guides"),
     icon: GraduationCap,
     links: [
-      { to: "/docs/walkthroughs", label: "Walkthroughs", description: "End-to-end flows for every role." },
+      { to: "/docs/walkthroughs", label: t("docsUi.links.walkthroughs.label"), description: t("docsUi.links.walkthroughs.description") },
     ],
   },
   {
     id: "reference",
-    label: "Reference",
+    label: t("docsUi.groups.reference"),
     icon: Code2,
     links: [
-      { to: "/docs/api-reference", label: "API Reference", description: "Every REST endpoint, scoped by role." },
-      { to: "/docs/smart-contracts", label: "Smart Contracts", description: "Registry & SBT ABI surface." },
+      { to: "/docs/api-reference", label: t("docsUi.links.apiReference.label"), description: t("docsUi.links.apiReference.description") },
+      { to: "/docs/smart-contracts", label: t("docsUi.links.smartContracts.label"), description: t("docsUi.links.smartContracts.description") },
     ],
   },
   {
     id: "platform-ops",
-    label: "Platform ops",
+    label: t("docsUi.groups.platformOps"),
     icon: Server,
     links: [
-      { to: "/docs/security", label: "Security", description: "Auth, RBAC, uploads, transport." },
-      { to: "/docs/operations", label: "Operations", description: "Envs, logs, database." },
-      { to: "/docs/cli", label: "CLI & Scripts", description: "Backend and Foundry tooling." },
+      { to: "/docs/security", label: t("docsUi.links.security.label"), description: t("docsUi.links.security.description") },
+      { to: "/docs/operations", label: t("docsUi.links.operations.label"), description: t("docsUi.links.operations.description") },
+      { to: "/docs/cli", label: t("docsUi.links.cli.label"), description: t("docsUi.links.cli.description") },
     ],
   },
   {
     id: "help",
-    label: "Help",
+    label: t("docsUi.groups.help"),
     icon: LifeBuoy,
     links: [
-      { to: "/docs/support", label: "Support", description: "Troubleshooting, FAQ, contact." },
+      { to: "/docs/support", label: t("docsUi.links.support.label"), description: t("docsUi.links.support.description") },
     ],
   },
   {
     id: "coming-soon",
-    label: "Coming soon",
+    label: t("docsUi.groups.comingSoon"),
     icon: Sparkles,
     links: [
-      { to: "/docs/bulk-upload-wizard", label: "Bulk Upload Wizard", description: "Issue an entire graduating cohort in one import." },
-      { to: "/docs/email-service", label: "Email Service", description: "Transactional notifications & templated mail." },
-      { to: "/docs/language-support", label: "Language & Script Support", description: "i18n + non-Latin credential rendering." },
+      { to: "/docs/bulk-upload-wizard", label: t("docsUi.links.bulkUploadWizard.label"), description: t("docsUi.links.bulkUploadWizard.description") },
+      { to: "/docs/email-service", label: t("docsUi.links.emailService.label"), description: t("docsUi.links.emailService.description") },
+      { to: "/docs/language-support", label: t("docsUi.links.languageSupport.label"), description: t("docsUi.links.languageSupport.description") },
     ],
   },
 ];
@@ -136,6 +138,7 @@ export { BookOpen, Rocket, Layers, Users, Code2, Blocks, Lock, Server, Terminal,
 /* ------------------------------------------------------------------ */
 
 export const CodeBlock = ({ code, lang }: { code: string; lang?: string }) => {
+  const docs = useDocsContent();
   const [copied, setCopied] = useState(false);
   const onCopy = async () => {
     try {
@@ -165,16 +168,16 @@ export const CodeBlock = ({ code, lang }: { code: string; lang?: string }) => {
         </div>
         <button
           onClick={onCopy}
-          aria-label="Copy code"
+          aria-label={docs.shared.copyCode}
           className={`flex items-center gap-1 px-2 py-0.5 rounded-md ${palette.textMuted} hover:${palette.text} hover:bg-black/5 dark:hover:bg-white/5 transition-colors`}
         >
           {copied ? (
             <>
-              <Check className="h-3 w-3" /> Copied
+              <Check className="h-3 w-3" /> {docs.shared.copied}
             </>
           ) : (
             <>
-              <Copy className="h-3 w-3" /> Copy
+              <Copy className="h-3 w-3" /> {docs.shared.copy}
             </>
           )}
         </button>
@@ -275,23 +278,26 @@ export const Sub = ({
   id: string;
   title: string;
   children: React.ReactNode;
-}) => (
-  <section id={id} className="scroll-mt-24 pt-8 group/sub">
-    <h2
-      className={`flex items-center gap-2 text-[20px] font-semibold ${palette.text} mb-3 tracking-tight`}
-    >
-      <a
-        href={`#${id}`}
-        aria-label={`Link to ${title}`}
-        className={`opacity-0 group-hover/sub:opacity-100 transition-opacity ${palette.textFaint} hover:${palette.accent}`}
+}) => {
+  const docs = useDocsContent();
+  return (
+    <section id={id} className="scroll-mt-24 pt-8 group/sub">
+      <h2
+        className={`flex items-center gap-2 text-[20px] font-semibold ${palette.text} mb-3 tracking-tight`}
       >
-        <Hash className="h-4 w-4" />
-      </a>
-      {title}
-    </h2>
-    <div className="space-y-3">{children}</div>
-  </section>
-);
+        <a
+          href={`#${id}`}
+          aria-label={docs.shared.linkToSection(title)}
+          className={`opacity-0 group-hover/sub:opacity-100 transition-opacity ${palette.textFaint} hover:${palette.accent}`}
+        >
+          <Hash className="h-4 w-4" />
+        </a>
+        {title}
+      </h2>
+      <div className="space-y-3">{children}</div>
+    </section>
+  );
+};
 
 export const H3 = ({ children }: { children: React.ReactNode }) => (
   <h3 className={`text-[15px] font-semibold ${palette.text} mt-6 mb-2 tracking-tight`}>
@@ -315,11 +321,12 @@ export const Callout = ({
   kind?: "note" | "warn";
   children: React.ReactNode;
 }) => {
+  const docs = useDocsContent();
   const tone =
     kind === "warn"
       ? "border-amber-500/40 bg-amber-500/10"
       : `${palette.accentBorder} ${palette.accentSoft}`;
-  const label = kind === "warn" ? "Warning" : "Note";
+  const label = kind === "warn" ? docs.shared.warning : docs.shared.note;
   return (
     <div
       className={`rounded-xl p-4 border ${tone} text-[13.5px] leading-relaxed`}

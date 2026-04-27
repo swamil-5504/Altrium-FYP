@@ -10,6 +10,7 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 import { Blocks, Clock, Eye, Shield, XCircle, Wallet, HelpCircle, Users, GraduationCap, AlertTriangle, Mail, User as UserIcon, Building2 } from "lucide-react";
 
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 type CredentialStatus = "PENDING" | "APPROVED" | "REJECTED";
 
@@ -122,6 +123,7 @@ const degreeSbtAbi = [
 
 const UniversityAdmin: React.FC = () => {
   const { isAuthenticated, user, refreshUser } = useAuth();
+  const { t } = useTranslation();
   const [credentials, setCredentials] = useState<Credential[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [activeTab, setActiveTab] = useState<"degrees" | "students">("degrees");
@@ -143,11 +145,11 @@ const UniversityAdmin: React.FC = () => {
     const saveWallet = async () => {
       try {
         await axios.patch("/users/me/wallet", { wallet_address: walletAddress });
-        toast.success("Wallet linked! On-chain roles are being granted…");
+        toast.success(t("universityDashboard.toasts.walletLinked"));
         await refreshUser();
       } catch (err) {
         console.error("Failed to save wallet address:", err);
-        toast.error("Could not save wallet address to your profile.");
+        toast.error(t("universityDashboard.toasts.walletSaveFailed"));
       }
     };
     void saveWallet();
@@ -182,7 +184,7 @@ const UniversityAdmin: React.FC = () => {
       setStudents(studRes.data);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to load submissions.");
+      toast.error(t("universityDashboard.toasts.loadFailed"));
     } finally {
       setLoading(false);
     }
@@ -192,18 +194,18 @@ const UniversityAdmin: React.FC = () => {
     try {
       await open();
     } catch (error: unknown) {
-      toast.error("Failed to open wallet modal");
+      toast.error(t("universityDashboard.toasts.walletModalFailed"));
     }
   };
 
   const handleReject = async (credentialId: string) => {
     try {
       await axios.patch(`/degrees/${credentialId}`, { status: "REJECTED" });
-      toast.success("Submission rejected.");
+      toast.success(t("universityDashboard.toasts.rejected"));
       await fetchCredentials();
     } catch (err) {
       console.error(err);
-      toast.error("Failed to reject submission.");
+      toast.error(t("universityDashboard.toasts.rejectFailed"));
     }
   };
 
@@ -462,13 +464,13 @@ const UniversityAdmin: React.FC = () => {
           <ScrollReveal>
             <div className="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold mb-1">College Admin</h1>
-                <p className="text-muted-foreground mb-3">Review submissions and mint verified degrees to Sepolia.</p>
+                <h1 className="text-2xl md:text-3xl font-bold mb-1">{t("universityDashboard.title")}</h1>
+                <p className="text-muted-foreground mb-3">{t("universityDashboard.subtitle")}</p>
 
                 <div className="flex flex-wrap items-center gap-x-5 gap-y-2 py-2 px-3 rounded-lg bg-muted/40 border text-xs sm:text-sm">
                   <div className="flex items-center gap-1.5">
                     <UserIcon className="w-3.5 h-3.5 text-accent" />
-                    <span className="font-semibold">{user?.full_name || "Admin"}</span>
+                    <span className="font-semibold">{user?.full_name || t("universityDashboard.fallbackAdmin")}</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-muted-foreground">
                     <Mail className="w-3.5 h-3.5" />
@@ -486,10 +488,10 @@ const UniversityAdmin: React.FC = () => {
                 <div className="flex items-center gap-2 px-4 py-2 border rounded-lg bg-card text-foreground text-sm font-medium">
                   <Wallet className="w-4 h-4 text-accent" />
                   <span className="font-mono text-xs truncate max-w-[120px]">
-                    {walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : "Not Connected"}
+                    {walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : t("universityDashboard.notConnected")}
                   </span>
                   {!walletAddress && (
-                    <button onClick={connectWallet} className="ml-1 text-accent hover:underline text-xs">Connect</button>
+                    <button onClick={connectWallet} className="ml-1 text-accent hover:underline text-xs">{t("universityDashboard.connect")}</button>
                   )}
                 </div>
 
@@ -498,7 +500,7 @@ const UniversityAdmin: React.FC = () => {
                   className="inline-flex items-center gap-2 px-4 py-2 border rounded-lg bg-accent/10 text-accent font-medium text-sm hover:bg-accent/20 transition active:scale-[0.98]"
                 >
                   <HelpCircle className="w-4 h-4" />
-                  Web3 Guide
+                  {t("universityDashboard.web3Guide")}
                 </Link>
               </div>
             </div>
@@ -506,19 +508,19 @@ const UniversityAdmin: React.FC = () => {
             <ScrollReveal delay={60}>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                 <div className="rounded-3xl border bg-card p-5 shadow-sm">
-                  <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3">Pending submissions</div>
+                  <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3">{t("universityDashboard.pendingSubmissions")}</div>
                   <div className="text-3xl font-bold tabular-nums">{totalPending}</div>
-                  <p className="text-sm text-muted-foreground mt-2">Items waiting for admin review and mint approval.</p>
+                  <p className="text-sm text-muted-foreground mt-2">{t("universityDashboard.pendingSubmissionsDesc")}</p>
                 </div>
                 <div className="rounded-3xl border bg-card p-5 shadow-sm">
-                  <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3">Approved degrees</div>
+                  <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3">{t("universityDashboard.approvedDegrees")}</div>
                   <div className="text-3xl font-bold tabular-nums">{totalApproved}</div>
-                  <p className="text-sm text-muted-foreground mt-2">Credentials already verified and issued on-chain.</p>
+                  <p className="text-sm text-muted-foreground mt-2">{t("universityDashboard.approvedDegreesDesc")}</p>
                 </div>
                 <div className="rounded-3xl border bg-card p-5 shadow-sm">
-                  <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3">Students enrolled</div>
+                  <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3">{t("universityDashboard.studentsEnrolled")}</div>
                   <div className="text-3xl font-bold tabular-nums">{totalStudents}</div>
-                  <p className="text-sm text-muted-foreground mt-2">Active student profiles linked to this university.</p>
+                  <p className="text-sm text-muted-foreground mt-2">{t("universityDashboard.studentsEnrolledDesc")}</p>
                 </div>
               </div>
             </ScrollReveal>
@@ -548,7 +550,7 @@ const UniversityAdmin: React.FC = () => {
                 }`}
             >
               <GraduationCap className="w-4 h-4" />
-              Degree Submissions
+              {t("universityDashboard.degreeSubmissions")}
             </button>
             <button
               onClick={() => setActiveTab("students")}
@@ -558,7 +560,7 @@ const UniversityAdmin: React.FC = () => {
                 }`}
             >
               <Users className="w-4 h-4" />
-              Students Enrolled
+              {t("universityDashboard.studentsEnrolled")}
               <span className="ml-1 px-1.5 py-0.5 rounded-full text-xs bg-accent/10 text-accent">{students.length}</span>
             </button>
           </div>
@@ -570,11 +572,11 @@ const UniversityAdmin: React.FC = () => {
                   <div className="p-4 border-b bg-muted/30">
                     <div className="flex flex-wrap items-center gap-4 justify-between">
                       <div>
-                        <div className="text-sm text-muted-foreground">Pending submissions</div>
+                        <div className="text-sm text-muted-foreground">{t("universityDashboard.pendingSubmissions")}</div>
                         <div className="text-2xl font-bold tabular-nums">{pendingCredentials.length}</div>
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {loading ? "Loading..." : "Minted submissions are persisted to backend and show up instantly."}
+                        {loading ? t("common.loading") : t("universityDashboard.mintedHint")}
                       </div>
                     </div>
                   </div>
@@ -583,11 +585,11 @@ const UniversityAdmin: React.FC = () => {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b bg-muted/30">
-                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">Student</th>
-                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">Degree</th>
-                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">PRN</th>
-                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status</th>
-                          <th className="text-right py-3 px-4 font-medium text-muted-foreground">Actions</th>
+                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">{t("universityDashboard.table.student")}</th>
+                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">{t("universityDashboard.table.degree")}</th>
+                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">{t("universityDashboard.table.prn")}</th>
+                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">{t("universityDashboard.table.status")}</th>
+                          <th className="text-right py-3 px-4 font-medium text-muted-foreground">{t("universityDashboard.table.actions")}</th>
                         </tr>
                       </thead>
 
@@ -595,19 +597,19 @@ const UniversityAdmin: React.FC = () => {
                         {loading ? (
                           <tr>
                             <td colSpan={5} className="py-10 text-center text-muted-foreground">
-                              Loading submissions...
+                              {t("studentDashboard.loadingSubmissions")}
                             </td>
                           </tr>
                         ) : pendingCredentials.length === 0 ? (
                           <tr>
                             <td colSpan={5} className="py-12 text-center text-muted-foreground">
-                              No pending submissions.
+                              {t("universityDashboard.noPendingSubmissions")}
                             </td>
                           </tr>
                         ) : (
                           pendingCredentials.map((cred) => {
                             const meta = (cred.metadata_json ?? {}) as Record<string, unknown>;
-                            const studentName = typeof meta.studentName === "string" ? meta.studentName : "Student";
+                            const studentName = typeof meta.studentName === "string" ? meta.studentName : t("studentDashboard.fallbackStudent");
                             return (
                               <tr key={cred.id} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
                                 <td className="py-3.5 px-4">
@@ -619,7 +621,7 @@ const UniversityAdmin: React.FC = () => {
                                 <td className="py-3.5 px-4">
                                   <span className="inline-flex items-center gap-2 text-xs font-medium text-muted-foreground">
                                     <Clock className="w-3 h-3" />
-                                    Pending
+                                    {t("studentDashboard.pendingReview")}
                                   </span>
                                 </td>
                                 <td className="py-3.5 px-4">
@@ -629,11 +631,11 @@ const UniversityAdmin: React.FC = () => {
                                         ? "hover:bg-muted text-accent"
                                         : "opacity-40 cursor-not-allowed"
                                         }`}
-                                      title={cred.has_document ? "View Document" : "No document uploaded"}
+                                      title={cred.has_document ? t("universityDashboard.viewDocument") : t("universityDashboard.noDocument")}
                                       onClick={() =>
                                         cred.has_document
                                           ? void handleViewDocument(cred.id)
-                                          : toast.info("No document uploaded for this submission.")
+                                          : toast.info(t("universityDashboard.noDocumentToast"))
                                       }
                                     >
                                       <Eye className="w-4 h-4" />
@@ -646,8 +648,8 @@ const UniversityAdmin: React.FC = () => {
                                     >
                                       <Blocks className="w-3 h-3" />
                                       {mintingById[cred.id]
-                                        ? (BYPASS_BLOCKCHAIN_APPROVAL ? "Approving..." : "Minting...")
-                                        : (BYPASS_BLOCKCHAIN_APPROVAL ? "Approve" : "Mint & Approve")}
+                                        ? (BYPASS_BLOCKCHAIN_APPROVAL ? t("universityDashboard.approving") : t("universityDashboard.minting"))
+                                        : (BYPASS_BLOCKCHAIN_APPROVAL ? t("universityDashboard.approve") : t("universityDashboard.mintAndApprove"))}
                                     </button>
 
                                     <button
@@ -656,7 +658,7 @@ const UniversityAdmin: React.FC = () => {
                                       disabled={!!mintingById[cred.id]}
                                     >
                                       <XCircle className="inline w-3 h-3 mr-1" />
-                                      Reject
+                                      {t("universityDashboard.reject")}
                                     </button>
                                   </div>
                                 </td>
@@ -675,31 +677,31 @@ const UniversityAdmin: React.FC = () => {
                 <div className="rounded-xl border bg-card overflow-hidden mt-6">
                   <div className="p-4 border-b bg-muted/30 flex items-center justify-between">
                     <div>
-                      <div className="text-sm text-muted-foreground">Approved & Minted</div>
+                      <div className="text-sm text-muted-foreground">{t("universityDashboard.approvedMinted")}</div>
                       <div className="text-2xl font-bold tabular-nums">{approvedCredentials.length}</div>
                     </div>
-                    <div className="text-xs text-muted-foreground">Revoke any credential to mark it invalid on the platform.</div>
+                    <div className="text-xs text-muted-foreground">{t("universityDashboard.revokeHint")}</div>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b bg-muted/30">
-                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">Student</th>
-                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">Degree</th>
-                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">Token ID</th>
-                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status</th>
-                          <th className="text-right py-3 px-4 font-medium text-muted-foreground">Actions</th>
+                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">{t("universityDashboard.table.student")}</th>
+                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">{t("universityDashboard.table.degree")}</th>
+                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">{t("universityDashboard.table.tokenId")}</th>
+                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">{t("universityDashboard.table.status")}</th>
+                          <th className="text-right py-3 px-4 font-medium text-muted-foreground">{t("universityDashboard.table.actions")}</th>
                         </tr>
                       </thead>
                       <tbody>
                         {approvedCredentials.length === 0 ? (
                           <tr>
-                            <td colSpan={5} className="py-10 text-center text-muted-foreground">No approved credentials yet.</td>
+                            <td colSpan={5} className="py-10 text-center text-muted-foreground">{t("universityDashboard.noApprovedCredentials")}</td>
                           </tr>
                         ) : (
                           approvedCredentials.map((cred) => {
                             const meta = (cred.metadata_json ?? {}) as Record<string, unknown>;
-                            const sName = typeof meta.studentName === "string" ? meta.studentName : "Student";
+                            const sName = typeof meta.studentName === "string" ? meta.studentName : t("studentDashboard.fallbackStudent");
                             return (
                               <tr key={cred.id} className={`border-b last:border-0 hover:bg-muted/20 transition-colors ${(cred as any).revoked ? "opacity-50" : ""}`}>
                                 <td className="py-3.5 px-4">
@@ -710,8 +712,8 @@ const UniversityAdmin: React.FC = () => {
                                 <td className="py-3.5 px-4 font-mono text-xs">{cred.token_id ?? "-"}</td>
                                 <td className="py-3.5 px-4">
                                   {(cred as any).revoked
-                                    ? <span className="inline-flex items-center gap-1 text-xs font-medium text-destructive"><XCircle className="w-3 h-3" />Revoked</span>
-                                    : <span className="inline-flex items-center gap-1 text-xs font-medium text-accent"><Shield className="w-3 h-3" />Valid</span>}
+                                    ? <span className="inline-flex items-center gap-1 text-xs font-medium text-destructive"><XCircle className="w-3 h-3" />{t("universityDashboard.revoked")}</span>
+                                    : <span className="inline-flex items-center gap-1 text-xs font-medium text-accent"><Shield className="w-3 h-3" />{t("universityDashboard.valid")}</span>}
                                 </td>
                                 <td className="py-3.5 px-4 text-right">
                                   <div className="flex items-center justify-end gap-2">
@@ -721,16 +723,16 @@ const UniversityAdmin: React.FC = () => {
                                         onClick={() => void handleRevoke(cred.id)}
                                       >
                                         <XCircle className="inline w-3 h-3 mr-1" />
-                                        Revoke
+                                        {t("universityDashboard.revoke")}
                                       </button>
                                     )}
                                     <button
                                       className="px-3 py-1.5 rounded-md bg-orange-500/10 text-orange-500 text-xs font-medium hover:bg-orange-500/20 transition-colors"
                                       onClick={() => void handleBurnReset(cred.id)}
-                                      title="Test only: burns the NFT on-chain and resets submission to pending"
+                                      title={t("universityDashboard.burnResetTitle")}
                                     >
                                       <XCircle className="inline w-3 h-3 mr-1" />
-                                      Burn & Reset
+                                      {t("universityDashboard.burnReset")}
                                     </button>
                                   </div>
                                 </td>
@@ -751,7 +753,7 @@ const UniversityAdmin: React.FC = () => {
               <div className="rounded-xl border bg-card overflow-hidden">
                 <div className="p-4 border-b bg-muted/30 flex items-center justify-between">
                   <div>
-                    <div className="text-sm text-muted-foreground">Students enrolled in {user?.college_name}</div>
+                    <div className="text-sm text-muted-foreground">{t("universityDashboard.studentsEnrolledIn", { university: user?.college_name ?? "-" })}</div>
                     <div className="text-2xl font-bold tabular-nums">{students.length}</div>
                   </div>
                 </div>
@@ -759,18 +761,18 @@ const UniversityAdmin: React.FC = () => {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b bg-muted/30">
-                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">Name</th>
-                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">Email</th>
-                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">PRN</th>
-                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">University</th>
-                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">Joined</th>
+                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">{t("universityDashboard.studentTable.name")}</th>
+                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">{t("universityDashboard.studentTable.email")}</th>
+                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">{t("universityDashboard.studentTable.prn")}</th>
+                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">{t("universityDashboard.studentTable.university")}</th>
+                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">{t("universityDashboard.studentTable.joined")}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {students.length === 0 ? (
                         <tr>
                           <td colSpan={5} className="py-10 text-center text-muted-foreground">
-                            {loading ? "Loading students..." : "No students enrolled yet."}
+                            {loading ? t("universityDashboard.loadingStudents") : t("universityDashboard.noStudentsEnrolled")}
                           </td>
                         </tr>
                       ) : (

@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { ChevronDown, ChevronRight, Search, Github, ArrowRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { DOC_GROUPS, palette } from "./_shared";
+import { getDocGroups, palette } from "./_shared";
 
 const DocsLayout = () => {
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const location = useLocation();
+  const DOC_GROUPS = useMemo(() => getDocGroups(t), [t]);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() =>
     DOC_GROUPS.reduce((acc, g) => ({ ...acc, [g.id]: true }), {} as Record<string, boolean>)
   );
@@ -39,8 +42,8 @@ const DocsLayout = () => {
       const hit = g.links.find((l) => l.to === location.pathname);
       if (hit) return { group: g.label, page: hit.label };
     }
-    return { group: "Documentation", page: "Overview" };
-  }, [location.pathname]);
+    return { group: t("docsUi.documentation"), page: t("docsUi.overview") };
+  }, [DOC_GROUPS, location.pathname, t]);
 
   return (
     <div className={`min-h-screen ${palette.pageBg} ${palette.text}`}>
@@ -51,11 +54,11 @@ const DocsLayout = () => {
         <div className="flex items-center justify-between gap-3 pt-2 pb-4">
           <div className={`flex items-center gap-1.5 text-[12px] ${palette.textMuted}`}>
             <Link to="/" className={`hover:${palette.accent} transition-colors`}>
-              Home
+              {t("dashboard.home")}
             </Link>
             <ChevronRight className="h-3 w-3" />
             <Link to="/docs" className={`hover:${palette.accent} transition-colors`}>
-              Docs
+              {t("navbar.docs")}
             </Link>
             <ChevronRight className="h-3 w-3" />
             <span className={`${palette.textFaint}`}>{currentLabel.group}</span>
@@ -67,7 +70,7 @@ const DocsLayout = () => {
             onClick={() => setMobileNavOpen((v) => !v)}
             className={`lg:hidden text-[12px] px-3 py-1.5 rounded-md border ${palette.border} ${palette.panelSoft} ${palette.text}`}
           >
-            {mobileNavOpen ? "Close" : "Menu"}
+            {mobileNavOpen ? t("docsUi.close") : t("docsUi.menu")}
           </button>
         </div>
 
@@ -84,7 +87,7 @@ const DocsLayout = () => {
               />
               <input
                 type="text"
-                placeholder="Search docs…"
+                placeholder={t("docsUi.searchPlaceholder")}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 className={`w-full pl-8 pr-10 py-2 text-[12.5px] rounded-lg ${palette.panelSoft} border ${palette.border} focus:outline-none focus:ring-2 focus:ring-[#2563eb]/30 dark:focus:ring-[#60a5fa]/30 focus:border-[#2563eb] dark:focus:border-[#60a5fa] ${palette.text} placeholder:${palette.textFaint} transition-colors`}
@@ -148,14 +151,14 @@ const DocsLayout = () => {
                 className={`flex items-center gap-2 text-[12.5px] ${palette.textMuted} hover:${palette.accent} transition-colors`}
               >
                 <Github className="h-3.5 w-3.5" />
-                View on GitHub
+                {t("docsUi.viewOnGithub")}
               </a>
               <Link
                 to="/verify"
                 className={`flex items-center gap-2 text-[12.5px] ${palette.textMuted} hover:${palette.accent} transition-colors`}
               >
                 <ArrowRight className="h-3.5 w-3.5" />
-                Verify a credential
+                {t("docsUi.verifyCredential")}
               </Link>
             </div>
           </aside>

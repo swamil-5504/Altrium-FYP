@@ -3,6 +3,7 @@ import { ShieldCheck, GraduationCap, Building2, Briefcase, ArrowRight, FileCheck
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslation } from "react-i18next";
 
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { Navbar } from "@/components/Navbar";
@@ -13,6 +14,7 @@ const Index = () => {
   const [mounted, setMounted] = useState(false);
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
     setMounted(true);
@@ -75,29 +77,29 @@ const Index = () => {
           <ScrollReveal className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/10 text-accent text-sm font-medium mb-6">
               <Blocks className="w-3.5 h-3.5" />
-              Blockchain-Secured Academic Credentials
+              {t("home.badge")}
             </div>
             <h1 className="text-4xl md:text-6xl font-bold leading-[1.08] mb-5" style={{ letterSpacing: "-0.025em" }}>
-              Tamper-proof degrees,
+              {t("home.heroTitleLine1")}
               <br />
-              <span className="text-accent">verified instantly.</span>
+              <span className="text-accent">{t("home.heroTitleLine2")}</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto mb-8 leading-relaxed">
-              Universities mint immutable Soulbound Tokens for every graduate. Employers verify in seconds — no intermediaries, no fraud.
+              {t("home.heroDescription")}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link
                 to="/student"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity active:scale-[0.98]"
               >
-                I'm a Student
+                {t("home.studentCta")}
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 to="/verify"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border bg-card text-foreground font-medium text-sm hover:bg-muted transition-colors active:scale-[0.98]"
               >
-                Verify a Degree
+                {t("home.verifyCta")}
                 <Search className="w-4 h-4" />
               </Link>
             </div>
@@ -109,16 +111,16 @@ const Index = () => {
       <section className="min-h-screen flex flex-col justify-center bg-card border-y">
         <div className="container mx-auto px-4">
           <ScrollReveal className="text-center mb-16">
-            <p className="text-sm font-medium text-accent mb-2 uppercase tracking-wider">Process</p>
-            <h2 className="text-3xl md:text-4xl font-bold">How Altrium Works</h2>
+            <p className="text-sm font-medium text-accent mb-2 uppercase tracking-wider">{t("home.processLabel")}</p>
+            <h2 className="text-3xl md:text-4xl font-bold">{t("home.processTitle")}</h2>
           </ScrollReveal>
 
           <div className="grid md:grid-cols-4 gap-6 max-w-5xl mx-auto">
             {[
-              { icon: GraduationCap, title: "Student Submits", desc: "Upload your degree PDF and pay the verification fee to your university.", step: "01" },
-              { icon: Building2, title: "University Reviews", desc: "The university admin verifies the document and approves the request.", step: "02" },
-              { icon: Blocks, title: "SBT Minted", desc: "An immutable Soulbound Token is minted on-chain with your degree metadata.", step: "03" },
-              { icon: Briefcase, title: "Employer Verifies", desc: "Anyone can verify the degree using the student's PRN — free, instant, trustless.", step: "04" },
+              { icon: GraduationCap, title: t("home.process.studentSubmits.title"), desc: t("home.process.studentSubmits.desc"), step: "01" },
+              { icon: Building2, title: t("home.process.universityReviews.title"), desc: t("home.process.universityReviews.desc"), step: "02" },
+              { icon: Blocks, title: t("home.process.sbtMinted.title"), desc: t("home.process.sbtMinted.desc"), step: "03" },
+              { icon: Briefcase, title: t("home.process.employerVerifies.title"), desc: t("home.process.employerVerifies.desc"), step: "04" },
             ].map((item, i) => (
               <ScrollReveal key={i} delay={i * 80}>
                 <div className="relative p-6 rounded-xl surface-elevated border group hover:blockchain-glow transition-shadow duration-300">
@@ -142,32 +144,32 @@ const Index = () => {
       <section className="min-h-screen flex flex-col justify-center">
         <div className="container mx-auto px-4">
           <ScrollReveal className="text-center mb-16">
-            <p className="text-sm font-medium text-accent mb-2 uppercase tracking-wider">Portals</p>
-            <h2 className="text-3xl md:text-4xl font-bold">Choose Your Role</h2>
+            <p className="text-sm font-medium text-accent mb-2 uppercase tracking-wider">{t("home.portalsLabel")}</p>
+            <h2 className="text-3xl md:text-4xl font-bold">{t("home.portalsTitle")}</h2>
           </ScrollReveal>
 
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {[
               {
                 icon: GraduationCap,
-                title: "Student",
-                desc: "Submit your degree for on-chain verification. No wallet needed — just your documents and PRN.",
+                title: t("home.roles.student.title"),
+                desc: t("home.roles.student.desc"),
                 link: "/student",
-                label: "Go to Dashboard",
+                label: t("home.roles.student.label"),
               },
               {
                 icon: Building2,
-                title: "University Admin",
-                desc: "Review submissions, approve degrees, and mint Soulbound Tokens. Full Web3 handled for you.",
+                title: t("home.roles.admin.title"),
+                desc: t("home.roles.admin.desc"),
                 link: "/university",
-                label: "Admin Panel",
+                label: t("home.roles.admin.label"),
               },
               {
                 icon: Briefcase,
-                title: "Employer",
-                desc: "Verify any graduate's credentials instantly using their PRN. Free access, no registration required.",
+                title: t("home.roles.employer.title"),
+                desc: t("home.roles.employer.desc"),
                 link: "/verify",
-                label: "Verify Now",
+                label: t("home.roles.employer.label"),
               },
             ].map((role, i) => (
               <ScrollReveal key={i} delay={i * 100}>
@@ -197,20 +199,20 @@ const Index = () => {
           <ScrollReveal className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-4">
               <ShieldCheck className="w-10 h-10 text-accent" />
-              <h3 className="text-lg font-semibold text-foreground dark:text-white">Built on Trust, Secured by Blockchain</h3>
+              <h3 className="text-lg font-semibold text-foreground dark:text-white">{t("home.trustTitle")}</h3>
             </div>
             <div className="flex items-center gap-8 text-sm">
               <div className="text-center">
                 <div className="text-2xl font-bold text-accent">SBT</div>
-                <div className="text-xs text-muted-foreground dark:text-white/60">Soulbound Tokens</div>
+                <div className="text-xs text-muted-foreground dark:text-white/60">{t("home.trust.sbt")}</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-accent">Sepolia</div>
-                <div className="text-xs text-muted-foreground dark:text-white/60">Testnet</div>
+                <div className="text-xs text-muted-foreground dark:text-white/60">{t("home.trust.testnet")}</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-accent">Free</div>
-                <div className="text-xs text-muted-foreground dark:text-white/60">For Employers</div>
+                <div className="text-xs text-muted-foreground dark:text-white/60">{t("home.trust.forEmployers")}</div>
               </div>
             </div>
           </ScrollReveal>
