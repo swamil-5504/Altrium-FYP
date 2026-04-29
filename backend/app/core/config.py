@@ -46,8 +46,9 @@ class Settings(BaseSettings):
     SUPERADMIN_EMAIL: str = "admin@altrium.com"
     SUPERADMIN_PASSWORD: str = "Altrium123!Dev"
 
+    # Notifications (Zero-Config Telegram Push)
+    TELEGRAM_BOT_TOKEN: Optional[str] = None
 
-    
     class Config:
         env_file = ".env"
         case_sensitive = True

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
-import { ArrowLeft, UserPlus, Mail, KeyRound, Building2, FileText, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, UserPlus, Mail, KeyRound, Building2, FileText, Eye, EyeOff, Info } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import axios from "@/api/axios";
@@ -19,6 +19,7 @@ export default function Register() {
   const [file, setFile] = useState<File | null>(null);
   const [role, setRole] = useState<"STUDENT" | "ADMIN">(roleFromQuery);
   const [prnNumber, setPrnNumber] = useState("");
+  const [telegramId, setTelegramId] = useState("");
   const [loading, setLoading] = useState(false);
   const [universities, setUniversities] = useState<string[]>([]);
 
@@ -51,7 +52,7 @@ export default function Register() {
 
     setLoading(true);
     try {
-      const user = await register(email, password, fullName, role, collegeName, undefined, prnNumber);
+      const user = await register(email, password, fullName, role, collegeName, undefined, prnNumber, telegramId);
 
       if (role === "ADMIN" && file && user?.id) {
         const formData = new FormData();
@@ -206,6 +207,30 @@ export default function Register() {
                 </label>
               </div>
             </>
+          )}
+
+          {role === "STUDENT" && (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium flex items-center gap-2">
+                Telegram ID for Alerts
+                <div className="group relative">
+                  <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-popover text-popover-foreground text-[10px] rounded border shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
+                    Get your ID from @userinfobot on Telegram.
+                  </div>
+                </div>
+              </label>
+              <input
+                type="text"
+                className="w-full px-3 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent transition-all"
+                placeholder="Ex. 1081709963"
+                value={telegramId}
+                onChange={(e) => setTelegramId(e.target.value)}
+              />
+              <p className="text-[10px] text-muted-foreground">
+                ⚠️ IMPORTANT: Click <b>START</b> on <a href="https://t.me/Altrium_Notification_Bot" target="_blank" rel="noreferrer" className="text-accent hover:underline">@Altrium_Notification_Bot</a> and keep it <b>UNMUTED</b> to receive your degree alerts.
+              </p>
+            </div>
           )}
 
           <div className="space-y-1.5">

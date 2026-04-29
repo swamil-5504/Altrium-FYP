@@ -10,6 +10,8 @@ RUN sed -i 's|http://deb.debian.org|https://deb.debian.org|g; s|http://security.
     pkg-config \
     libcairo2-dev \
     python3-dev \
+    libjpeg-dev \
+    zlib1g-dev \
   && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
