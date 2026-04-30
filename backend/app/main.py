@@ -13,7 +13,7 @@ from beanie import init_beanie
 from app.crud.crud import UserCRUD
 from app.schemas.schemas import UserCreate
 from app.models.models import UserRole, BlacklistedToken, BulkBatch
-from app.api.routes import auth, users, credentials, degrees, degrees_bulk
+from app.api.routes import auth, users, credentials, degrees, telegram, degrees_bulk
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from app.core.limiter import limiter
@@ -165,6 +165,11 @@ async def lifespan(app: FastAPI):
     _reminder_task = _asyncio.create_task(_weekly_pending_reminder_loop())
     logger.info("📱 Notification service initialized (Telegram %s)",
                 "active" if settings.TELEGRAM_BOT_TOKEN else "not configured")
+                
+    if settings.TELEGRAM_BOT_TOKEN and settings.WEBHOOK_HOST:
+        from app.services.telegram_bot import service as tg_service
+        webhook_url = f"{settings.WEBHOOK_HOST}{settings.API_V1_STR}/telegram/webhook/{settings.TELEGRAM_BOT_TOKEN}"
+        await tg_service.set_webhook(webhook_url)
     
     yield
     
@@ -210,6 +215,7 @@ app.include_router(users.router)
 app.include_router(credentials.router)
 app.include_router(degrees_bulk.router)
 app.include_router(degrees.router)
+app.include_router(telegram.router)
 register_exception_handlers(app)
 
 @app.get("/")
