@@ -6,6 +6,7 @@ import { Navbar } from "@/components/Navbar";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { Upload, FileText, CreditCard, Clock, Shield, XCircle, ArrowRight, Eye, User as UserIcon, Mail, Building2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslation } from "react-i18next";
 
 
 type CredentialStatus = "PENDING" | "APPROVED" | "REJECTED";
@@ -26,6 +27,7 @@ interface Credential {
 
 const StudentDashboard: React.FC = () => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [submissions, setSubmissions] = useState<Credential[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -70,14 +72,14 @@ const StudentDashboard: React.FC = () => {
       setSubmissions(response.data);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to load your submissions.");
+      toast.error(t("studentDashboard.toasts.loadFailed"));
     } finally {
       setLoading(false);
     }
   };
 
   const handleViewDocument = async (credentialId: string) => {
-    const loadingToast = toast.loading("Loading proof document, please wait...");
+    const loadingToast = toast.loading(t("studentDashboard.toasts.loadingDocument"));
     try {
       const response = await axios.get(`/degrees/${credentialId}/document`, {
         responseType: "blob",
@@ -90,7 +92,7 @@ const StudentDashboard: React.FC = () => {
     } catch (err) {
       toast.dismiss(loadingToast);
       console.error(err);
-      toast.error("Failed to load document. It may not have been approved or generated yet.");
+      toast.error(t("studentDashboard.toasts.documentFailed"));
     }
   };
 
@@ -98,12 +100,12 @@ const StudentDashboard: React.FC = () => {
     e.preventDefault();
 
     if (!formData.prn_number || !formData.title) {
-      toast.error("PRN number and Degree Title are required.");
+      toast.error(t("studentDashboard.toasts.requiredFields"));
       return;
     }
 
     if (!file) {
-      toast.error("Please select your degree PDF.");
+      toast.error(t("studentDashboard.toasts.selectPdf"));
       return;
     }
 
@@ -135,7 +137,7 @@ const StudentDashboard: React.FC = () => {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      toast.success("Submission & document uploaded. College Admin will verify and mint on Sepolia.");
+      toast.success(t("studentDashboard.toasts.submitSuccess"));
       setShowForm(false);
       setFile(null);
       setFormData({
@@ -152,7 +154,7 @@ const StudentDashboard: React.FC = () => {
 
       await fetchSubmissions();
     } catch (err: unknown) {
-      toast.error(extractErrorMessage(err, "Failed to submit degree."));
+      toast.error(extractErrorMessage(err, t("studentDashboard.toasts.submitFailed")));
     }
   };
 
@@ -166,14 +168,14 @@ const StudentDashboard: React.FC = () => {
             <div className="flex flex-col gap-4 mb-8 sm:flex-row sm:items-end sm:justify-between">
               <div className="space-y-4">
                 <div>
-                  <h1 className="text-2xl md:text-3xl font-bold mb-1">Student Dashboard</h1>
-                  <p className="text-muted-foreground text-sm">Track your degree submission status and upload documents for approval.</p>
+                  <h1 className="text-2xl md:text-3xl font-bold mb-1">{t("studentDashboard.title")}</h1>
+                  <p className="text-muted-foreground text-sm">{t("studentDashboard.subtitle")}</p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-x-5 gap-y-2 py-2 px-3 rounded-lg bg-muted/40 border text-xs sm:text-sm w-fit">
                   <div className="flex items-center gap-1.5">
                     <UserIcon className="w-3.5 h-3.5 text-accent" />
-                    <span className="font-semibold">{user?.full_name || "Student"}</span>
+                    <span className="font-semibold">{user?.full_name || t("studentDashboard.fallbackStudent")}</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-muted-foreground">
                     <Mail className="w-3.5 h-3.5" />
@@ -190,7 +192,7 @@ const StudentDashboard: React.FC = () => {
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity active:scale-[0.98]"
               >
                 <Upload className="w-4 h-4" />
-                New Submission
+                {t("studentDashboard.newSubmission")}
               </button>
             </div>
           </ScrollReveal>
@@ -198,19 +200,19 @@ const StudentDashboard: React.FC = () => {
           <ScrollReveal delay={50}>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
               <div className="rounded-3xl border bg-card p-5 shadow-sm">
-                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3">Pending review</p>
+                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3">{t("studentDashboard.pendingReview")}</p>
                 <div className="text-3xl font-bold tabular-nums">{pendingCount}</div>
-                <p className="text-sm text-muted-foreground mt-2">Submissions waiting for university admin verification</p>
+                <p className="text-sm text-muted-foreground mt-2">{t("studentDashboard.pendingReviewDesc")}</p>
               </div>
               <div className="rounded-3xl border bg-card p-5 shadow-sm">
-                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3">Approved</p>
+                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3">{t("studentDashboard.approved")}</p>
                 <div className="text-3xl font-bold tabular-nums">{approvedCount}</div>
-                <p className="text-sm text-muted-foreground mt-2">Verified submissions with on-chain minting in progress</p>
+                <p className="text-sm text-muted-foreground mt-2">{t("studentDashboard.approvedDesc")}</p>
               </div>
               <div className="rounded-3xl border bg-card p-5 shadow-sm">
-                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3">Rejected</p>
+                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3">{t("studentDashboard.rejected")}</p>
                 <div className="text-3xl font-bold tabular-nums">{rejectedCount}</div>
-                <p className="text-sm text-muted-foreground mt-2">Submissions that need resubmission or correction</p>
+                <p className="text-sm text-muted-foreground mt-2">{t("studentDashboard.rejectedDesc")}</p>
               </div>
             </div>
           </ScrollReveal>
@@ -218,11 +220,11 @@ const StudentDashboard: React.FC = () => {
           {showForm && (
             <ScrollReveal>
               <form onSubmit={handleSubmit} className="p-6 rounded-xl border bg-card mb-8 space-y-5">
-                <h3 className="font-semibold text-lg">Submit Degree for Verification</h3>
+                <h3 className="font-semibold text-lg">{t("studentDashboard.form.title")}</h3>
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1.5 opacity-70">PRN Number (From Profile)</label>
+                    <label className="block text-sm font-medium mb-1.5 opacity-70">{t("studentDashboard.form.prnNumber")}</label>
                     <input
                       type="text"
                       value={formData.prn_number}
@@ -231,29 +233,29 @@ const StudentDashboard: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1.5">Student Name</label>
+                    <label className="block text-sm font-medium mb-1.5">{t("studentDashboard.form.studentName")}</label>
                     <input
                       type="text"
                       value={formData.studentName}
                       onChange={(e) => setFormData({ ...formData, studentName: e.target.value })}
-                      placeholder="As on your degree"
+                      placeholder={t("studentDashboard.form.studentNamePlaceholder")}
                       required
                       className="w-full px-3 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1.5">Degree Title</label>
+                    <label className="block text-sm font-medium mb-1.5">{t("studentDashboard.form.degreeTitle")}</label>
                     <input
                       type="text"
                       value={formData.title}
                       onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      placeholder="e.g. B.Tech Computer Science"
+                      placeholder={t("studentDashboard.form.degreeTitlePlaceholder")}
                       required
                       className="w-full px-3 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1.5 opacity-70">University (From Profile)</label>
+                    <label className="block text-sm font-medium mb-1.5 opacity-70">{t("studentDashboard.form.university")}</label>
                     <input
                       type="text"
                       value={formData.college_name}
@@ -262,56 +264,56 @@ const StudentDashboard: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1.5">Description (optional)</label>
+                    <label className="block text-sm font-medium mb-1.5">{t("studentDashboard.form.description")}</label>
                     <input
                       type="text"
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      placeholder="e.g. specialization, remarks"
+                      placeholder={t("studentDashboard.form.descriptionPlaceholder")}
                       className="w-full px-3 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-1.5">Entry Year</label>
+                    <label className="block text-sm font-medium mb-1.5">{t("studentDashboard.form.entryYear")}</label>
                     <input
                       type="text"
                       value={formData.entryYear}
                       onChange={(e) => setFormData({ ...formData, entryYear: e.target.value })}
-                      placeholder="e.g. 2021"
+                      placeholder={t("studentDashboard.form.entryYearPlaceholder")}
                       required
                       className="w-full px-3 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1.5">Passing Year</label>
+                    <label className="block text-sm font-medium mb-1.5">{t("studentDashboard.form.passingYear")}</label>
                     <input
                       type="text"
                       value={formData.passingYear}
                       onChange={(e) => setFormData({ ...formData, passingYear: e.target.value })}
-                      placeholder="e.g. 2024"
+                      placeholder={t("studentDashboard.form.passingYearPlaceholder")}
                       required
                       className="w-full px-3 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1.5">CGPA</label>
+                    <label className="block text-sm font-medium mb-1.5">{t("studentDashboard.form.cgpa")}</label>
                     <input
                       type="text"
                       value={formData.cgpa}
                       onChange={(e) => setFormData({ ...formData, cgpa: e.target.value })}
-                      placeholder="e.g. 8.6"
+                      placeholder={t("studentDashboard.form.cgpaPlaceholder")}
                       required
                       className="w-full px-3 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1.5">Credits</label>
+                    <label className="block text-sm font-medium mb-1.5">{t("studentDashboard.form.credits")}</label>
                     <input
                       type="text"
                       value={formData.credits}
                       onChange={(e) => setFormData({ ...formData, credits: e.target.value })}
-                      placeholder="e.g. 160"
+                      placeholder={t("studentDashboard.form.creditsPlaceholder")}
                       required
                       className="w-full px-3 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                     />
@@ -319,11 +321,11 @@ const StudentDashboard: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1.5">Degree Document (PDF)</label>
+                  <label className="block text-sm font-medium mb-1.5">{t("studentDashboard.form.degreeDocument")}</label>
                   <label className="flex items-center gap-3 px-4 py-6 rounded-lg border-2 border-dashed bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors">
                     <FileText className="w-5 h-5 text-muted-foreground" />
                     <span className="text-sm text-muted-foreground">
-                      {file ? file.name : "Click to upload or drag your degree PDF here"}
+                      {file ? file.name : t("studentDashboard.form.degreeDocumentPlaceholder")}
                     </span>
                     <input
                       type="file"
@@ -337,7 +339,7 @@ const StudentDashboard: React.FC = () => {
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5 border border-accent/20">
                   <CreditCard className="w-4 h-4 text-accent shrink-0" />
                   <p className="text-xs text-muted-foreground">
-                    Payment (Razorpay/UPI) is not wired yet; submit will create a PENDING entry for College Admin to mint.
+                    {t("studentDashboard.form.paymentNote")}
                   </p>
                 </div>
 
@@ -346,7 +348,7 @@ const StudentDashboard: React.FC = () => {
                     type="submit"
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity active:scale-[0.98]"
                   >
-                    Submit & Proceed to Pay
+                    {t("studentDashboard.form.submitAndPay")}
                     <ArrowRight className="w-4 h-4" />
                   </button>
                   <button
@@ -354,7 +356,7 @@ const StudentDashboard: React.FC = () => {
                     onClick={() => setShowForm(false)}
                     className="px-4 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-muted transition-colors"
                   >
-                    Cancel
+                    {t("common.cancel")}
                   </button>
                 </div>
               </form>
@@ -363,13 +365,13 @@ const StudentDashboard: React.FC = () => {
 
           <ScrollReveal delay={100}>
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Your Submissions</h3>
+              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{t("studentDashboard.yourSubmissions")}</h3>
 
               {loading ? (
-                <div className="text-center py-10 opacity-70">Loading submissions...</div>
+                <div className="text-center py-10 opacity-70">{t("studentDashboard.loadingSubmissions")}</div>
               ) : submissions.length === 0 ? (
                 <div className="p-8 border rounded-xl bg-card text-center text-muted-foreground">
-                  You have no submissions yet.
+                  {t("studentDashboard.noSubmissions")}
                 </div>
               ) : (
                 submissions.map((sub) => {
@@ -387,12 +389,12 @@ const StudentDashboard: React.FC = () => {
                         <div>
                           <h4 className="font-medium">{sub.title}</h4>
                           <p className="text-sm text-muted-foreground">
-                            PRN: <span className="font-mono">{sub.prn_number ?? "-"}</span>
+                            {t("studentDashboard.prnLabel")} <span className="font-mono">{sub.prn_number ?? "-"}</span>
                           </p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            Submitted {new Date(sub.created_at).toLocaleDateString()}
+                            {t("studentDashboard.submittedOn", { date: new Date(sub.created_at).toLocaleDateString() })}
                           </p>
-                          <p className="text-xs text-muted-foreground mt-1">Student: {studentName}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{t("studentDashboard.studentLabel", { name: studentName })}</p>
                         </div>
                       </div>
 
@@ -400,34 +402,34 @@ const StudentDashboard: React.FC = () => {
                         {sub.status === "PENDING" && (
                           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-muted/30 text-xs text-muted-foreground">
                             <Clock className="w-3 h-3" />
-                            Pending Review
+                            {t("studentDashboard.pendingReview")}
                           </span>
                         )}
 
                         {sub.status === "APPROVED" && (
                           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-success/10 text-success text-xs font-medium">
                             <Shield className="w-3 h-3" />
-                            Approved
+                            {t("studentDashboard.approved")}
                           </span>
                         )}
 
                         {sub.status === "REJECTED" && (
                           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-destructive/10 text-destructive text-xs font-medium">
                             <XCircle className="w-3 h-3" />
-                            Rejected
+                            {t("studentDashboard.rejected")}
                           </span>
                         )}
 
                         {sub.status === "APPROVED" && sub.tx_hash && (
                           <span className="text-xs font-mono text-muted-foreground max-w-[180px] truncate" title={sub.tx_hash}>
-                            Tx: {sub.tx_hash}
+                            {t("studentDashboard.txLabel")} {sub.tx_hash}
                           </span>
                         )}
                         {sub.status === "APPROVED" && sub.token_id !== null && sub.token_id !== undefined && (
-                          <span className="text-xs font-mono text-muted-foreground">Token: {sub.token_id}</span>
+                          <span className="text-xs font-mono text-muted-foreground">{t("studentDashboard.tokenLabel")} {sub.token_id}</span>
                         )}
                         {sub.status === "APPROVED" && sub.document_uid && (
-                          <span className="text-xs font-mono text-muted-foreground">Document ID: {sub.document_uid}</span>
+                          <span className="text-xs font-mono text-muted-foreground">{t("studentDashboard.documentIdLabel")} {sub.document_uid}</span>
                         )}
 
                         {sub.has_document && sub.status === "APPROVED" ? (
@@ -436,10 +438,10 @@ const StudentDashboard: React.FC = () => {
                             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-medium hover:bg-accent/20 transition-colors active:scale-[0.97]"
                           >
                             <Eye className="w-3 h-3" />
-                            View Approved PDF
+                            {t("studentDashboard.viewApprovedPdf")}
                           </button>
                         ) : sub.has_document ? (
-                          <span className="text-xs text-muted-foreground">Document uploaded — awaiting approval.</span>
+                          <span className="text-xs text-muted-foreground">{t("studentDashboard.documentUploaded")}</span>
                         ) : null}
                       </div>
                     </div>

@@ -40,6 +40,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useTranslation } from "react-i18next";
 
 interface UserInfo {
   id: string;
@@ -62,6 +63,7 @@ interface CredentialInfo {
 }
 
 const SuperadminDashboard: React.FC = () => {
+  const { t } = useTranslation();
   const [users, setUsers] = useState<UserInfo[]>([]);
   const [credentials, setCredentials] = useState<CredentialInfo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,7 +85,7 @@ const SuperadminDashboard: React.FC = () => {
       setCredentials(credRes.data);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to load users.");
+      toast.error(t("superadminDashboard.toasts.loadFailed"));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -96,30 +98,30 @@ const SuperadminDashboard: React.FC = () => {
 
   const handleVerifyAdmin = async (userId: string) => {
     setVerifyingId(userId);
-    const toastId = toast.loading("Approving user login...");
+    const toastId = toast.loading(t("superadminDashboard.toasts.approvingLogin"));
     try {
       await axios.post(`/users/verify-admin/${userId}`);
-      toast.success("User login approved successfully!", { id: toastId });
+      toast.success(t("superadminDashboard.toasts.approvedLogin"), { id: toastId });
       await fetchUsers(true);
     } catch (err: unknown) {
       console.error(err);
-      toast.error(extractErrorMessage(err, "Approval failed. Check backend logs."), { id: toastId });
+      toast.error(extractErrorMessage(err, t("superadminDashboard.toasts.approvalFailed")), { id: toastId });
     } finally {
       setVerifyingId(null);
     }
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (!window.confirm("Are you sure you want to permanently delete this user?")) return;
+    if (!window.confirm(t("superadminDashboard.deleteConfirm"))) return;
     setDeletingId(userId);
-    const toastId = toast.loading("Deleting user from database...");
+    const toastId = toast.loading(t("superadminDashboard.toasts.deletingUser"));
     try {
       await axios.delete(`/users/${userId}`);
-      toast.success("User deleted successfully.", { id: toastId });
+      toast.success(t("superadminDashboard.toasts.userDeleted"), { id: toastId });
       await fetchUsers(true);
     } catch (err: unknown) {
       console.error(err);
-      toast.error("Failed to delete user.", { id: toastId });
+      toast.error(t("superadminDashboard.toasts.deleteFailed"), { id: toastId });
     } finally {
       setDeletingId(null);
     }
@@ -179,7 +181,9 @@ const SuperadminDashboard: React.FC = () => {
 
   const totalCredentials = credApproved + credPending + credRejected;
   const approvedRatio = totalCredentials > 0 ? Math.round((credApproved / totalCredentials) * 100) : 0;
-  const approvalStatusLabel = pendingAdmins.length > 0 ? "Action required" : "All systems nominal";
+  const approvalStatusLabel = pendingAdmins.length > 0
+    ? t("superadminDashboard.actionRequired")
+    : t("superadminDashboard.allSystemsNominal");
 
   // Filtered lists for search
   const filteredStudents = studentList.filter(s =>
@@ -204,14 +208,14 @@ const SuperadminDashboard: React.FC = () => {
   );
 
   const tabs = [
-    { id: "overview" as const, label: "Overview", icon: BarChart3, badge: null },
+    { id: "overview" as const, label: t("superadminDashboard.tabs.overview"), icon: BarChart3, badge: null },
     {
-      id: "admins" as const, label: "Administrators", icon: UserCog,
+      id: "admins" as const, label: t("superadminDashboard.tabs.administrators"), icon: UserCog,
       badge: pendingAdmins.length > 0 ? pendingAdmins.length : null,
       badgeColor: "bg-amber-500"
     },
     {
-      id: "students" as const, label: "Students", icon: GraduationCap,
+      id: "students" as const, label: t("superadminDashboard.tabs.students"), icon: GraduationCap,
       badge: studentList.length, badgeColor: "bg-accent"
     },
   ];
@@ -240,15 +244,15 @@ const SuperadminDashboard: React.FC = () => {
                     </div>
                     <div className="space-y-1">
                       <span className="text-xs font-bold uppercase tracking-widest text-accent/80 px-2 py-0.5 rounded-full bg-accent/10 border border-accent/15 inline-flex items-center gap-2">
-                        SUPERADMIN
+                        {t("superadminDashboard.badge")}
                       </span>
-                      <div className="text-xs text-muted-foreground">Elevated access to platform controls</div>
+                      <div className="text-xs text-muted-foreground">{t("superadminDashboard.badgeDescription")}</div>
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Platform Control Center</h1>
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{t("superadminDashboard.title")}</h1>
                     <p className="max-w-2xl text-sm text-muted-foreground">
-                      Manage administrator approvals, monitor platform health, and oversee all registered users from one responsive dashboard.
+                      {t("superadminDashboard.subtitle")}
                     </p>
                   </div>
                 </div>
@@ -259,8 +263,8 @@ const SuperadminDashboard: React.FC = () => {
                       <div className="space-y-5 min-w-0">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                           <div className="min-w-0">
-                            <p className="text-xs uppercase tracking-[0.28em] text-muted-foreground">Platform snapshot</p>
-                            <h2 className="text-2xl font-semibold tracking-tight">Operational control center</h2>
+                            <p className="text-xs uppercase tracking-[0.28em] text-muted-foreground">{t("superadminDashboard.platformSnapshot")}</p>
+                            <h2 className="text-2xl font-semibold tracking-tight">{t("superadminDashboard.operationalControlCenter")}</h2>
                           </div>
                           <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${pendingAdmins.length > 0 ? "bg-amber-500/15 text-amber-600" : "bg-emerald-500/15 text-emerald-600"}`}>
                             <span className={`w-2.5 h-2.5 rounded-full ${pendingAdmins.length > 0 ? "bg-amber-500" : "bg-emerald-500"}`} />
@@ -268,23 +272,23 @@ const SuperadminDashboard: React.FC = () => {
                           </span>
                         </div>
                         <p className="max-w-2xl text-sm text-muted-foreground">
-                          Track latest signups, institution coverage, and credential flow without crowding the page.
+                          {t("superadminDashboard.snapshotDescription")}
                         </p>
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                           <div className="rounded-2xl border border-border bg-background/80 p-4">
-                            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">Universities onboarded</p>
+                            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">{t("superadminDashboard.universitiesOnboarded")}</p>
                             <p className="text-2xl font-semibold tracking-tight">{uniqueUniversities}</p>
-                            <p className="text-xs text-muted-foreground mt-2">Distinct institutions represented</p>
+                            <p className="text-xs text-muted-foreground mt-2">{t("superadminDashboard.universitiesOnboardedDesc")}</p>
                           </div>
                           <div className="rounded-2xl border border-border bg-background/80 p-4">
-                            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">Recent signups</p>
+                            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">{t("superadminDashboard.recentSignups")}</p>
                             <p className="text-2xl font-semibold tracking-tight">{recentSignups}</p>
-                            <p className="text-xs text-muted-foreground mt-2">In the last 7 days</p>
+                            <p className="text-xs text-muted-foreground mt-2">{t("superadminDashboard.recentSignupsDesc")}</p>
                           </div>
                           <div className="rounded-2xl border border-border bg-background/80 p-4">
-                            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">Verification state</p>
+                            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">{t("superadminDashboard.verificationState")}</p>
                             <p className="text-2xl font-semibold tracking-tight">{approvalStatusLabel}</p>
-                            <p className="text-xs text-muted-foreground mt-2">Pending admin approvals</p>
+                            <p className="text-xs text-muted-foreground mt-2">{t("superadminDashboard.verificationStateDesc")}</p>
                           </div>
                         </div>
                       </div>
@@ -294,13 +298,13 @@ const SuperadminDashboard: React.FC = () => {
                             <TrendingUp className="w-4 h-4 text-primary" />
                           </div>
                           <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Credential pipeline</p>
-                            <h3 className="text-sm font-semibold">Platform issuance health</h3>
+                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">{t("superadminDashboard.credentialPipeline")}</p>
+                            <h3 className="text-sm font-semibold">{t("superadminDashboard.platformIssuanceHealth")}</h3>
                           </div>
                         </div>
                         <div className="rounded-3xl bg-muted px-4 py-5">
                           <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
-                            <span>Approved</span>
+                            <span>{t("studentDashboard.approved")}</span>
                             <span>{credApproved}</span>
                           </div>
                           <div className="h-2 rounded-full overflow-hidden bg-border">
@@ -323,7 +327,7 @@ const SuperadminDashboard: React.FC = () => {
                       className="inline-flex min-w-[180px] items-center gap-2 px-4 py-2 rounded-2xl bg-accent text-accent-foreground font-semibold text-sm hover:opacity-90 transition"
                     >
                       <ShieldCheck className="w-4 h-4" />
-                      Review pending logins
+                      {t("superadminDashboard.reviewPendingLogins")}
                     </button>
                     <button
                       onClick={() => void fetchUsers(true)}
@@ -331,7 +335,7 @@ const SuperadminDashboard: React.FC = () => {
                       className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl border border-border bg-card text-sm text-muted-foreground hover:text-foreground hover:border-accent/30 transition"
                     >
                       <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
-                      Refresh data
+                      {t("superadminDashboard.refreshData")}
                     </button>
                   </div>
                 </div>

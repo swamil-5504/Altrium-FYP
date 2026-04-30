@@ -3,6 +3,8 @@ import { Menu, X, Sun, Moon } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/components/ThemeProvider";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 
 interface NavItem {
   key: string;
@@ -12,6 +14,7 @@ interface NavItem {
 }
 
 export const Navbar = () => {
+  const { t } = useTranslation();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
@@ -25,16 +28,18 @@ export const Navbar = () => {
 
   const role = user?.role;
   const navLinks: NavItem[] = [
-    ...(!isAuthenticated ? [{ key: "home", to: "/", label: "Home", enabled: true }] : []),
+    ...(!isAuthenticated ? [{ key: "home", to: "/", label: t("dashboard.home"), enabled: true }] : []),
     ...(isAuthenticated ? [
       {
         key: "primary",
         to: role === "SUPERADMIN" ? "/superadmin" : (role === "ADMIN" ? "/university" : "/student"),
-        label: role === "SUPERADMIN" ? "Superadmin Dashboard" : (role === "ADMIN" ? "Submissions" : "My Degree"),
+        label: role === "SUPERADMIN"
+          ? t("navbar.superadminDashboard")
+          : (role === "ADMIN" ? t("navbar.submissions") : t("navbar.myDegree")),
         enabled: true,
       }
     ] : []),
-    { key: "docs", to: "/docs", label: "Docs", enabled: true },
+    { key: "docs", to: "/docs", label: t("navbar.docs"), enabled: true },
   ];
 
   const renderNavItem = (link: NavItem) => {
@@ -87,10 +92,12 @@ export const Navbar = () => {
         <div className="hidden md:flex items-center gap-5">
           {navLinks.map(renderNavItem)}
 
+          <LanguageSwitcher />
+
           <button
             onClick={toggleTheme}
             className="text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Toggle theme"
+            aria-label={t("navbar.toggleTheme")}
           >
             <Sun className="h-4 w-4 hidden dark:block" />
             <Moon className="h-4 w-4 block dark:hidden" />
@@ -102,7 +109,7 @@ export const Navbar = () => {
               onClick={() => void handleLogout()}
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              Logout
+              {t("common.logout")}
             </button>
           ) : (
             <div className="flex items-center gap-4">
@@ -110,13 +117,13 @@ export const Navbar = () => {
                 to="/login"
                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
-                Login
+                {t("navbar.login")}
               </Link>
               <Link
                 to="/register"
                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
-                Register
+                {t("navbar.register")}
               </Link>
             </div>
           )}
@@ -124,10 +131,11 @@ export const Navbar = () => {
 
         {/* Mobile toggle */}
         <div className="flex items-center gap-3 md:hidden">
+          <LanguageSwitcher />
           <button
             onClick={toggleTheme}
             className="text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Toggle theme"
+            aria-label={t("navbar.toggleTheme")}
           >
             <Sun className="h-4 w-4 hidden dark:block" />
             <Moon className="h-4 w-4 block dark:hidden" />
@@ -135,7 +143,7 @@ export const Navbar = () => {
           <button
             className="text-muted-foreground hover:text-foreground transition-colors"
             onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            aria-label={mobileOpen ? t("navbar.closeMenu") : t("navbar.openMenu")}
           >
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -176,7 +184,7 @@ export const Navbar = () => {
                 onClick={() => void handleLogout()}
                 className="text-left px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
-                Logout
+                {t("common.logout")}
               </button>
             ) : (
               <>
@@ -185,14 +193,14 @@ export const Navbar = () => {
                   onClick={() => setMobileOpen(false)}
                   className="block px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Login
+                  {t("navbar.login")}
                 </Link>
                 <Link
                   to="/register"
                   onClick={() => setMobileOpen(false)}
                   className="block px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Register
+                  {t("navbar.register")}
                 </Link>
               </>
             )}
