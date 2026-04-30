@@ -27,7 +27,7 @@ import DocsOperations from "./pages/docs/sections/Operations.tsx";
 import DocsCli from "./pages/docs/sections/Cli.tsx";
 import DocsSupport from "./pages/docs/sections/Support.tsx";
 import DocsNotifications from "./pages/docs/sections/Notifications.tsx";
-import DocsBulkUpload from "./pages/docs/coming-soon/BulkUploadWizard.tsx";
+import DocsBulkUpload from "./pages/docs/sections/BulkUploadWizard.tsx";
 import DocsLanguageSupport from "./pages/docs/sections/LanguageSupport.tsx";
 import PendingVerification from "./pages/PendingVerification.tsx";
 import { ProtectedRoute } from "@/components/ProtectedRoute";

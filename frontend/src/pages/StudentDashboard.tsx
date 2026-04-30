@@ -4,7 +4,16 @@ import { toast } from "sonner";
 import { extractErrorMessage } from "@/utils/errors";
 import { Navbar } from "@/components/Navbar";
 import { ScrollReveal } from "@/components/ScrollReveal";
-import { Upload, FileText, CreditCard, Clock, Shield, XCircle, ArrowRight, Eye, User as UserIcon, Mail, Building2 } from "lucide-react";
+import { Upload, CreditCard, Clock, Shield, XCircle, ArrowRight, Eye, User as UserIcon, Mail, Building2, FileText } from "lucide-react";
+
+type DegreeType = "BTECH" | "BSC" | "MTECH" | "MBA";
+
+const DEGREE_TYPE_OPTIONS: { value: DegreeType; label: string }[] = [
+  { value: "BTECH", label: "BTech" },
+  { value: "BSC", label: "BSc" },
+  { value: "MTECH", label: "MTech" },
+  { value: "MBA", label: "MBA" },
+];
 import { useAuth } from "@/context/AuthContext";
 import { useTranslation } from "react-i18next";
 
@@ -36,7 +45,6 @@ const StudentDashboard: React.FC = () => {
   const pendingCount = submissions.filter((sub) => sub.status === "PENDING").length;
 
   const [showForm, setShowForm] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     prn_number: user?.prn_number || "",
     studentName: user?.full_name || "",
@@ -44,7 +52,7 @@ const StudentDashboard: React.FC = () => {
     passingYear: "",
     cgpa: "",
     credits: "",
-    title: "",
+    degree_type: "" as DegreeType | "",
     description: "",
     college_name: user?.college_name || "",
   });
@@ -99,13 +107,8 @@ const StudentDashboard: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.prn_number || !formData.title) {
+    if (!formData.prn_number || !formData.degree_type) {
       toast.error(t("studentDashboard.toasts.requiredFields"));
-      return;
-    }
-
-    if (!file) {
-      toast.error(t("studentDashboard.toasts.selectPdf"));
       return;
     }
 
@@ -118,28 +121,21 @@ const StudentDashboard: React.FC = () => {
         credits: formData.credits,
       };
 
-      // Step 1: Create the degree submission
-      const response = await axios.post("/degrees", {
-        title: formData.title,
+      const titleLabel =
+        DEGREE_TYPE_OPTIONS.find((o) => o.value === formData.degree_type)?.label
+        ?? formData.degree_type;
+
+      await axios.post("/degrees", {
+        title: titleLabel,
+        degree_type: formData.degree_type,
         description: formData.description || null,
         prn_number: formData.prn_number,
         college_name: formData.college_name,
         metadata_json: studentBasicsPayload,
       });
 
-      const credentialId = response.data.id;
-
-      // Step 2: Upload the PDF document
-      const formDataUpload = new FormData();
-      formDataUpload.append("file", file);
-
-      await axios.post(`/degrees/${credentialId}/document`, formDataUpload, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
       toast.success(t("studentDashboard.toasts.submitSuccess"));
       setShowForm(false);
-      setFile(null);
       setFormData({
         prn_number: "",
         studentName: "",
@@ -147,7 +143,7 @@ const StudentDashboard: React.FC = () => {
         passingYear: "",
         cgpa: "",
         credits: "",
-        title: "",
+        degree_type: "",
         description: "",
         college_name: "",
       });
@@ -245,14 +241,19 @@ const StudentDashboard: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1.5">{t("studentDashboard.form.degreeTitle")}</label>
-                    <input
-                      type="text"
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      placeholder={t("studentDashboard.form.degreeTitlePlaceholder")}
+                    <select
+                      value={formData.degree_type}
+                      onChange={(e) =>
+                        setFormData({ ...formData, degree_type: e.target.value as DegreeType | "" })
+                      }
                       required
                       className="w-full px-3 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    />
+                    >
+                      <option value="" disabled>Select degree type…</option>
+                      {DEGREE_TYPE_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1.5 opacity-70">{t("studentDashboard.form.university")}</label>
@@ -320,26 +321,10 @@ const StudentDashboard: React.FC = () => {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-1.5">{t("studentDashboard.form.degreeDocument")}</label>
-                  <label className="flex items-center gap-3 px-4 py-6 rounded-lg border-2 border-dashed bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors">
-                    <FileText className="w-5 h-5 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">
-                      {file ? file.name : t("studentDashboard.form.degreeDocumentPlaceholder")}
-                    </span>
-                    <input
-                      type="file"
-                      accept=".pdf"
-                      className="hidden"
-                      onChange={(e) => setFile(e.target.files?.[0] || null)}
-                    />
-                  </label>
-                </div>
-
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5 border border-accent/20">
                   <CreditCard className="w-4 h-4 text-accent shrink-0" />
                   <p className="text-xs text-muted-foreground">
-                    {t("studentDashboard.form.paymentNote")}
+                    Your university will mint your degree on-chain when they import the cohort PDFs. No PDF upload needed from you.
                   </p>
                 </div>
 

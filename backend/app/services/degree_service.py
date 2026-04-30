@@ -177,6 +177,7 @@ class DegreeService:
             credential_create=credential_create,
             issued_to_id=current_user.id,
             issued_by_id=current_user.id,
+            initial_status=CredentialStatus.REQUESTED,
         )
 
     @staticmethod

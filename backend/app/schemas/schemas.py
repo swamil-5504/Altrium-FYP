@@ -15,9 +15,22 @@ class UserRole(str, Enum):
 
 
 class CredentialStatus(str, Enum):
+    REQUESTED = "REQUESTED"
     PENDING = "PENDING"
     APPROVED = "APPROVED"
     REJECTED = "REJECTED"
+
+
+class DegreeType(str, Enum):
+    BTECH = "BTECH"
+    BSC = "BSC"
+    MTECH = "MTECH"
+    MBA = "MBA"
+
+
+class BulkBatchStatus(str, Enum):
+    READY = "READY"
+    COMMITTED = "COMMITTED"
 
 
 # ---------------------------------------------------------------------------
@@ -147,6 +160,7 @@ class CredentialCreate(CredentialBase):
     tx_hash: Optional[str] = Field(None, pattern=TX_HASH_PATTERN)
     prn_number: Optional[str] = None
     college_name: Optional[str] = Field(None, max_length=150)
+    degree_type: Optional[DegreeType] = None
 
     @field_validator("college_name", mode="before")
     @classmethod
@@ -178,6 +192,7 @@ class CredentialResponse(CredentialBase):
     tx_hash: Optional[str] = Field(None, pattern=TX_HASH_PATTERN)
     prn_number: Optional[str] = None
     college_name: Optional[str] = None
+    degree_type: Optional[DegreeType] = None
     document_uid: Optional[str] = None
     has_document: bool = False
     revoked: bool = False
@@ -227,3 +242,52 @@ class ForgotPasswordRequest(_PasswordPayload):
 
 class ChangePasswordRequest(_PasswordPayload):
     old_password: str
+
+
+# ---------------------------------------------------------------------------
+# Bulk upload schemas
+# ---------------------------------------------------------------------------
+class RequestedRowResponse(BaseModel):
+    credential_id: UUID
+    prn_number: Optional[str] = None
+    student_name: Optional[str] = None
+    student_email: Optional[str] = None
+    description: Optional[str] = None
+    metadata_json: Optional[dict] = None
+    created_at: datetime
+
+
+class BulkMatchedRow(BaseModel):
+    credential_id: UUID
+    prn_number: str
+    student_name: Optional[str] = None
+    pdf_filename: str
+    selected: bool = True
+
+
+class BulkMatchResponse(BaseModel):
+    batch_id: UUID
+    degree_type: DegreeType
+    matched_rows: List[BulkMatchedRow]
+    unmatched_request_prns: List[str]
+    orphan_pdf_filenames: List[str]
+    created_at: datetime
+
+
+class BulkCommitRequest(BaseModel):
+    deselected_credential_ids: List[UUID] = Field(default_factory=list)
+
+
+class BulkCommitResultRow(BaseModel):
+    credential_id: UUID
+    prn_number: str
+    status: str
+    error: Optional[str] = None
+
+
+class BulkCommitResponse(BaseModel):
+    batch_id: UUID
+    committed_count: int
+    skipped_count: int
+    failed_count: int
+    rows: List[BulkCommitResultRow]
