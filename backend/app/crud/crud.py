@@ -137,6 +137,13 @@ class CredentialCRUD:
         ).to_list()
 
     @staticmethod
+    async def get_approved_by_user_id(user_id: UUID) -> List[Credential]:
+        return await Credential.find(
+            Credential.issued_to_id == user_id,
+            Credential.status == CredentialStatus.APPROVED
+        ).to_list()
+
+    @staticmethod
     async def get_all_approved() -> List[Credential]:
         return await Credential.find(
             (Credential.status == CredentialStatus.APPROVED)

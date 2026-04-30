@@ -101,6 +101,8 @@ export const getDocGroups = (t: TFunction): DocGroup[] => [
       { to: "/docs/security", label: t("docsUi.links.security.label"), description: t("docsUi.links.security.description") },
       { to: "/docs/operations", label: t("docsUi.links.operations.label"), description: t("docsUi.links.operations.description") },
       { to: "/docs/cli", label: t("docsUi.links.cli.label"), description: t("docsUi.links.cli.description") },
+      { to: "/docs/notifications", label: t("docsUi.links.telegramBot.label"), description: t("docsUi.links.telegramBot.description") },
+      { to: "/docs/language-support", label: t("docsUi.links.languageSupport.label"), description: t("docsUi.links.languageSupport.description") },
     ],
   },
   {
@@ -118,7 +120,6 @@ export const getDocGroups = (t: TFunction): DocGroup[] => [
     links: [
       { to: "/docs/bulk-upload-wizard", label: t("docsUi.links.bulkUploadWizard.label"), description: t("docsUi.links.bulkUploadWizard.description") },
       { to: "/docs/email-service", label: t("docsUi.links.emailService.label"), description: t("docsUi.links.emailService.description") },
-      { to: "/docs/language-support", label: t("docsUi.links.languageSupport.label"), description: t("docsUi.links.languageSupport.description") },
     ],
   },
 ];
@@ -332,9 +333,8 @@ export const Callout = ({
       className={`rounded-xl p-4 border ${tone} text-[13.5px] leading-relaxed`}
     >
       <div
-        className={`text-[11px] uppercase tracking-wider mb-1 font-semibold ${
-          kind === "warn" ? "text-amber-700 dark:text-amber-400" : palette.accent
-        }`}
+        className={`text-[11px] uppercase tracking-wider mb-1 font-semibold ${kind === "warn" ? "text-amber-700 dark:text-amber-400" : palette.accent
+          }`}
       >
         {label}
       </div>

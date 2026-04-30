@@ -254,6 +254,14 @@ class DegreeService:
     @staticmethod
     async def get_public_by_prn(prn_number: str) -> List[Credential]:
         return await CredentialCRUD.get_approved_by_prn(prn_number)
+
+    @staticmethod
+    async def get_public_by_email(email: str) -> List[Credential]:
+        from app.crud.crud import UserCRUD
+        user = await UserCRUD.get_by_email(email)
+        if not user:
+            return []
+        return await CredentialCRUD.get_approved_by_user_id(user.id)
         
     @staticmethod
     async def get_all_public() -> List[Credential]:
