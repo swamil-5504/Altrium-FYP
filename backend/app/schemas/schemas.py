@@ -60,22 +60,7 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    password: str = Field(..., min_length=12, max_length=128)
-
-    @field_validator("password")
-    @classmethod
-    def _password_complexity(cls, v: str) -> str:
-        # Require at least one lower, one upper, one digit, one symbol.
-        # This is intentionally strict — relax only if you also add MFA.
-        if not re.search(r"[a-z]", v):
-            raise ValueError("Password must contain a lowercase letter")
-        if not re.search(r"[A-Z]", v):
-            raise ValueError("Password must contain an uppercase letter")
-        if not re.search(r"\d", v):
-            raise ValueError("Password must contain a digit")
-        if not re.search(r"[^A-Za-z0-9]", v):
-            raise ValueError("Password must contain a symbol")
-        return v
+    password: str
 
 
 class UserUpdate(BaseModel):
@@ -230,7 +215,6 @@ class RegisterRequest(UserCreate):
 
 
 class _PasswordPayload(BaseModel):
-    """Base class that shares the complexity validator with UserCreate."""
 
     new_password: str = Field(...)
 
