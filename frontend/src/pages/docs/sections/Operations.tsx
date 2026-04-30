@@ -1,4 +1,4 @@
-import { DocPage, Sub, Ul } from "../_shared";
+import { DocPage, K, Sub, Ul } from "../_shared";
 import { useDocsContent } from "../content";
 
 const Operations = () => {
@@ -45,5 +45,6 @@ const Operations = () => {
       </Sub>
     </DocPage>
   );
+};
 
-  export default Operations;
+export default Operations;

@@ -98,10 +98,11 @@ export const getDocGroups = (t: TFunction): DocGroup[] => [
     label: t("docsUi.groups.platformOps"),
     icon: Server,
     links: [
-      { to: "/docs/security", label: "Security", description: "Auth, RBAC, uploads, transport." },
-      { to: "/docs/operations", label: "Operations", description: "Envs, logs, database." },
-      { to: "/docs/cli", label: "CLI & Scripts", description: "Backend and Foundry tooling." },
-      { to: "/docs/notifications", label: "Notifications", description: "Telegram bot push notifications setup." },
+      { to: "/docs/security", label: t("docsUi.links.security.label"), description: t("docsUi.links.security.description") },
+      { to: "/docs/operations", label: t("docsUi.links.operations.label"), description: t("docsUi.links.operations.description") },
+      { to: "/docs/cli", label: t("docsUi.links.cli.label"), description: t("docsUi.links.cli.description") },
+      { to: "/docs/notifications", label: t("docsUi.links.telegramBot.label"), description: t("docsUi.links.telegramBot.description") },
+      { to: "/docs/language-support", label: t("docsUi.links.languageSupport.label"), description: t("docsUi.links.languageSupport.description") },
     ],
   },
   {
@@ -119,7 +120,6 @@ export const getDocGroups = (t: TFunction): DocGroup[] => [
     links: [
       { to: "/docs/bulk-upload-wizard", label: t("docsUi.links.bulkUploadWizard.label"), description: t("docsUi.links.bulkUploadWizard.description") },
       { to: "/docs/email-service", label: t("docsUi.links.emailService.label"), description: t("docsUi.links.emailService.description") },
-      { to: "/docs/language-support", label: t("docsUi.links.languageSupport.label"), description: t("docsUi.links.languageSupport.description") },
     ],
   },
 ];

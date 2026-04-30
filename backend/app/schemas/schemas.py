@@ -50,7 +50,8 @@ class UserBase(BaseModel):
     role: UserRole = UserRole.STUDENT
     college_name: Optional[str] = Field(None, max_length=150)
     wallet_address: Optional[str] = Field(None, pattern=WALLET_ADDRESS_PATTERN)
-    prn_number: Optional[str] = Field(None, pattern=PRN_NUMBER_PATTERN)
+    prn_number: Optional[str] = None
+    telegram_id: Optional[str] = None
 
     @field_validator("full_name", "college_name", mode="before")
     @classmethod

@@ -3,7 +3,7 @@ import { DocPage, K, Sub } from "../_shared";
 const Notifications = () => (
   <DocPage
     kicker="Platform ops"
-    title="Telegram Notifications"
+    title="Telegram Bot"
     summary="How Altrium uses a central Telegram Bot to push instant notifications for Degree Approvals, Rejections, and Registration Events."
   >
     <Sub id="overview" title="Overview">
