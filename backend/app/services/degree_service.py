@@ -278,7 +278,7 @@ class DegreeService:
             )
 
         if status_value == CredentialStatus.APPROVED and credential.tx_hash:
-            combined_string = f"{credential.prn_number}-{credential.college_name}"
+            combined_string = f"{credential.prn_number}-{credential.college_name}-{credential.title}"
             expected_college_id_hash = Web3.keccak(text=combined_string).hex()
             if not expected_college_id_hash.startswith("0x"):
                 expected_college_id_hash = "0x" + expected_college_id_hash
@@ -306,8 +306,8 @@ class DegreeService:
 
         if new_status == CredentialStatus.APPROVED and new_tx_hash:
             # Reconstruct the expected collegeIdHash
-            # collegeIdHash = keccak256(utf8(prn_number + "-" + universityName))
-            combined_string = f"{credential.prn_number}-{credential.college_name}"
+            # collegeIdHash = keccak256(utf8(prn_number + "-" + universityName + "-" + degreeTitle))
+            combined_string = f"{credential.prn_number}-{credential.college_name}-{credential.title}"
             expected_college_id_hash = Web3.keccak(text=combined_string).hex()
             if not expected_college_id_hash.startswith("0x"):
                 expected_college_id_hash = "0x" + expected_college_id_hash

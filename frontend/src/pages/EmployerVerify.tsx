@@ -133,7 +133,7 @@ const EmployerVerify: React.FC = () => {
     setVerifyingHash(true);
     try {
       const universityName = result.college_name || "Altrium University";
-      const combinedString = `${result.prn_number}-${universityName}`;
+      const combinedString = `${result.prn_number}-${universityName}-${result.title}`;
       const collegeIdHash = ethers.keccak256(ethers.toUtf8Bytes(combinedString));
 
       const m = (result.metadata_json ?? {}) as Record<string, unknown>;

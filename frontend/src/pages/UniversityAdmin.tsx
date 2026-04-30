@@ -225,7 +225,7 @@ const UniversityAdmin: React.FC = () => {
         const provider = new ethers.BrowserProvider(walletProvider as any);
         const signer = await provider.getSigner();
         const registryContract = new ethers.Contract(CONTRACT_REGISTRY_ADDRESS, registryAbi, signer);
-        const combinedString = `${credential.prn_number}-${credential.college_name}`;
+        const combinedString = `${credential.prn_number}-${credential.college_name}-${credential.title}`;
         const collegeIdHash = ethers.keccak256(ethers.toUtf8Bytes(combinedString));
         const tx = await registryContract.revokeDegree(collegeIdHash);
         await tx.wait();
@@ -257,7 +257,7 @@ const UniversityAdmin: React.FC = () => {
         const provider = new ethers.BrowserProvider(walletProvider as any);
         const signer = await provider.getSigner();
         const registryContract = new ethers.Contract(CONTRACT_REGISTRY_ADDRESS, registryAbi, signer);
-        const combinedString = `${credential.prn_number}-${credential.college_name}`;
+        const combinedString = `${credential.prn_number}-${credential.college_name}-${credential.title}`;
         const collegeIdHash = ethers.keccak256(ethers.toUtf8Bytes(combinedString));
         const tx = await registryContract.burnDegree(collegeIdHash);
         await tx.wait();
@@ -347,8 +347,8 @@ const UniversityAdmin: React.FC = () => {
 
       const universityName = user?.college_name || "Altrium University";
 
-      // collegeIdHash = keccak256(utf8(prn_number + universityName))
-      const combinedString = `${credential.prn_number}-${universityName}`;
+      // collegeIdHash = keccak256(utf8(prn_number + "-" + universityName + "-" + degreeTitle))
+      const combinedString = `${credential.prn_number}-${universityName}-${credential.title}`;
       const collegeIdHash = ethers.keccak256(ethers.toUtf8Bytes(combinedString));
 
       // degreeHash = keccak256(utf8(JSON.stringify(studentBasicsPayload)))
