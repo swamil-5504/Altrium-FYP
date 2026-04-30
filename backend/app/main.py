@@ -12,8 +12,8 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
 from app.crud.crud import UserCRUD
 from app.schemas.schemas import UserCreate
-from app.models.models import UserRole, BlacklistedToken
-from app.api.routes import auth, users, credentials, degrees, telegram
+from app.models.models import UserRole, BlacklistedToken, BulkBatch
+from app.api.routes import auth, users, credentials, degrees, telegram, degrees_bulk
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from app.core.limiter import limiter
@@ -137,7 +137,7 @@ async def lifespan(app: FastAPI):
     # Drop legacy non-TTL indexes BEFORE Beanie tries to (re)create them.
     await _reconcile_blacklist_indexes(db)
     # initialize beanie with our document models
-    await init_beanie(database=db, document_models=[models.User, models.Credential, models.BlacklistedToken])
+    await init_beanie(database=db, document_models=[models.User, models.Credential, models.BlacklistedToken, BulkBatch])
 
 
     # Seed a generic Superadmin
@@ -213,6 +213,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(credentials.router)
+app.include_router(degrees_bulk.router)
 app.include_router(degrees.router)
 app.include_router(telegram.router)
 register_exception_handlers(app)

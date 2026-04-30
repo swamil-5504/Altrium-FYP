@@ -100,6 +100,7 @@ export const getDocGroups = (t: TFunction): DocGroup[] => [
     links: [
       { to: "/docs/security", label: t("docsUi.links.security.label"), description: t("docsUi.links.security.description") },
       { to: "/docs/operations", label: t("docsUi.links.operations.label"), description: t("docsUi.links.operations.description") },
+      { to: "/docs/bulk-upload-wizard", label: t("docsUi.links.bulkUploadWizard.label"), description: t("docsUi.links.bulkUploadWizard.description") },
       { to: "/docs/cli", label: t("docsUi.links.cli.label"), description: t("docsUi.links.cli.description") },
       { to: "/docs/notifications", label: t("docsUi.links.telegramBot.label"), description: t("docsUi.links.telegramBot.description") },
       { to: "/docs/language-support", label: t("docsUi.links.languageSupport.label"), description: t("docsUi.links.languageSupport.description") },
@@ -113,23 +114,7 @@ export const getDocGroups = (t: TFunction): DocGroup[] => [
       { to: "/docs/support", label: t("docsUi.links.support.label"), description: t("docsUi.links.support.description") },
     ],
   },
-  {
-    id: "coming-soon",
-    label: t("docsUi.groups.comingSoon"),
-    icon: Sparkles,
-    links: [
-      { to: "/docs/bulk-upload-wizard", label: t("docsUi.links.bulkUploadWizard.label"), description: t("docsUi.links.bulkUploadWizard.description") },
-      { to: "/docs/email-service", label: t("docsUi.links.emailService.label"), description: t("docsUi.links.emailService.description") },
-    ],
-  },
 ];
-
-/* Handy icon accessors for the coming-soon pages */
-export const comingSoonIcons = {
-  "bulk-upload-wizard": Upload,
-  "email-service": Mail,
-  "language-support": Languages,
-};
 
 /* Re-export common icons for section pages that want them */
 export { BookOpen, Rocket, Layers, Users, Code2, Blocks, Lock, Server, Terminal, LifeBuoy, GraduationCap, Sparkles };

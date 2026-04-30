@@ -7,7 +7,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useAppKit, useAppKitAccount, useAppKitProvider } from '@reown/appkit/react';
 import { Navbar } from "@/components/Navbar";
 import { ScrollReveal } from "@/components/ScrollReveal";
-import { Blocks, Clock, Eye, Shield, XCircle, Wallet, HelpCircle, Users, GraduationCap, AlertTriangle, Mail, User as UserIcon, Building2 } from "lucide-react";
+import { Blocks, Clock, Eye, Shield, XCircle, Wallet, HelpCircle, Users, GraduationCap, AlertTriangle, Mail, User as UserIcon, Building2, Upload } from "lucide-react";
+import BulkUploadWizard from "@/components/BulkUploadWizard";
 
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -126,7 +127,7 @@ const UniversityAdmin: React.FC = () => {
   const { t } = useTranslation();
   const [credentials, setCredentials] = useState<Credential[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
-  const [activeTab, setActiveTab] = useState<"degrees" | "students">("degrees");
+  const [activeTab, setActiveTab] = useState<"degrees" | "students" | "bulk">("degrees");
   const [loading, setLoading] = useState(true);
 
   const { open } = useAppKit();
@@ -224,7 +225,7 @@ const UniversityAdmin: React.FC = () => {
         const provider = new ethers.BrowserProvider(walletProvider as any);
         const signer = await provider.getSigner();
         const registryContract = new ethers.Contract(CONTRACT_REGISTRY_ADDRESS, registryAbi, signer);
-        const combinedString = `${credential.prn_number}-${credential.college_name}`;
+        const combinedString = `${credential.prn_number}-${credential.college_name}-${credential.title}`;
         const collegeIdHash = ethers.keccak256(ethers.toUtf8Bytes(combinedString));
         const tx = await registryContract.revokeDegree(collegeIdHash);
         await tx.wait();
@@ -256,7 +257,7 @@ const UniversityAdmin: React.FC = () => {
         const provider = new ethers.BrowserProvider(walletProvider as any);
         const signer = await provider.getSigner();
         const registryContract = new ethers.Contract(CONTRACT_REGISTRY_ADDRESS, registryAbi, signer);
-        const combinedString = `${credential.prn_number}-${credential.college_name}`;
+        const combinedString = `${credential.prn_number}-${credential.college_name}-${credential.title}`;
         const collegeIdHash = ethers.keccak256(ethers.toUtf8Bytes(combinedString));
         const tx = await registryContract.burnDegree(collegeIdHash);
         await tx.wait();
@@ -346,8 +347,8 @@ const UniversityAdmin: React.FC = () => {
 
       const universityName = user?.college_name || "Altrium University";
 
-      // collegeIdHash = keccak256(utf8(prn_number + universityName))
-      const combinedString = `${credential.prn_number}-${universityName}`;
+      // collegeIdHash = keccak256(utf8(prn_number + "-" + universityName + "-" + degreeTitle))
+      const combinedString = `${credential.prn_number}-${universityName}-${credential.title}`;
       const collegeIdHash = ethers.keccak256(ethers.toUtf8Bytes(combinedString));
 
       // degreeHash = keccak256(utf8(JSON.stringify(studentBasicsPayload)))
@@ -563,6 +564,16 @@ const UniversityAdmin: React.FC = () => {
               {t("universityDashboard.studentsEnrolled")}
               <span className="ml-1 px-1.5 py-0.5 rounded-full text-xs bg-accent/10 text-accent">{students.length}</span>
             </button>
+            <button
+              onClick={() => setActiveTab("bulk")}
+              className={`flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === "bulk"
+                ? "bg-background shadow text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+                }`}
+            >
+              <Upload className="w-4 h-4" />
+              Bulk Mint
+            </button>
           </div>
 
           {activeTab === "degrees" && (
@@ -746,6 +757,12 @@ const UniversityAdmin: React.FC = () => {
                 </div>
               </ScrollReveal>
             </>
+          )}
+
+          {activeTab === "bulk" && (
+            <ScrollReveal delay={100}>
+              <BulkUploadWizard onCommitted={() => void fetchCredentials()} />
+            </ScrollReveal>
           )}
 
           {activeTab === "students" && (
