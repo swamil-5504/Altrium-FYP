@@ -119,7 +119,6 @@ export const getDocGroups = (t: TFunction): DocGroup[] => [
     icon: Sparkles,
     links: [
       { to: "/docs/bulk-upload-wizard", label: t("docsUi.links.bulkUploadWizard.label"), description: t("docsUi.links.bulkUploadWizard.description") },
-      { to: "/docs/email-service", label: t("docsUi.links.emailService.label"), description: t("docsUi.links.emailService.description") },
     ],
   },
 ];
@@ -127,7 +126,6 @@ export const getDocGroups = (t: TFunction): DocGroup[] => [
 /* Handy icon accessors for the coming-soon pages */
 export const comingSoonIcons = {
   "bulk-upload-wizard": Upload,
-  "email-service": Mail,
   "language-support": Languages,
 };
 

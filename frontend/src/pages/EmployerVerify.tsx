@@ -22,6 +22,8 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
+import { useTranslation } from "react-i18next";
+
 type CredentialStatus = "PENDING" | "APPROVED" | "REJECTED";
 
 interface Credential {
@@ -76,6 +78,7 @@ const isEmail = (value: string): boolean => {
 };
 
 const EmployerVerify: React.FC = () => {
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [result, setResult] = useState<Credential | null>(null);
   const [searched, setSearched] = useState(false);
@@ -148,7 +151,7 @@ const EmployerVerify: React.FC = () => {
       const computedDegreeHash = ethers.keccak256(ethers.toUtf8Bytes(JSON.stringify(payload)));
 
       if (typeof window !== "undefined" && window.ethereum && CONTRACT_REGISTRY_ADDRESS) {
-        const provider = new ethers.BrowserProvider(window.ethereum);
+        const provider = new ethers.BrowserProvider(window.ethereum as any);
         const contract = new ethers.Contract(CONTRACT_REGISTRY_ADDRESS, registryAbi, provider);
 
         const [exists, tokenId, record] = await contract.getDegree(collegeIdHash);
@@ -203,8 +206,8 @@ const EmployerVerify: React.FC = () => {
             <div className="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-5">
               <Search className="w-7 h-7 text-accent" />
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold mb-2">Verify a Degree</h1>
-            <p className="text-muted-foreground">Enter a student&apos;s PRN or email to check verified credentials. No login required.</p>
+            <h1 className="text-2xl md:text-3xl font-bold mb-2">{t("employerVerify.title")}</h1>
+            <p className="text-muted-foreground">{t("employerVerify.subtitle")}</p>
           </ScrollReveal>
 
           <ScrollReveal delay={80}>
@@ -213,7 +216,7 @@ const EmployerVerify: React.FC = () => {
                 type="text"
                 value={query}
                 onChange={handleQueryChange}
-                placeholder="Enter PRN (e.g. PRN2024001) or Email"
+                placeholder={t("employerVerify.searchPlaceholder")}
                 required
                 className="flex-1 px-4 py-3 rounded-lg border bg-card text-sm font-mono focus:outline-none focus:ring-2 focus:ring-accent transition-all"
               />
@@ -231,7 +234,7 @@ const EmployerVerify: React.FC = () => {
                 disabled={loading}
                 className="px-5 py-3 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity active:scale-[0.98] disabled:opacity-50"
               >
-                {loading ? "Verifying..." : "Verify"}
+                {loading ? t("employerVerify.verifying") : t("employerVerify.verify")}
               </button>
             </form>
           </ScrollReveal>
@@ -242,7 +245,7 @@ const EmployerVerify: React.FC = () => {
                 {result.revoked && (
                   <div className="bg-destructive/10 border-b border-destructive/20 px-6 py-3 flex items-center gap-2">
                     <XCircle className="w-4 h-4 text-destructive shrink-0" />
-                    <p className="text-sm text-destructive font-medium">This credential has been <strong>revoked</strong> by the issuing institution and is no longer valid.</p>
+                    <p className="text-sm text-destructive font-medium">{t("employerVerify.revokedBanner")}</p>
                   </div>
                 )}
 
@@ -256,12 +259,12 @@ const EmployerVerify: React.FC = () => {
                     <div>
                       <div className="flex items-center gap-1.5 mb-0.5">
                         {result.revoked
-                          ? <><AlertTriangle className="w-4 h-4 text-destructive" /><h3 className="font-semibold text-destructive">Credential Revoked</h3></>
-                          : <><CheckCircle2 className="w-4 h-4 text-accent" /><h3 className="font-semibold text-primary">Altrium Verified</h3></>
+                          ? <><AlertTriangle className="w-4 h-4 text-destructive" /><h3 className="font-semibold text-destructive">{t("employerVerify.revokedTitle")}</h3></>
+                          : <><CheckCircle2 className="w-4 h-4 text-accent" /><h3 className="font-semibold text-primary">{t("employerVerify.verifiedTitle")}</h3></>
                         }
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        {result.revoked ? "This credential is no longer valid." : "Degree anchored on the blockchain (SBT minted)."}
+                        {result.revoked ? t("employerVerify.revokedSubtitle") : t("employerVerify.verifiedSubtitle")}
                       </p>
                     </div>
                   </div>
@@ -271,31 +274,31 @@ const EmployerVerify: React.FC = () => {
                   <div className="max-w-3xl mx-auto space-y-6">
                     <div className="grid sm:grid-cols-2 gap-6 items-start">
                       <div className="space-y-5">
-                        <InfoRow icon={GraduationCap} label="Student Name" value={studentName} />
-                        <InfoRow icon={Hash} label="PRN" value={result.prn_number ?? "-"} mono />
-                        <InfoRow icon={Calendar} label="Entry Year" value={String(entryYear)} />
-                        <InfoRow icon={Blocks} label="CGPA" value={String(cgpa)} />
-                        <InfoRow icon={Building2} label="Off-chain Notes" value={result.description ?? "-"} />
+                        <InfoRow icon={GraduationCap} label={t("employerVerify.studentName")} value={studentName} />
+                        <InfoRow icon={Hash} label={t("employerVerify.prn")} value={result.prn_number ?? "-"} mono />
+                        <InfoRow icon={Calendar} label={t("employerVerify.entryYear")} value={String(entryYear)} />
+                        <InfoRow icon={Blocks} label={t("employerVerify.cgpa")} value={String(cgpa)} />
+                        <InfoRow icon={Building2} label={t("employerVerify.offchainNotes")} value={result.description ?? "-"} />
                       </div>
                       <div className="space-y-5">
-                        <InfoRow icon={Building2} label="University" value={result.college_name || "Altrium University"} />
-                        <InfoRow icon={FileText} label="Degree Title" value={result.title} />
-                        <InfoRow icon={Calendar} label="Passing Year" value={String(passingYear)} />
-                        <InfoRow icon={Blocks} label="Credits" value={String(credits)} />
+                        <InfoRow icon={Building2} label={t("employerVerify.university")} value={result.college_name || "Altrium University"} />
+                        <InfoRow icon={FileText} label={t("employerVerify.degreeTitle")} value={result.title} />
+                        <InfoRow icon={Calendar} label={t("employerVerify.passingYear")} value={String(passingYear)} />
+                        <InfoRow icon={Blocks} label={t("employerVerify.credits")} value={String(credits)} />
                       </div>
                     </div>
 
                     <div className="p-5 rounded-xl bg-muted/20 border border-muted-foreground/10 space-y-3">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">On-Chain Proof</p>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">{t("employerVerify.onChainProof")}</p>
 
                       <div className="flex items-center justify-between text-sm py-1 border-b border-muted-foreground/10">
-                        <span className="text-muted-foreground">Token ID</span>
+                        <span className="text-muted-foreground">{t("employerVerify.tokenId")}</span>
                         <span className="font-mono font-bold text-foreground">{result.token_id ?? "-"}</span>
                       </div>
 
                       {result.tx_hash && (
                         <div className="flex items-center justify-between text-sm py-1 border-b border-muted-foreground/10">
-                          <span className="text-muted-foreground">Tx Hash</span>
+                          <span className="text-muted-foreground">{t("employerVerify.txHash")}</span>
                           
   <a
                             href={`https://sepolia.etherscan.io/tx/${result.tx_hash}`}
@@ -310,14 +313,14 @@ const EmployerVerify: React.FC = () => {
                       )}
 
                       <div className="flex items-center justify-between text-sm py-1">
-                        <span className="text-muted-foreground">Integrity Check</span>
+                        <span className="text-muted-foreground">{t("employerVerify.integrityCheck")}</span>
                         <button
                           onClick={handleVerifyHash}
                           disabled={verifyingHash}
                           className="flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium bg-accent/10 text-accent hover:bg-accent/20 transition-colors disabled:opacity-50"
                         >
                           <ShieldCheck className="w-3.5 h-3.5" />
-                          {verifyingHash ? "Verifying..." : hashVerified === true ? "✅ Verified" : hashVerified === false ? "❌ Failed" : "Verify Hash"}
+                          {verifyingHash ? t("employerVerify.verifying") : hashVerified === true ? "✅ " + t("employerVerify.verifiedHash") : hashVerified === false ? "❌ " + t("employerVerify.failedHash") : t("employerVerify.verifyHash")}
                         </button>
                       </div>
                     </div>
@@ -333,16 +336,16 @@ const EmployerVerify: React.FC = () => {
                 <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
                   <Search className="w-5 h-5 text-muted-foreground" />
                 </div>
-                <h3 className="font-semibold mb-1">No Record Found</h3>
+                <h3 className="font-semibold mb-1">{t("employerVerify.noRecordFound")}</h3>
                 <p className="text-sm text-muted-foreground mb-6">
-                  No APPROVED degree was found for{" "}
-                  <span className="font-mono font-medium">{query}</span>. The admin may not have minted it yet.
+                  {t("employerVerify.noRecordFoundDesc1")}{" "}
+                  <span className="font-mono font-medium">{query}</span>. {t("employerVerify.noRecordFoundDesc2")}
                 </p>
                 <button
                   onClick={() => handleQueryChange({ target: { value: "" } } as any)}
                   className="px-4 py-2 bg-muted text-foreground rounded-lg text-sm font-medium hover:bg-accent/10 hover:text-accent transition-colors"
                 >
-                  Back to Directory
+                  {t("employerVerify.backToDirectory")}
                 </button>
               </div>
             </ScrollReveal>

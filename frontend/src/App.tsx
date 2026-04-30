@@ -28,7 +28,6 @@ import DocsCli from "./pages/docs/sections/Cli.tsx";
 import DocsSupport from "./pages/docs/sections/Support.tsx";
 import DocsNotifications from "./pages/docs/sections/Notifications.tsx";
 import DocsBulkUpload from "./pages/docs/coming-soon/BulkUploadWizard.tsx";
-import DocsEmailService from "./pages/docs/coming-soon/EmailService.tsx";
 import DocsLanguageSupport from "./pages/docs/sections/LanguageSupport.tsx";
 import PendingVerification from "./pages/PendingVerification.tsx";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -115,7 +114,6 @@ const App = () => (
               <Route path="support" element={<DocsSupport />} />
               <Route path="notifications" element={<DocsNotifications />} />
               <Route path="bulk-upload-wizard" element={<DocsBulkUpload />} />
-              <Route path="email-service" element={<DocsEmailService />} />
               <Route path="language-support" element={<DocsLanguageSupport />} />
             </Route>
             <Route path="/pending-verification" element={<PendingVerification />} />
