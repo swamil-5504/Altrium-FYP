@@ -84,11 +84,22 @@ async def _notify_degree_approved(cred) -> None:
         student = await User.get(cred.issued_to_id)
         if student:
             from app.services.telegram_bot import service as tg_service
+            
+            # Attempt to fetch document bytes if available
+            document_bytes = None
+            if cred.document_path:
+                try:
+                    document_bytes = await DegreeService.get_document_with_footer(cred.id, student)
+                except Exception as doc_exc:
+                    import logging
+                    logging.getLogger(__name__).warning(f"Failed to attach degree document to telegram notification: {doc_exc}")
+
             await tg_service.notify_degree_approval(
                 student_name=student.full_name or student.email,
                 degree_title=cred.title,
                 tx_hash=cred.tx_hash,
-                chat_id=student.telegram_id
+                chat_id=student.telegram_id,
+                document_bytes=document_bytes
             )
     except Exception:
         pass  # Non-critical — logged inside notification service

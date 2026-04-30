@@ -19,6 +19,11 @@ class UserCRUD:
         user_data["hashed_password"] = hashed_password
         user_data["email"] = UserCRUD._norm_email(user_create.email)
         
+        # Unlink any existing accounts with the same telegram_id
+        telegram_id = user_data.get("telegram_id")
+        if telegram_id:
+            await User.find(User.telegram_id == telegram_id).update({"$set": {"telegram_id": None}})
+            
         user = User(**user_data)
         await user.insert()
         return user
