@@ -45,9 +45,11 @@ async def get_degrees(current_user: User = Depends(get_current_user)):
 
 @router.get("/public", response_model=List[CredentialResponse])
 @limiter.limit("30/minute")
-async def get_public_degrees(request: Request, prn_number: str = None):
+async def get_public_degrees(request: Request, prn_number: str = None, email: str = None):
     if prn_number:
         creds = await DegreeService.get_public_by_prn(prn_number)
+    elif email:
+        creds = await DegreeService.get_public_by_email(email)
     else:
         creds = await DegreeService.get_all_public()
     return [_to_response(c) for c in creds]
