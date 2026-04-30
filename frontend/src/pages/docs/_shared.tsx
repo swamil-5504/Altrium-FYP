@@ -99,6 +99,7 @@ export const DOC_GROUPS: DocGroup[] = [
       { to: "/docs/security", label: "Security", description: "Auth, RBAC, uploads, transport." },
       { to: "/docs/operations", label: "Operations", description: "Envs, logs, database." },
       { to: "/docs/cli", label: "CLI & Scripts", description: "Backend and Foundry tooling." },
+      { to: "/docs/notifications", label: "Notifications", description: "Telegram bot push notifications setup." },
     ],
   },
   {

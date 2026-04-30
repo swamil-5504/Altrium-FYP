@@ -268,7 +268,6 @@ export default function Register() {
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
-            <PasswordStrengthChecklist password={password} className="pt-1" />
           </div>
 
           <button

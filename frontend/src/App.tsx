@@ -26,6 +26,7 @@ import DocsSecurity from "./pages/docs/sections/Security.tsx";
 import DocsOperations from "./pages/docs/sections/Operations.tsx";
 import DocsCli from "./pages/docs/sections/Cli.tsx";
 import DocsSupport from "./pages/docs/sections/Support.tsx";
+import DocsNotifications from "./pages/docs/sections/Notifications.tsx";
 import DocsBulkUpload from "./pages/docs/coming-soon/BulkUploadWizard.tsx";
 import DocsEmailService from "./pages/docs/coming-soon/EmailService.tsx";
 import DocsLanguageSupport from "./pages/docs/coming-soon/LanguageSupport.tsx";
@@ -112,6 +113,7 @@ const App = () => (
               <Route path="operations" element={<DocsOperations />} />
               <Route path="cli" element={<DocsCli />} />
               <Route path="support" element={<DocsSupport />} />
+              <Route path="notifications" element={<DocsNotifications />} />
               <Route path="bulk-upload-wizard" element={<DocsBulkUpload />} />
               <Route path="email-service" element={<DocsEmailService />} />
               <Route path="language-support" element={<DocsLanguageSupport />} />
