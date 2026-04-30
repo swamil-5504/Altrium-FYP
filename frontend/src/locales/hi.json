@@ -72,20 +72,66 @@
       "comingSoon": "\u091c\u0932\u094d\u0926 \u0906 \u0930\u0939\u093e \u0939\u0948"
     },
     "links": {
-      "introduction": { "label": "\u092a\u0930\u093f\u091a\u092f", "description": "Altrium \u0915\u094d\u092f\u093e \u0939\u0948 \u0914\u0930 \u0915\u093f\u0938\u0915\u0947 \u0932\u093f\u090f \u0939\u0948\u0964" },
-      "quickstart": { "label": "\u0915\u094d\u0935\u093f\u0915\u0938\u094d\u091f\u093e\u0930\u094d\u091f", "description": "15 \u092e\u093f\u0928\u091f \u092e\u0947\u0902 full stack \u0916\u0921\u093c\u093e \u0915\u0930\u0947\u0902\u0964" },
-      "architecture": { "label": "\u0906\u0930\u094d\u0915\u093f\u091f\u0947\u0915\u094d\u091a\u0930", "description": "\u091a\u093e\u0930 layers \u090f\u0915 \u0938\u093e\u0925 \u0915\u0948\u0938\u0947 \u0915\u093e\u092e \u0915\u0930\u0924\u0947 \u0939\u0948\u0902\u0964" },
-      "roles": { "label": "\u092f\u0942\u091c\u0930 \u0930\u094b\u0932\u094d\u0938", "description": "Super Admin, University, Student, Employer\u0964" },
-      "walkthroughs": { "label": "\u0935\u0949\u0915\u0925\u094d\u0930\u0942\u0938", "description": "\u0939\u0930 role \u0915\u0947 \u0932\u093f\u090f end-to-end flows\u0964" },
-      "apiReference": { "label": "API Reference", "description": "\u0938\u092d\u0940 REST endpoints, role \u0915\u0947 \u0905\u0928\u0941\u0938\u093e\u0930\u0964" },
-      "smartContracts": { "label": "Smart Contracts", "description": "Registry \u0914\u0930 SBT ABI surface\u0964" },
-      "security": { "label": "\u0938\u0941\u0930\u0915\u094d\u0937\u093e", "description": "Auth, RBAC, uploads, transport\u0964" },
-      "operations": { "label": "\u0911\u092a\u0930\u0947\u0936\u0928\u094d\u0938", "description": "Envs, logs, database\u0964" },
-      "cli": { "label": "CLI \u0914\u0930 Scripts", "description": "Backend \u0914\u0930 Foundry tooling\u0964" },
-      "support": { "label": "\u0938\u092a\u094b\u0930\u094d\u091f", "description": "Troubleshooting, FAQ, contact\u0964" },
-      "bulkUploadWizard": { "label": "Bulk Upload Wizard", "description": "\u090f\u0915 import \u092e\u0947\u0902 \u092a\u0942\u0930\u0940 graduating cohort issue \u0915\u0930\u0947\u0902\u0964" },
-      "emailService": { "label": "Email Service", "description": "Transactional notifications \u0914\u0930 templated mail\u0964" },
-      "languageSupport": { "label": "Language & Script Support", "description": "i18n \u0914\u0930 non-Latin credential rendering\u0964" }
+      "introduction": {
+        "label": "परिचय",
+        "description": "अल्ट्रियम क्या है और किसके लिए है।"
+      },
+      "quickstart": {
+        "label": "क्विकस्टार्ट",
+        "description": "15 मिनट में फुल स्टैक खड़ा करें।"
+      },
+      "architecture": {
+        "label": "आर्किटेक्चर",
+        "description": "चार लेयर्स एक साथ कैसे काम करते हैं।"
+      },
+      "roles": {
+        "label": "यूज़र रोल्स",
+        "description": "सुपर एडमिन, यूनिवर्सिटी, स्टूडेंट, एम्प्लॉयर।"
+      },
+      "walkthroughs": {
+        "label": "वॉकथ्रूस",
+        "description": "हर रोल के लिए एंड-टू-एंड फ्लोज़।"
+      },
+      "apiReference": {
+        "label": "API रेफरेंस",
+        "description": "सभी REST एंडपॉइंट्स, रोल के अनुसार।"
+      },
+      "smartContracts": {
+        "label": "स्मार्ट कॉन्ट्रैक्ट्स",
+        "description": "रजिस्ट्री और SBT ABI सरफेस।"
+      },
+      "security": {
+        "label": "सुरक्षा",
+        "description": "ऑथ, RBAC, अपलोड्स, ट्रांसपोर्ट।"
+      },
+      "operations": {
+        "label": "ऑपरेशन्स",
+        "description": "एनवायर्नमेंट्स, लॉग्स, डेटाबेस।"
+      },
+      "cli": {
+        "label": "CLI और स्क्रिप्ट्स",
+        "description": "बैकएंड और फाउंड्री टूलिंग।"
+      },
+      "support": {
+        "label": "सपोर्ट",
+        "description": "ट्रबलशूटिंग, FAQ, संपर्क।"
+      },
+      "bulkUploadWizard": {
+        "label": "बल्क अपलोड विज़ार्ड",
+        "description": "एक इम्पोर्ट में पूरी ग्रेजुएटिंग कोहॉर्ट इश्यू करें।"
+      },
+      "emailService": {
+        "label": "ईमेल सर्विस",
+        "description": "ट्रांज़ैक्शनल नोटिफिकेशन्स और टेम्प्लेटेड मेल।"
+      },
+      "languageSupport": {
+        "label": "लैंग्वेज और स्क्रिप्ट सपोर्ट",
+        "description": "i18n और नॉन-लैटिन क्रेडेंशियल रेंडरिंग।"
+      },
+      "telegramBot": {
+        "label": "टेलीग्राम बॉट",
+        "description": "स्टूडेंट्स के लिए पुश नोटिफिकेशन सेटअप।"
+      }
     }
   },
   "login": {

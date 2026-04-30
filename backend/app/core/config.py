@@ -48,6 +48,7 @@ class Settings(BaseSettings):
 
     # Notifications (Zero-Config Telegram Push)
     TELEGRAM_BOT_TOKEN: Optional[str] = None
+    WEBHOOK_HOST: Optional[str] = None
 
     class Config:
         env_file = ".env"

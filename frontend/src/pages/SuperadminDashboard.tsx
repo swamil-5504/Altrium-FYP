@@ -378,8 +378,8 @@ const SuperadminDashboard: React.FC = () => {
                   key={tab.id}
                   onClick={() => { setActiveTab(tab.id); setSearchQuery(""); }}
                   className={`relative flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === tab.id
-                      ? "bg-background shadow-md text-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-background/40"
+                    ? "bg-background shadow-md text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-background/40"
                     }`}
                 >
                   <tab.icon className="w-4 h-4 flex-shrink-0" />
@@ -432,8 +432,8 @@ const SuperadminDashboard: React.FC = () => {
                       }}
                     />
                     <div className={`inline-flex p-3 rounded-2xl mb-4 ${stat.color === "amber" ? "bg-amber-500/10 text-amber-500"
-                        : stat.color === "green" ? "bg-green-500/10 text-green-500"
-                          : "bg-accent/10 text-accent"
+                      : stat.color === "green" ? "bg-green-500/10 text-green-500"
+                        : "bg-accent/10 text-accent"
                       }`}>
                       <stat.icon className="w-5 h-5" />
                     </div>

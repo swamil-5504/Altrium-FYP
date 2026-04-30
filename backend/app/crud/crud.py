@@ -19,6 +19,11 @@ class UserCRUD:
         user_data["hashed_password"] = hashed_password
         user_data["email"] = UserCRUD._norm_email(user_create.email)
         
+        # Unlink any existing accounts with the same telegram_id
+        telegram_id = user_data.get("telegram_id")
+        if telegram_id:
+            await User.find(User.telegram_id == telegram_id).update({"$set": {"telegram_id": None}})
+            
         user = User(**user_data)
         await user.insert()
         return user
@@ -128,6 +133,13 @@ class CredentialCRUD:
     async def get_approved_by_prn(prn_number: str) -> List[Credential]:
         return await Credential.find(
             Credential.prn_number == prn_number,
+            Credential.status == CredentialStatus.APPROVED
+        ).to_list()
+
+    @staticmethod
+    async def get_approved_by_user_id(user_id: UUID) -> List[Credential]:
+        return await Credential.find(
+            Credential.issued_to_id == user_id,
             Credential.status == CredentialStatus.APPROVED
         ).to_list()
 

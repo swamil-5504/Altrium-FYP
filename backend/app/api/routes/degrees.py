@@ -45,9 +45,11 @@ async def get_degrees(current_user: User = Depends(get_current_user)):
 
 @router.get("/public", response_model=List[CredentialResponse])
 @limiter.limit("30/minute")
-async def get_public_degrees(request: Request, prn_number: str = None):
+async def get_public_degrees(request: Request, prn_number: str = None, email: str = None):
     if prn_number:
         creds = await DegreeService.get_public_by_prn(prn_number)
+    elif email:
+        creds = await DegreeService.get_public_by_email(email)
     else:
         creds = await DegreeService.get_all_public()
     return [_to_response(c) for c in creds]
@@ -84,11 +86,22 @@ async def _notify_degree_approved(cred) -> None:
         student = await User.get(cred.issued_to_id)
         if student:
             from app.services.telegram_bot import service as tg_service
+            
+            # Attempt to fetch document bytes if available
+            document_bytes = None
+            if cred.document_path:
+                try:
+                    document_bytes = await DegreeService.get_document_with_footer(cred.id, student)
+                except Exception as doc_exc:
+                    import logging
+                    logging.getLogger(__name__).warning(f"Failed to attach degree document to telegram notification: {doc_exc}")
+
             await tg_service.notify_degree_approval(
                 student_name=student.full_name or student.email,
                 degree_title=cred.title,
                 tx_hash=cred.tx_hash,
-                chat_id=student.telegram_id
+                chat_id=student.telegram_id,
+                document_bytes=document_bytes
             )
     except Exception:
         pass  # Non-critical — logged inside notification service

@@ -57,10 +57,10 @@
     "indexTitle": "Altrium build, run \u0906\u0923\u093f integrate \u0915\u0930\u093e.",
     "indexSummary": "Altrium Ethereum \u0935\u0930 Soulbound Tokens \u092e\u094d\u0939\u0923\u0942\u0928 tamper-proof academic credentials issue \u0915\u0930\u0923\u093e\u0930\u0947 full-stack platform \u0906\u0939\u0947. \u0939\u0947 docs docker compose \u092a\u093e\u0938\u0942\u0928 degree mint \u0915\u0930\u0923\u094d\u092f\u093e\u092a\u0930\u094d\u092f\u0902\u0924, employer \u092e\u094d\u0939\u0923\u0942\u0928 verify \u0915\u0930\u0923\u094d\u092f\u093e\u092a\u0930\u094d\u092f\u0902\u0924 \u0906\u0923\u093f API extend \u0915\u0930\u0923\u094d\u092f\u093e\u092a\u0930\u094d\u092f\u0902\u0924 \u092a\u0942\u0930\u094d\u0923 flow \u0926\u093e\u0916\u0935\u0924\u093e\u0924.",
     "highlights": {
-      "quickstart": "Docker \u0938\u0939 15 \u092e\u093f\u0928\u093f\u091f\u093e\u0902\u092e\u0927\u094d\u092f\u0947 full stack \u0938\u0941\u0930\u0942 \u0915\u0930\u093e.",
-      "apiReference": "\u0938\u0930\u094d\u0935 REST endpoints, auth requirements \u0906\u0923\u093f rate limits.",
-      "smartContracts": "Registry \u0906\u0923\u093f SBT ABI surface, deployment workflow.",
-      "security": "Auth, RBAC, PDF validation \u0906\u0923\u093f transport hardening."
+      "quickstart": "डॉकर सह १५ मिनिटांमध्ये फुल स्टॅक सुरू करा.",
+      "apiReference": "सर्व REST एंडपॉइंट्स, ऑथ रिक्वायर्मेंट्स आणि रेट लिमिट्स.",
+      "smartContracts": "रजिस्ट्री आणि SBT ABI सरफेस, डिप्लॉयमेंट वर्कफ्लो.",
+      "security": "ऑथ, RBAC, PDF व्हॅलिडेशन आणि ट्रान्सपोर्ट हार्डनिंग."
     },
     "groups": {
       "getStarted": "\u0938\u0941\u0930\u0941\u0935\u093e\u0924",
@@ -72,20 +72,66 @@
       "comingSoon": "\u0932\u0935\u0915\u0930\u091a"
     },
     "links": {
-      "introduction": { "label": "\u092a\u0930\u093f\u091a\u092f", "description": "Altrium \u0915\u093e\u092f \u0906\u0939\u0947 \u0906\u0923\u093f \u0915\u094b\u0923\u093e\u0938\u093e\u0920\u0940 \u0906\u0939\u0947." },
-      "quickstart": { "label": "Quickstart", "description": "15 \u092e\u093f\u0928\u093f\u091f\u093e\u0902\u092e\u0927\u094d\u092f\u0947 full stack \u0938\u0947\u091f \u0915\u0930\u093e." },
-      "architecture": { "label": "Architecture", "description": "\u091a\u093e\u0930 layers \u090f\u0915\u092e\u0947\u0915\u093e\u0902\u0938\u094b\u092c\u0924 \u0915\u0938\u0947 \u091c\u0941\u0933\u0924\u093e\u0924." },
-      "roles": { "label": "User Roles", "description": "Super Admin, University, Student, Employer." },
-      "walkthroughs": { "label": "Walkthroughs", "description": "\u092a\u094d\u0930\u0924\u094d\u092f\u0947\u0915 role \u0938\u093e\u0920\u0940 end-to-end flows." },
-      "apiReference": { "label": "API Reference", "description": "\u092d\u0942\u092e\u093f\u0915\u0947\u0928\u0941\u0938\u093e\u0930 \u0938\u0930\u094d\u0935 REST endpoints." },
-      "smartContracts": { "label": "Smart Contracts", "description": "Registry \u0906\u0923\u093f SBT ABI surface." },
-      "security": { "label": "Security", "description": "Auth, RBAC, uploads, transport." },
-      "operations": { "label": "Operations", "description": "Envs, logs, database." },
-      "cli": { "label": "CLI \u0906\u0923\u093f Scripts", "description": "Backend \u0906\u0923\u093f Foundry tooling." },
-      "support": { "label": "Support", "description": "Troubleshooting, FAQ, contact." },
-      "bulkUploadWizard": { "label": "Bulk Upload Wizard", "description": "\u090f\u0915\u093e import \u092e\u0927\u094d\u092f\u0947 \u0938\u0902\u092a\u0942\u0930\u094d\u0923 graduating cohort issue \u0915\u0930\u093e." },
-      "emailService": { "label": "Email Service", "description": "Transactional notifications \u0906\u0923\u093f templated mail." },
-      "languageSupport": { "label": "Language & Script Support", "description": "i18n \u0906\u0923\u093f non-Latin credential rendering." }
+      "introduction": {
+        "label": "परिचय",
+        "description": "अल्ट्रियम काय आहे आणि कोणासाठी आहे."
+      },
+      "quickstart": {
+        "label": "क्विकस्टार्ट",
+        "description": "१५ मिनिटांमध्ये फुल स्टॅक सेट करा."
+      },
+      "architecture": {
+        "label": "आर्किटेक्चर",
+        "description": "चार लेयर्स एकमेकांसोबत कसे जुळतात."
+      },
+      "roles": {
+        "label": "यूजर रोल्स",
+        "description": "सुपर अॅडमिन, युनिव्हर्सिटी, स्टुडंट, एम्प्लॉयर."
+      },
+      "walkthroughs": {
+        "label": "वॉकथ्रूज",
+        "description": "प्रत्येक रोलसाठी एंड-टू-एंड फ्लोज."
+      },
+      "apiReference": {
+        "label": "API रेफरन्स",
+        "description": "भूमिकेनुसार सर्व REST एंडपॉइंट्स."
+      },
+      "smartContracts": {
+        "label": "स्मार्ट कॉन्ट्रॅक्ट्स",
+        "description": "रजिस्ट्री आणि SBT ABI सरफेस."
+      },
+      "security": {
+        "label": "सिक्युरिटी",
+        "description": "ऑथ, RBAC, अपलोड्स, ट्रान्सपोर्ट."
+      },
+      "operations": {
+        "label": "ऑपरेशन्स",
+        "description": "एन्व्हायर्नमेंट्स, लॉग्ज, डेटाबेस."
+      },
+      "cli": {
+        "label": "CLI आणि स्क्रिप्ट्स",
+        "description": "बॅकएंड आणि फाउंड्री टूलिंग."
+      },
+      "support": {
+        "label": "सपोर्ट",
+        "description": "ट्रबलशूटिंग, FAQ, संपर्क."
+      },
+      "bulkUploadWizard": {
+        "label": "बल्क अपलोड विझार्ड",
+        "description": "एका इम्पोर्ट मध्ये संपूर्ण ग्रॅज्युएटिंग कोहॉर्ट इश्यू करा."
+      },
+      "emailService": {
+        "label": "ईमेल सर्व्हिस",
+        "description": "ट्रान्झॅक्शनल नोटिफिकेशन्स आणि टेम्प्लेटेड मेल."
+      },
+      "languageSupport": {
+        "label": "लँग्वेज आणि स्क्रिप्ट सपोर्ट",
+        "description": "i18n आणि नॉन-लॅटिन क्रेडेन्शियल रेंडरिंग."
+      },
+      "telegramBot": {
+        "label": "टेलिग्राम बॉट",
+        "description": "स्टुडंट्ससाठी पुश नोटिफिकेशन सेटअप."
+      }
     }
   },
   "login": {

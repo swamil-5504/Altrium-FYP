@@ -4,7 +4,7 @@ from enum import Enum
 from typing import List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class UserRole(str, Enum):
@@ -45,6 +45,36 @@ def _strip_control(value: Optional[str]) -> Optional[str]:
 # User schemas
 # ---------------------------------------------------------------------------
 class UserBase(BaseModel):
+    email: str
+    full_name: Optional[str] = Field(None, max_length=100)
+    role: UserRole = UserRole.STUDENT
+    college_name: Optional[str] = Field(None, max_length=150)
+    wallet_address: Optional[str] = Field(None, pattern=WALLET_ADDRESS_PATTERN)
+    prn_number: Optional[str] = None
+    telegram_id: Optional[str] = None
+
+    @field_validator("full_name", "college_name", mode="before")
+    @classmethod
+    def _scrub_text(cls, v):
+        return _strip_control(v) if isinstance(v, str) else v
+
+
+class UserCreate(UserBase):
+    password: str
+
+
+class UserUpdate(BaseModel):
+    full_name: Optional[str] = Field(None, max_length=100)
+    role: Optional[UserRole] = None
+
+    @field_validator("full_name", mode="before")
+    @classmethod
+    def _scrub_text(cls, v):
+        return _strip_control(v) if isinstance(v, str) else v
+
+
+class UserResponse(BaseModel):
+    id: UUID
     email: str
     full_name: Optional[str] = Field(None, max_length=100)
     role: UserRole = UserRole.STUDENT
@@ -185,7 +215,6 @@ class RegisterRequest(UserCreate):
 
 
 class _PasswordPayload(BaseModel):
-    """Base class that shares the complexity validator with UserCreate."""
 
     new_password: str = Field(...)
 
