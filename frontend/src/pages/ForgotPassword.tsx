@@ -107,9 +107,8 @@ export default function ForgotPassword() {
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
                 placeholder="Re-enter password"
-                className={`w-full pl-9 pr-12 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all ${
-                  confirm.length > 0 && !match ? "border-red-500" : ""
-                }`}
+                className={`w-full pl-9 pr-12 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all ${confirm.length > 0 && !match ? "border-red-500" : ""
+                  }`}
               />
               <button
                 type="button"
