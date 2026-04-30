@@ -4,7 +4,7 @@ from enum import Enum
 from typing import List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class UserRole(str, Enum):
@@ -45,7 +45,7 @@ def _strip_control(value: Optional[str]) -> Optional[str]:
 # User schemas
 # ---------------------------------------------------------------------------
 class UserBase(BaseModel):
-    email: EmailStr
+    email: str
     full_name: Optional[str] = Field(None, max_length=100)
     role: UserRole = UserRole.STUDENT
     college_name: Optional[str] = Field(None, max_length=150)
@@ -216,7 +216,7 @@ class TokenResponse(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    email: str
     password: str
     ignore_verification: bool = False
 
