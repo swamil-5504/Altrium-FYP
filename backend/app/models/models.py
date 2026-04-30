@@ -47,6 +47,7 @@ class User(Document):
     wallet_address: Optional[str] = None
     verification_document_path: Optional[str] = None
     telegram_id: Optional[str] = None
+    telegram_link_token: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 

@@ -1,6 +1,7 @@
 from uuid import UUID, uuid4
 from typing import List, Optional
 from datetime import datetime
+import secrets
 from app.models.models import User, Credential, UserRole, CredentialStatus
 from app.schemas.schemas import UserCreate, UserUpdate, CredentialCreate, CredentialUpdate
 from app.core.security import hash_password, verify_password
@@ -23,6 +24,9 @@ class UserCRUD:
         telegram_id = user_data.get("telegram_id")
         if telegram_id:
             await User.find(User.telegram_id == telegram_id).update({"$set": {"telegram_id": None}})
+            
+        # Generate a unique linking token for Telegram
+        user_data["telegram_link_token"] = secrets.token_urlsafe(16)
             
         user = User(**user_data)
         await user.insert()

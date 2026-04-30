@@ -18,6 +18,7 @@ from app.models.models import (
     User,
 )
 from app.services.pdf_validation import validate_pdf_upload
+import asyncio
 
 UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", "/app/uploads"))
 BULK_STAGING_DIR = UPLOAD_DIR / "bulk"
@@ -234,6 +235,23 @@ class BulkDegreeService:
                 await cred.save()
 
                 committed += 1
+                
+                # Notify student via Telegram (fire-and-forget)
+                try:
+                    from app.services.telegram_bot import service as tg_service
+                    from app.crud.crud import UserCRUD
+                    student = await UserCRUD.get_by_id(cred.issued_to_id)
+                    if student and student.telegram_id:
+                        asyncio.create_task(
+                            tg_service.notify_degree_acknowledgement(
+                                student.full_name or student.email,
+                                cred.title,
+                                student.telegram_id
+                            )
+                        )
+                except Exception:
+                    pass
+
                 results.append({
                     "credential_id": row.credential_id,
                     "prn_number": row.prn_number,

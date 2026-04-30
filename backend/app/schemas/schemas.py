@@ -86,20 +86,6 @@ class UserUpdate(BaseModel):
         return _strip_control(v) if isinstance(v, str) else v
 
 
-class UserResponse(BaseModel):
-    id: UUID
-    email: str
-    full_name: Optional[str] = Field(None, max_length=100)
-    role: UserRole = UserRole.STUDENT
-    college_name: Optional[str] = Field(None, max_length=150)
-    wallet_address: Optional[str] = Field(None, pattern=WALLET_ADDRESS_PATTERN)
-    prn_number: Optional[str] = None
-    telegram_id: Optional[str] = None
-
-    @field_validator("full_name", "college_name", mode="before")
-    @classmethod
-    def _scrub_text(cls, v):
-        return _strip_control(v) if isinstance(v, str) else v
 
 
 class UserCreate(UserBase):
@@ -125,15 +111,33 @@ class UserResponse(BaseModel):
     role: UserRole = UserRole.STUDENT
     college_name: Optional[str] = None
     wallet_address: Optional[str] = None
-    phone_number: Optional[str] = None
     telegram_id: Optional[str] = None
+    telegram_link_token: Optional[str] = None
     prn_number: Optional[str] = None
     is_active: bool
     is_legal_admin_verified: bool = False
     created_at: datetime
 
+    @property
+    def telegram_bot_link(self) -> Optional[str]:
+        if not self.telegram_link_token:
+            return None
+        import os
+        bot_name = os.getenv("TELEGRAM_BOT_USERNAME", "Altrium_Notification_Bot")
+        return f"https://t.me/{bot_name}?start={self.telegram_link_token}"
+
     class Config:
         from_attributes = True
+        # Allow the property to be serialized in the response
+        json_encoders = {
+            datetime: lambda v: v.isoformat(),
+        }
+        
+    # For Pydantic v2 compatibility if needed
+    def model_dump(self, *args, **kwargs):
+        data = super().model_dump(*args, **kwargs)
+        data["telegram_bot_link"] = self.telegram_bot_link
+        return data
 
 
 class WalletPatchRequest(BaseModel):

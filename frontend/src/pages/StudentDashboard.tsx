@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { extractErrorMessage } from "@/utils/errors";
 import { Navbar } from "@/components/Navbar";
 import { ScrollReveal } from "@/components/ScrollReveal";
-import { Upload, CreditCard, Clock, Shield, XCircle, ArrowRight, Eye, User as UserIcon, Mail, Building2, FileText } from "lucide-react";
+import { Upload, CreditCard, Clock, Shield, XCircle, ArrowRight, Eye, User as UserIcon, Mail, Building2, FileText, MessageSquare, RefreshCcw } from "lucide-react";
 
 type DegreeType = "BTECH" | "BSC" | "MTECH" | "MBA";
 
@@ -35,7 +35,7 @@ interface Credential {
 }
 
 const StudentDashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { t } = useTranslation();
   const [submissions, setSubmissions] = useState<Credential[]>([]);
   const [loading, setLoading] = useState(true);
@@ -101,6 +101,18 @@ const StudentDashboard: React.FC = () => {
       toast.dismiss(loadingToast);
       console.error(err);
       toast.error(t("studentDashboard.toasts.documentFailed"));
+    }
+  };
+
+  const handleRelink = async () => {
+    try {
+      const response = await axios.get("/telegram/link-token");
+      toast.success("New link generated! Please connect again.");
+      await refreshUser();
+      // Optionally open the link automatically
+      window.open(response.data.link, "_blank");
+    } catch (err) {
+      toast.error("Failed to generate new link");
     }
   };
 
@@ -180,6 +192,60 @@ const StudentDashboard: React.FC = () => {
                   <div className="flex items-center gap-1.5 text-muted-foreground">
                     <Building2 className="w-3.5 h-3.5" />
                     <span>{user?.college_name}</span>
+                  </div>
+                </div>
+
+                {/* Telegram Connectivity Card */}
+                <div className={`flex items-center justify-between gap-4 p-3 rounded-xl border transition-all duration-300 ${user?.telegram_id
+                    ? "bg-green-500/5 border-green-500/20"
+                    : "bg-accent/5 border-accent/20 animate-pulse-slow"
+                  }`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${user?.telegram_id ? "bg-green-500/10 text-green-500" : "bg-accent/10 text-accent"
+                      }`}>
+                      <MessageSquare className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider font-bold opacity-60">Telegram Status</p>
+                      <p className="text-xs font-semibold">
+                        {user?.telegram_id ? "Live Alerts Active" : "Not Connected"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {user?.telegram_id ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-green-600/70 font-medium px-2 py-0.5 bg-green-500/10 rounded-full">
+                          Linked: {user.telegram_id}
+                        </span>
+                        <button
+                          onClick={handleRelink}
+                          className="text-[10px] text-muted-foreground hover:text-accent transition-colors font-bold uppercase tracking-tighter border-l pl-2 border-muted-foreground/20"
+                        >
+                          Relink
+                        </button>
+                      </div>
+                    ) : (
+                      <a
+                        href={user?.telegram_bot_link || `https://t.me/Altrium_Notification_Bot?start=${user?.telegram_link_token}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[10px] bg-accent text-white px-3 py-1 rounded-lg font-bold hover:opacity-90 transition-opacity"
+                      >
+                        Link Now
+                      </a>
+                    )}
+                    <button
+                      onClick={() => {
+                        void refreshUser();
+                        toast.success("Syncing status...");
+                      }}
+                      className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground"
+                      title="Sync Status"
+                    >
+                      <RefreshCcw className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
               </div>
